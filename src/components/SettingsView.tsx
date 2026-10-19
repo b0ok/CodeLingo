@@ -6,6 +6,7 @@ import { supabase, useSession } from '../utils/supabase';
 import { AccountDialog } from './Onboarding';
 import { HabitRoutinePrompt } from './HabitRoutinePrompt';
 import { Modal } from './Modal';
+import { ThemeChoice, getThemeChoice, setThemeChoice } from '../utils/theme';
 import { TriangleAlert } from 'lucide-react';
 
 const DELETE_PHRASE = 'delete my account';
@@ -61,6 +62,7 @@ export const SettingsView: React.FC<{ onOpenPlans: () => void; onStartQuickLesso
   const [confirm, setConfirm] = useState<'clear' | 'delete' | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [theme, setTheme] = useState<ThemeChoice>(getThemeChoice);
   const [typedEmail, setTypedEmail] = useState('');
   const [typedPhrase, setTypedPhrase] = useState('');
   const [fieldError, setFieldError] = useState<{ email?: string; phrase?: string }>({});
@@ -161,6 +163,29 @@ export const SettingsView: React.FC<{ onOpenPlans: () => void; onStartQuickLesso
           </div>
           <button onClick={() => openRoadmapModal(undefined, 'track')} className={secondaryBtn}>Change goal</button>
         </div>
+      </Section>
+
+      <Section id="settings-appearance" title="Appearance">
+        <fieldset>
+          <legend className="font-bold text-slate-800 mb-2">Theme</legend>
+          <div className="inline-flex p-1 bg-slate-100 rounded-2xl">
+            {([['light', 'Light'], ['dark', 'Dark'], ['device', 'Match device']] as const).map(([value, label]) => (
+              <label
+                key={value}
+                className="px-4 py-2 rounded-xl text-sm font-bold cursor-pointer text-slate-600 has-[:checked]:bg-white has-[:checked]:text-slate-900 has-[:checked]:shadow-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-emerald-600"
+              >
+                <input
+                  type="radio"
+                  name="theme"
+                  className="sr-only"
+                  checked={theme === value}
+                  onChange={() => { setTheme(value); setThemeChoice(value); }}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
       </Section>
 
       <Section id="settings-sound" title="Sound">
