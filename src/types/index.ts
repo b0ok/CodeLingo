@@ -19,6 +19,17 @@ export interface TestCase {
   contains?: boolean; // pass if output includes expectedOutput (default: whole output must match)
 }
 
+// One requirement for an HTML/CSS code_runner challenge, checked against the rendered page.
+// Every element matching `selector` must satisfy the listed computed styles, attributes and text.
+export interface WebCheck {
+  label: string; // shown to the student, e.g. "The nav uses display: flex"
+  selector: string;
+  count?: number; // exact number of matches (default: at least one)
+  style?: Record<string, string>; // computed values, e.g. { display: 'flex', 'padding-top': '16px' }
+  attr?: Record<string, string>; // '' means the attribute only has to exist
+  text?: string; // trimmed textContent must include this
+}
+
 export interface Challenge {
   id: string;
   type: ChallengeType;
@@ -54,6 +65,7 @@ export interface Challenge {
   starterCode?: string;
   solutionHint?: string;
   testCases?: TestCase[];
+  webChecks?: WebCheck[]; // used instead of testCases for HTML/CSS challenges
 
   hint: string;
   explanation: string;
