@@ -9,6 +9,7 @@ import { LessonModal } from './components/LessonModal';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { LeaderboardView } from './components/LeaderboardView';
 import { ProfileView } from './components/ProfileView';
+import { FeedView } from './components/FeedView';
 import { PracticeView } from './components/PracticeView';
 import { ChallengesView } from './components/ChallengesView';
 import { DailySidebar } from './components/DailySidebar';
@@ -19,7 +20,7 @@ import { RoadmapModal } from './components/RoadmapModal';
 
 function AppContent() {
   const { activeLanguage } = useGame();
-  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'profile'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile'>('learn');
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
@@ -59,6 +60,7 @@ function AppContent() {
 
           {activeTab === 'leagues' && <LeaderboardView />}
 
+          {activeTab === 'feed' && <FeedView />}
           {activeTab === 'profile' && <ProfileView />}
 
         </div>
