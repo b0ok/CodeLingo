@@ -204,6 +204,9 @@ export interface ProfileCustomization {
   status?: string; // Pro: short status line
   snippetLanguage?: LanguageId; // Pro: pinned code snippet
   snippetCode?: string;
+  showcaseStats?: string[]; // stat ids from data/profileStats, in the order shown
+  spaceHtml?: string; // Pro: My Space
+  spaceCss?: string;
 }
 
 export interface UserStats {
