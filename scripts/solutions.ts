@@ -2,6 +2,22 @@
 // and every `wrong` answer must fail. Python and JavaScript ones are also run in real
 // Python and Node by verify-snippets.ts.
 export const SOLUTIONS: Record<string, { right: string; wrong: string[] }> = {
+  // Onboarding "let me cook" challenges (data/proChallenges.ts); the web one is checked in the browser test
+  'pro-python-rle': {
+    right: "def compress(s):\n    out = \"\"\n    i = 0\n    while i < len(s):\n        j = i\n        while j < len(s) and s[j] == s[i]:\n            j += 1\n        out += s[i] + str(j - i)\n        i = j\n    return out\n\nprint(compress(\"aaabccdddd\"))\nprint(compress(\"z\"))\nprint(compress(\"abba\"))\nprint(compress(\"\"))",
+    wrong: ["def compress(s):\n    out = \"\"\n    for ch in dict.fromkeys(s):\n        out += ch + str(s.count(ch))\n    return out\n\nprint(compress(\"aaabccdddd\"))\nprint(compress(\"z\"))\nprint(compress(\"abba\"))\nprint(compress(\"\"))"], // counts letters overall instead of runs: "abba" becomes a2b2
+  },
+  'pro-js-brackets': {
+    right: "function isBalanced(str) {\n  const pairs = { \")\": \"(\", \"]\": \"[\", \"}\": \"{\" };\n  const stack = [];\n  for (const ch of str) {\n    if (\"([{\".includes(ch)) stack.push(ch);\n    else if (ch in pairs && stack.pop() !== pairs[ch]) return false;\n  }\n  return stack.length === 0;\n}\n\nconsole.log(isBalanced(\"([]{})\"));\nconsole.log(isBalanced(\"([)]\"));\nconsole.log(isBalanced(\"((\"));\nconsole.log(isBalanced(\"a(b[c]d)e\"));\nconsole.log(isBalanced(\"\"));",
+    wrong: ["function isBalanced(str) {\n  let open = 0;\n  for (const ch of str) {\n    if (\"([{\".includes(ch)) open++;\n    if (\")]}\".includes(ch)) open--;\n  }\n  return open === 0;\n}\n\nconsole.log(isBalanced(\"([]{})\"));\nconsole.log(isBalanced(\"([)]\"));\nconsole.log(isBalanced(\"((\"));\nconsole.log(isBalanced(\"a(b[c]d)e\"));\nconsole.log(isBalanced(\"\"));"], // only counts brackets, so "([)]" wrongly passes
+  },
+  'pro-sql-top-dev': {
+    right: "SELECT name, email FROM users WHERE role = 'Developer' ORDER BY points DESC LIMIT 1;",
+    wrong: [
+      "SELECT name, email FROM users ORDER BY points DESC LIMIT 1;",
+      "SELECT name, email FROM users WHERE role = 'Developer' ORDER BY points DESC;",
+    ],
+  },
   // Scheduled challenges (data/challenges.ts)
   'challenge-daily-1': {
     right: 'nums = [2, 7, 11, 15]\ntarget = 9\n\nfor i in range(len(nums)):\n    for j in range(i + 1, len(nums)):\n        if nums[i] + nums[j] == target:\n            print(f"{nums[i]} {nums[j]}")',
