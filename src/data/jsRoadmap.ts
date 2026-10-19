@@ -206,8 +206,8 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         roadmapCategory: 'Functions & Scope / Arrow Functions',
         description: 'Understand lexical this binding, constructor capabilities, and arguments object differences.',
         keyConcepts: ['Lexical this', 'arguments keyword', 'Constructor functions (new)', 'Implicit return'],
-        unitId: 'js-unit-5',
-        lessonIds: ['js-lesson-5-2'],
+        unitId: 'js-unit-3',
+        lessonIds: ['js-lesson-3-2'],
         importance: 'essential',
         icon: 'sparkles',
         antiBlindQuestion:
@@ -255,7 +255,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Use modern class syntax, constructor methods, super calls, and hard private fields (#field).',
         keyConcepts: ['class', 'constructor', 'super()', 'extends', 'Private fields (#)'],
         unitId: 'js-unit-6',
-        lessonIds: ['js-lesson-6-2'],
+        lessonIds: ['js-lesson-6-1'],
         importance: 'essential',
         icon: 'terminal',
         antiBlindQuestion:
@@ -303,7 +303,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Write clean asynchronous code with async/await, handle errors with try/catch, and coordinate parallel requests with Promise.all().',
         keyConcepts: ['async / await', 'Promise.all vs Promise.allSettled', 'try / catch / finally', 'Error handling'],
         unitId: 'js-unit-7',
-        lessonIds: ['js-lesson-7-2'],
+        lessonIds: ['js-lesson-7-1'],
         importance: 'essential',
         icon: 'trending-up',
         antiBlindQuestion:
@@ -383,7 +383,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Safely access deeply nested object properties and distinguish false/0 from null/undefined.',
         keyConcepts: ['user?.profile?.avatar', '?? vs ||', 'Short-circuiting', 'Falsy vs Nullish'],
         unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-2'],
+        lessonIds: ['js-lesson-8-1'],
         importance: 'essential',
         icon: 'sliders',
         antiBlindQuestion:
@@ -415,7 +415,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Limit rapid execution of scroll, resize, and search input handlers.',
         keyConcepts: ['Debounce (waits for silence)', 'Throttle (guarantees interval)', 'requestAnimationFrame', 'Memory leak prevention'],
         unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-2'],
+        lessonIds: ['js-lesson-8-1'],
         importance: 'recommended',
         icon: 'zap',
         antiBlindQuestion:

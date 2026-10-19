@@ -149,6 +149,7 @@ export function runPythonCode(code: string, mockInputs: string[] = []): Executio
         return Math.min(...(list as number[]));
       },
       abs: (v: number) => Math.abs(v),
+      enumerate: (items: unknown[], start: number = 0) => [...items].map((v, i) => [i + start, v]),
       round: (v: number, decimals?: number) => {
         if (decimals !== undefined) {
           const factor = Math.pow(10, decimals);
@@ -202,8 +203,21 @@ function transpilePythonToJs(pyCode: string): string {
     });
   }
 
+  // Apply keyword rewrites outside string literals only, so print("Python is fun") stays intact.
+  const STRING_LITERAL = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)/;
+  function outsideStrings(line: string, fn: (code: string) => string): string {
+    return line
+      .split(STRING_LITERAL)
+      .map((part, i) =>
+        i % 2 === 0 ? fn(part) : part.startsWith('`') ? part.replace(/\$\{([^}]*)\}/g, (_m, e) => '${' + fn(e) + '}') : part
+      )
+      .join('');
+  }
+
   // Pre-process declarations
   const declaredVars = new Set<string>();
+  const classNames = new Set<string>();
+  const classBodyIndents: number[] = []; // body indent of each open class (-1 until its first line)
 
   for (let idx = 0; idx < lines.length; idx++) {
     let rawLine = lines[idx];
@@ -231,17 +245,33 @@ function transpilePythonToJs(pyCode: string): string {
     // F-strings
     trimmed = processFStrings(trimmed);
 
+    // Track whether this line sits directly in a class body
+    if (classBodyIndents[classBodyIndents.length - 1] === -1) {
+      classBodyIndents[classBodyIndents.length - 1] = indentSpaces;
+    }
+    while (classBodyIndents.length && indentSpaces < classBodyIndents[classBodyIndents.length - 1]) {
+      classBodyIndents.pop();
+    }
+    const inClassBody =
+      classBodyIndents.length > 0 && indentSpaces === classBodyIndents[classBodyIndents.length - 1];
+
     // Replace Python operators and keywords
     // 'and' -> '&&', 'or' -> '||', 'not' -> '!'
-    trimmed = trimmed
-      .replace(/\band\b/g, '&&')
-      .replace(/\bor\b/g, '||')
-      .replace(/\bnot\s+/g, '!')
-      .replace(/\bTrue\b/g, 'true')
-      .replace(/\bFalse\b/g, 'false')
-      .replace(/\bNone\b/g, 'null')
-      .replace(/\bis\s+not\b/g, '!==')
-      .replace(/\bis\b/g, '===');
+    trimmed = outsideStrings(trimmed, (code) =>
+      code
+        .replace(/\band\b/g, '&&')
+        .replace(/\bor\b/g, '||')
+        .replace(/\bnot\s+/g, '!')
+        .replace(/\bTrue\b/g, 'true')
+        .replace(/\bFalse\b/g, 'false')
+        .replace(/\bNone\b/g, 'null')
+        .replace(/\bis\s+not\b/g, '!==')
+        .replace(/\bis\b/g, '===')
+        .replace(/\bsuper\(\)\.__init__\(/g, 'super(')
+        .replace(/\bself\./g, 'this.')
+        .replace(/\[\s*-\s*(\d+)\s*\]/g, '.at(-$1)')
+        .replace(/(^|[^.\w])([A-Z]\w*)\(/g, (m, pre, name) => (classNames.has(name) ? `${pre}new ${name}(` : m))
+    );
 
     // In operator for strings / lists: "x in list" -> "list.includes(x)" (handled in conditions if simple)
 
@@ -256,16 +286,37 @@ function transpilePythonToJs(pyCode: string): string {
         indentStack.push(indentSpaces + 2);
         continue;
       }
-      // ELIF statement: elif cond:
-      if (header.startsWith('elif ')) {
-        const cond = header.slice(5).trim();
-        // Close prior if block before else if
-        jsLines.push(`} else if (${cond}) {`);
+      // elif / else / except / finally continue the previous block: the dedent above already
+      // emitted its closing brace, so replace that brace with the joined form.
+      const continuation = header.startsWith('elif ')
+        ? `} else if (${header.slice(5).trim()}) {`
+        : header === 'else'
+        ? '} else {'
+        : header.startsWith('except')
+        ? '} catch (e) {'
+        : header === 'finally'
+        ? '} finally {'
+        : null;
+      if (continuation) {
+        if (jsLines[jsLines.length - 1] === '}') jsLines.pop();
+        jsLines.push(continuation);
+        indentStack.push(indentSpaces + 2);
         continue;
       }
-      // ELSE statement: else:
-      if (header === 'else') {
-        jsLines.push(`} else {`);
+      // CLASS: class Name: / class Name(Base):
+      const classMatch = header.match(/^class\s+([A-Za-z_]\w*)\s*(?:\((\w*)\))?$/);
+      if (classMatch) {
+        classNames.add(classMatch[1]);
+        jsLines.push(`class ${classMatch[1]}${classMatch[2] ? ` extends ${classMatch[2]}` : ''} {`);
+        indentStack.push(indentSpaces + 2);
+        classBodyIndents.push(-1);
+        continue;
+      }
+      // METHOD in a class body: def name(self, ...):
+      const methodMatch = inClassBody && header.match(/^def\s+([a-zA-Z_]\w*)\s*\(\s*self\s*,?\s*(.*?)\)$/);
+      if (methodMatch) {
+        jsLines.push(`${methodMatch[1] === '__init__' ? 'constructor' : methodMatch[1]}(${methodMatch[2]}) {`);
+        indentStack.push(indentSpaces + 2);
         continue;
       }
       // WHILE loop: while cond:
@@ -276,12 +327,13 @@ function transpilePythonToJs(pyCode: string): string {
         continue;
       }
       // FOR loop: for x in range(n) or for item in list:
-      const forMatch = header.match(/^for\s+([a-zA-Z_]\w*)\s+in\s+(.+)$/);
+      const forMatch = header.match(/^for\s+([a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)*)\s+in\s+(.+)$/);
       if (forMatch) {
-        const varName = forMatch[1];
+        const names = forMatch[1].split(',').map((n) => n.trim());
         const iterable = forMatch[2];
-        declaredVars.add(varName);
-        jsLines.push(`for (let ${varName} of (${iterable})) {`);
+        names.forEach((n) => declaredVars.add(n));
+        const target = names.length > 1 ? `[${names.join(', ')}]` : names[0];
+        jsLines.push(`for (let ${target} of (${iterable})) {`);
         indentStack.push(indentSpaces + 2);
         continue;
       }
@@ -299,11 +351,6 @@ function transpilePythonToJs(pyCode: string): string {
       if (header === 'try') {
         jsLines.push('try {');
         indentStack.push(indentSpaces + 2);
-        continue;
-      }
-      // EXCEPT
-      if (header.startsWith('except')) {
-        jsLines.push('} catch (e) {');
         continue;
       }
     }
