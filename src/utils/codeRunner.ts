@@ -1,6 +1,6 @@
 // Universal client-side code runner supporting Python, JavaScript, and SQL execution
 import { runPythonCode, ExecutionResult } from './pythonRunner';
-import { LanguageId, TestCase } from '../types';
+import { LanguageId, TestCase, WebCheck } from '../types';
 
 export type { ExecutionResult };
 
@@ -46,6 +46,56 @@ export function passesTestCases(result: ExecutionResult, testCases: TestCase[] =
       tc.contains ? actual.includes(tc.expectedOutput.trim()) : actual === tc.expectedOutput.trim()
     )
   );
+}
+
+export interface WebGradeResult {
+  passed: boolean;
+  results: { label: string; passed: boolean }[];
+}
+
+// Renders HTML/CSS in a hidden frame and checks the live DOM and computed styles.
+// The frame is sandboxed without allow-scripts, so student <script> tags never run.
+export function gradeWebCode(code: string, checks: WebCheck[] = []): WebGradeResult {
+  const frame = document.createElement('iframe');
+  frame.setAttribute('sandbox', 'allow-same-origin');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.tabIndex = -1;
+  // A fixed, off-screen viewport keeps layout-dependent values (widths, grid tracks) predictable.
+  frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;visibility:hidden;';
+  document.body.appendChild(frame);
+  try {
+    const doc = frame.contentDocument!;
+    doc.open();
+    doc.write(code);
+    doc.close();
+    const view = doc.defaultView!;
+
+    const results = checks.map((check) => {
+      let els: Element[] = [];
+      try {
+        els = Array.from(doc.querySelectorAll(check.selector));
+      } catch {
+        // invalid selector in the check itself
+      }
+      const countOk = check.count === undefined ? els.length > 0 : els.length === check.count;
+      const passed =
+        countOk &&
+        els.every((el) => {
+          const css = view.getComputedStyle(el);
+          return (
+            Object.entries(check.style || {}).every(([prop, value]) => css.getPropertyValue(prop).trim() === value) &&
+            Object.entries(check.attr || {}).every(([name, value]) =>
+              value === '' ? el.hasAttribute(name) : el.getAttribute(name)?.trim() === value
+            ) &&
+            (check.text === undefined || (el.textContent || '').trim().includes(check.text))
+          );
+        });
+      return { label: check.label, passed };
+    });
+    return { passed: results.length > 0 && results.every((r) => r.passed), results };
+  } finally {
+    frame.remove();
+  }
 }
 
 // Safe In-Browser JavaScript Runner
