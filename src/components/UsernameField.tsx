@@ -14,7 +14,7 @@ export const USERNAME_MESSAGES: Record<UsernameStatus, string> = {
   unchanged: 'This is your username.',
   taken: 'is taken. Try one of these, or add a number:',
   invalid: 'Use 3 to 20 letters, numbers or underscores, starting with a letter.',
-  not_allowed: "That username isn't allowed. Keep it friendly. CodeLingo is for everyone.",
+  not_allowed: "That username isn't allowed. No swearing, insults, or words about anyone's religion, race, sexuality or disability. CodeLingo is for everyone.",
   reserved: 'That username is reserved. Try another one.',
   error: "We couldn't check that name. Check your connection and try again.",
 };
