@@ -43,7 +43,7 @@ export const SQL_UNITS: Unit[] = [
           },
           {
             id: 'sql-u1-l1-c2',
-            type: 'predict_output',
+            type: 'concept_quiz',
             title: 'Wildcard Meaning',
             instruction: 'What does the asterisk (*) symbol mean in a SELECT statement?',
             codeSnippet: 'SELECT * FROM products;',
@@ -836,10 +836,10 @@ export const SQL_UNITS: Unit[] = [
             instruction: 'users has 5 rows and products has 5 rows. How many rows does this return?',
             codeSnippet: 'SELECT u.name, p.title\nFROM users u\nCROSS JOIN products p;',
             options: [
-              { id: 'opt-1', text: '25' },
-              { id: 'opt-2', text: '10' },
-              { id: 'opt-3', text: '5' },
-              { id: 'opt-4', text: '0' },
+              { id: 'opt-1', text: '25 rows' },
+              { id: 'opt-2', text: '10 rows' },
+              { id: 'opt-3', text: '5 rows' },
+              { id: 'opt-4', text: '0 rows' },
             ],
             correctOptionId: 'opt-1',
             hint: 'Every row pairs with every other row.',
@@ -1172,7 +1172,7 @@ export const SQL_UNITS: Unit[] = [
             type: 'predict_output',
             title: 'RANK vs DENSE_RANK',
             instruction: 'Scores are 100, 90, 90, 80. What do RANK() and DENSE_RANK() give the 80?',
-            codeSnippet: 'SELECT score,\n  RANK() OVER (ORDER BY score DESC),\n  DENSE_RANK() OVER (ORDER BY score DESC)\nFROM results;',
+            codeSnippet: 'WITH results(score) AS (VALUES (100), (90), (90), (80))\nSELECT score,\n  RANK() OVER (ORDER BY score DESC),\n  DENSE_RANK() OVER (ORDER BY score DESC)\nFROM results;',
             options: [
               { id: 'opt-1', text: 'RANK = 4, DENSE_RANK = 3' },
               { id: 'opt-2', text: 'RANK = 3, DENSE_RANK = 3' },

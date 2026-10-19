@@ -10,50 +10,10 @@ import { SQL_ROADMAP_PHASES } from '../src/data/sqlRoadmap';
 import { getPhaseDiagnosticQuestions } from '../src/utils/agentCheckinService';
 import { runUnifiedCode, passesTestCases } from '../src/utils/codeRunner';
 import { PLAYGROUND_TEMPLATES } from '../src/utils/pythonRunner';
+import { SCHEDULED_CHALLENGES } from '../src/data/challenges';
 import type { Challenge, LanguageId, Unit } from '../src/types';
+import { SOLUTIONS } from './solutions';
 
-// Reference solutions: `right` must pass, starter code and every `wrong` must fail.
-const SOLUTIONS: Record<string, { right: string; wrong: string[] }> = {
-  'u1-l1-c4': { right: 'print("Python is fun")', wrong: ['print("python is fun")', 'print("Python is fun!")'] },
-  'u1-l3-c3': { right: '# print("Novice")\nprint("Python Champion")', wrong: ['print("Novice")'] },
-  'u2-l3-c3': { right: 'score = 99\nprint(f"User score is {score}")', wrong: ['score = 99\nprint("User score is score")'] },
-  'u3-l2-c3': { right: 'age = 15\nif age < 18:\n    print("Youth Ticket")\nelse:\n    print("Standard Ticket")', wrong: ['age = 15\nprint("Standard Ticket")'] },
-  'u4-l1-c3': { right: 'total = 0\nfor n in range(1, 5):\n    total = total + n\nprint(total)', wrong: ['total = 0\nfor n in range(1, 4):\n    total = total + n\nprint(total)'] },
-  'u5-l2-c2': { right: 'treasures = ["Gold", "Ruby"]\ntreasures.append("Diamond")\nprint(len(treasures))', wrong: ['treasures = ["Gold", "Ruby"]\nprint(len(treasures))'] },
-  'u6-l2-c2': { right: 'def double_it(n):\n    return n * 2\n\nprint(double_it(7))', wrong: ['def double_it(n):\n    return n + 2\n\nprint(double_it(7))'] },
-  'u7-l1-c2': { right: 'points = [45, 92, 78, 99, 61]\nprint(max(points))', wrong: ['points = [45, 92, 78, 99, 61]\nprint(min(points))'] },
-  'u8-l1-c3': { right: 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x + p.y)', wrong: ['class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x)'] },
-  'u4-l2-c4': { right: 'prices = [3, 5, 2]\ntotal = 0\nfor p in prices:\n    total = total + p\nprint(total)', wrong: ['prices = [3, 5, 2]\ntotal = 0\nfor p in prices:\n    total = p\nprint(total)'] },
-  'u4-l3-c4': { right: 'n = 1\nwhile n < 20:\n    print(n)\n    n = n * 2', wrong: ['n = 1\nwhile n < 20:\n    n = n * 2\n    print(n)'] },
-  'u5-l3-c4': { right: 'stock = {"apples": 5, "pears": 2}\nstock["apples"] = stock["apples"] + 3\nprint(stock["apples"])', wrong: ['stock = {"apples": 5, "pears": 2}\nstock["apples"] = 3\nprint(stock["apples"])'] },
-  'u6-l1-c4': { right: 'def greet(name):\n    print("Hello, " + name)\n\ngreet("Ada")', wrong: ['def greet(name):\n    print("Hello, name")\n\ngreet("Ada")'] },
-  'u6-l3-c4': { right: 'def power(base, exp=2):\n    return base ** exp\n\nprint(power(5))', wrong: ['def power(base, exp=3):\n    return base ** exp\n\nprint(power(5))'] },
-  'u8-l2-c4': { right: 'class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    def speak(self):\n        return "Woof!"\n\nprint(Dog("Rex").speak())', wrong: ['class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    pass\n\nprint(Dog("Rex").speak())'] },
-  'js-u1-l1-c5': { right: 'console.log("CodeLingo");', wrong: ['console.log("codelingo");', 'console.log("Code", "Lingo");'] },
-  'js-u3-l2-c2': { right: 'const square = (x) => x * x;\nconsole.log(square(6));', wrong: ['const square = (x) => x * x;\nconsole.log(square(5));'] },
-  'js-u1-l2-c4': { right: 'const lang = "JavaScript";\nconst year = 1995;\nconsole.log(`${lang} was created in ${year}`);', wrong: ['const lang = "JavaScript";\nconst year = 1995;\nconsole.log("lang was created in year");'] },
-  'js-u2-l2-c5': { right: 'const values = [7, "7", [7]];\nconsole.log(values.map((v) => typeof v).join(" "));', wrong: ['console.log("number string array");'] },
-  'js-u2-l3-c5': { right: 'const a = "4";\nconst b = "6";\nconsole.log(Number(a) + Number(b));', wrong: ['const a = "4";\nconst b = "6";\nconsole.log(a - b);'] },
-  'js-u3-l1-c5': { right: 'const score = 85;\nif (score >= 90) {\n  console.log("A");\n} else if (score >= 80) {\n  console.log("B");\n} else {\n  console.log("C");\n}', wrong: ['const score = 85;\nconsole.log(score >= 80 ? "A" : "B");'] },
-  'js-u3-l3-c5': { right: 'let total = 0;\nfor (let n = 1; n <= 10; n++) {\n  if (n % 2 === 0) total += n;\n}\nconsole.log(total);', wrong: ['let total = 0;\nfor (let n = 1; n <= 10; n++) {\n  total += n;\n}\nconsole.log(total);'] },
-  'js-u3-l4-c4': { right: 'function safeDivide(a, b) {\n  if (b === 0) throw new Error("Cannot divide by zero");\n  return a / b;\n}\n\ntry {\n  console.log(safeDivide(10, 0));\n} catch (err) {\n  console.log(err.message);\n}', wrong: ['function safeDivide(a, b) {\n  if (b === 0) throw "Cannot divide by zero";\n  return a / b;\n}\n\ntry {\n  console.log(safeDivide(10, 0));\n} catch (err) {\n  console.log(err.message);\n}'] },
-  'js-u4-l1-c4': { right: 'const prices = [5, 12, 8, 20];\nconsole.log(prices.filter((p) => p > 7).reduce((sum, p) => sum + p, 0));', wrong: ['const prices = [5, 12, 8, 20];\nconsole.log(prices.reduce((sum, p) => sum + p, 0));'] },
-  'js-u4-l2-c4': { right: 'let a = 1;\nlet b = 2;\n[a, b] = [b, a];\nconsole.log(a, b);', wrong: ['let a = 1;\nlet b = 2;\na = b;\nb = a;\nconsole.log(a, b);'] },
-  'js-u4-l3-c5': { right: 'const tags = ["js", "css", "js", "html", "css"];\nconsole.log(new Set(tags).size);', wrong: ['const tags = ["js", "css", "js", "html", "css"];\nconsole.log(tags.length);'] },
-  'js-u5-l1-c4': { right: 'function createCounter() {\n  let count = 0;\n  return () => ++count;\n}\n\nconst next = createCounter();\nnext();\nnext();\nconsole.log(next());', wrong: ['function createCounter() {\n  return () => {\n    let count = 0;\n    return ++count;\n  };\n}\n\nconst next = createCounter();\nnext();\nnext();\nconsole.log(next());'] },
-  'js-u5-l2-c4': { right: 'function sumTo(n) {\n  if (n <= 0) return 0;\n  return n + sumTo(n - 1);\n}\n\nconsole.log(sumTo(5));', wrong: ['function sumTo(n) {\n  if (n <= 0) return 0;\n  return n + sumTo(n - 2);\n}\n\nconsole.log(sumTo(5));'] },
-  'js-u5-l3-c4': { right: 'const counter = {\n  count: 10,\n  read() {\n    return this.count;\n  },\n};\n\nconst read = counter.read.bind(counter);\nconsole.log(read());', wrong: ['const counter = {\n  count: 10,\n  read() {\n    return this.count;\n  },\n};\n\nconst read = counter.read.bind({});\nconsole.log(read());'] },
-  'js-u6-l1-c4': { right: 'class Rectangle {\n  constructor(w, h) {\n    this.w = w;\n    this.h = h;\n  }\n  area() {\n    return this.w * this.h;\n  }\n}\n\nconsole.log(new Rectangle(3, 4).area());', wrong: ['class Rectangle {\n  constructor(w, h) {\n    this.w = w;\n    this.h = h;\n  }\n  area() {\n    return this.w + this.h;\n  }\n}\n\nconsole.log(new Rectangle(3, 4).area());'] },
-  'js-u8-l1-c3': { right: 'const settings = { volume: 0, theme: null };\nconsole.log(settings.volume ?? 50, settings.theme ?? "light");', wrong: ['const settings = { volume: 0, theme: null };\nconsole.log(settings.volume || 50, settings.theme || "light");'] },
-  'js-u8-l3-c3': { right: 'const prefs = { theme: "dark", fontSize: 16 };\nconst copy = JSON.parse(JSON.stringify(prefs));\nconsole.log(copy.theme);', wrong: ['const prefs = { theme: "dark", fontSize: 16 };\nconsole.log(JSON.stringify(prefs).theme);'] },
-  'js-u9-l1-c3': { right: 'function* range(start, end) {\n  for (let i = start; i < end; i++) yield i;\n}\n\nconsole.log([...range(1, 5)].join(","));', wrong: ['function* range(start, end) {\n  for (let i = start; i <= end; i++) yield i;\n}\n\nconsole.log([...range(1, 5)].join(","));'] },
-  'js-u9-l2-c4': { right: 'function once(fn) {\n  let called = false;\n  return (...args) => {\n    if (called) return;\n    called = true;\n    return fn(...args);\n  };\n}\n\nconst init = once(() => console.log("init"));\ninit();\ninit();\ninit();', wrong: ['function once(fn) {\n  return fn;\n}\n\nconst init = once(() => console.log("init"));\ninit();\ninit();\ninit();'] },
-  'sql-u1-l1-c4': { right: 'SELECT name, role, points FROM users;', wrong: ['SELECT * FROM users;', 'SELECT name, role FROM users;'] },
-  'sql-u1-l2-c3': { right: 'SELECT title, price FROM products WHERE price < 100;', wrong: ['SELECT title, price FROM products', 'SELECT title, price FROM products WHERE price > 100;'] },
-  'sql-u2-l1-c2': { right: 'SELECT name, points FROM users ORDER BY points DESC LIMIT 3;', wrong: ['SELECT name, points FROM users ORDER BY points ASC LIMIT 3;', 'SELECT name, points FROM users LIMIT 3;'] },
-  'sql-u2-l2-c3': { right: "SELECT name FROM users WHERE name LIKE '%li%';", wrong: ['SELECT name FROM users', "SELECT name FROM users WHERE name LIKE '%a%';"] },
-  'sql-u5-l1-c1': { right: "SELECT COUNT(*) FROM users WHERE role = 'Developer';", wrong: ['SELECT COUNT(*) FROM users', "SELECT COUNT(*) FROM users WHERE role = 'Designer';"] },
-};
 
 const TRACKS: [LanguageId, Unit[], { id: string; nodes: any[] }[]][] = [
   ['python', PYTHON_UNITS, PYTHON_ROADMAP_PHASES],
@@ -164,6 +124,21 @@ for (const [lang, units, phases] of TRACKS) {
   for (const l of lessonUnit.keys()) if (!linked.has(l)) warnings.push(`${l}: not on any roadmap milestone`);
 
   console.log(`${lang}: ${units.length} units, ${lessonUnit.size} lessons, ${challenges} challenges, ${phases.length} phases, ${nodeIds.size} milestones`);
+}
+
+// Scheduled challenges are graded by exact output match in the app's runner.
+for (const ch of SCHEDULED_CHALLENGES) {
+  const s = SOLUTIONS[ch.id];
+  const passes = (code: string) => {
+    const r = runUnifiedCode(code, ch.language);
+    return r.success && r.output.trim() === ch.expectedOutput.trim();
+  };
+  if (!s) fail(`${ch.id}: no reference solution`);
+  else {
+    if (!passes(s.right)) fail(`${ch.id}: reference solution fails in the app runner`);
+    if (passes(ch.starterCode)) fail(`${ch.id}: starter code already passes`);
+    for (const w of s.wrong) if (passes(w)) fail(`${ch.id}: wrong answer passes: ${w}`);
+  }
 }
 
 // The Python playground's own examples must run cleanly.
