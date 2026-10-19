@@ -41,21 +41,32 @@ export interface PendingProfile {
   active_language: string;
   career_goal: string;
   daily_goal_xp: number;
+  username?: string;
 }
 
 export function savePendingProfile(p: PendingProfile) {
   try { localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(p)); } catch { /* storage blocked */ }
 }
 
-export async function flushPendingProfile(session: Session) {
+// Returns the username that was saved, if any.
+export async function flushPendingProfile(session: Session): Promise<string | undefined> {
   if (!supabase) return;
   let pending: PendingProfile | null = null;
   try { pending = JSON.parse(localStorage.getItem(PENDING_PROFILE_KEY) || 'null'); } catch { /* ignore */ }
   if (!pending) return;
   // Only learners who passed the 13+ check reach the sign-up form, so confirming age here is accurate.
-  const { error } = await supabase
+  const save = (p: PendingProfile) => supabase!
     .from('profiles')
-    .update({ ...pending, age_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({ ...p, age_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq('id', session.user.id);
-  if (!error) localStorage.removeItem(PENDING_PROFILE_KEY);
+  let { error } = await save(pending);
+  if (error && pending.username && (error.code === '23505' || error.code === '23514')) {
+    // Someone claimed the name between the check and the email link: save the rest; they pick another in Profile.
+    const { username: _taken, ...rest } = pending;
+    ({ error } = await save(rest));
+    pending = rest;
+  }
+  if (error) return;
+  localStorage.removeItem(PENDING_PROFILE_KEY);
+  return pending.username;
 }

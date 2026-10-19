@@ -199,6 +199,7 @@ export interface ProfileCustomization {
   bio: string;
   banner: string; // id from data/profileOptions BANNERS
   featuredBadges: string[]; // badge ids shown on the profile
+  username?: string; // claimed on the server; never pushed by sync
 }
 
 export interface UserStats {

@@ -475,6 +475,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (item.isUser) {
           return {
             ...item,
+            name: stats.profile?.displayName || 'You',
+            username: stats.profile?.username ? `@${stats.profile.username}` : '@you',
             xp: stats.leagueWeeklyXp,
             streak: stats.streak,
           };
@@ -483,7 +485,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       return [...updated].sort((a, b) => b.xp - a.xp);
     });
-  }, [stats.leagueWeeklyXp, stats.streak]);
+  }, [stats.leagueWeeklyXp, stats.streak, stats.profile?.displayName, stats.profile?.username]);
 
   // Badge evaluation helper
   const evaluateBadges = (currentStats: UserStats) => {

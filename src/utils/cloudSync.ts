@@ -109,6 +109,7 @@ export function fromRows(r: { progress: Row; profile: Row; lessons: Row[]; achie
     profile: {
       displayName: r.profile.display_name || '', avatar: r.profile.avatar ?? DEFAULT_PROFILE.avatar, bio: r.profile.bio ?? '',
       banner: r.profile.banner ?? DEFAULT_PROFILE.banner, featuredBadges: r.profile.featured_badges ?? [],
+      username: r.profile.username || '',
     },
   };
 }
