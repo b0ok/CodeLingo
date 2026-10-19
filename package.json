@@ -11,6 +11,7 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "check:curriculum": "tsx scripts/check-curriculum.ts",
+    "check:sync": "tsx scripts/check-sync.ts",
     "verify:snippets": "tsx scripts/verify-snippets.ts",
     "export:review": "tsx scripts/export-review.ts"
   },
