@@ -247,6 +247,7 @@ export type RoadmapPhaseId =
   | 'responsive-modern'
   // JavaScript phases
   | 'js-basics'
+  | 'js-control-flow'
   | 'js-data-structures'
   | 'js-functions-closures'
   | 'js-oop-prototypes'
