@@ -44,6 +44,8 @@ function describeAnswer(c: Challenge): string | null {
     case 'predict_output':
     case 'concept_quiz':
       return c.options?.find((o) => o.id === c.correctOptionId)?.text ?? null;
+    case 'matching':
+      return (c.matchPairs || []).map((p) => `${p.left} → ${p.right}`).join('\n');
     case 'spot_bug':
       return c.buggyLineIndex == null ? null : `Line ${c.buggyLineIndex + 1}: ${c.buggyCodeLines?.[c.buggyLineIndex]}`;
     case 'code_runner':
@@ -86,6 +88,11 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
   const [runnerOutput, setRunnerOutput] = useState<string>('');
   const [runnerError, setRunnerError] = useState<string | null>(null);
   const [isRunningCode, setIsRunningCode] = useState(false);
+
+  // 6. matching: matches maps a left index to the pair index chosen on the right
+  const [matchRightOrder, setMatchRightOrder] = useState<number[]>([]);
+  const [matches, setMatches] = useState<Record<number, number>>({});
+  const [activeLeft, setActiveLeft] = useState<number | null>(null);
 
   const [webResults, setWebResults] = useState<WebGradeResult | null>(null);
   const [optionOrder, setOptionOrder] = useState<string[]>([]);
@@ -130,6 +137,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       setOptionOrder(shuffle((currentChallenge.options || []).map((o) => o.id)));
     } else if (currentChallenge.type === 'spot_bug') {
       setSelectedBugLine(null);
+    } else if (currentChallenge.type === 'matching') {
+      const indexes = (currentChallenge.matchPairs || []).map((_, i) => i);
+      let order = shuffle(indexes);
+      // Never line every answer up beside its term
+      if (indexes.length > 1 && order.every((v, i) => v === i)) order = [...indexes.slice(1), indexes[0]];
+      setMatchRightOrder(order);
+      setMatches({});
+      setActiveLeft(0);
     } else if (currentChallenge.type === 'code_runner') {
       setUserCode(currentChallenge.starterCode || '');
       setRunnerOutput('');
@@ -166,6 +181,30 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     copy[index] = copy[newIdx];
     copy[newIdx] = temp;
     setOrderedLineIds(copy);
+  };
+
+  // Matching: pick a term, then its partner. Picking a matched term unpairs it.
+  const handleSelectLeft = (leftIdx: number) => {
+    if (status !== 'unsubmitted') return;
+    sound.playTap();
+    if (leftIdx in matches) {
+      const next = { ...matches };
+      delete next[leftIdx];
+      setMatches(next);
+    }
+    setActiveLeft(leftIdx);
+  };
+
+  const handleSelectRight = (pairIdx: number) => {
+    if (status !== 'unsubmitted' || activeLeft === null) return;
+    sound.playTap();
+    const next: Record<number, number> = {};
+    for (const [l, r] of Object.entries(matches)) if (r !== pairIdx) next[Number(l)] = r;
+    next[activeLeft] = pairIdx;
+    setMatches(next);
+    const total = currentChallenge.matchPairs?.length || 0;
+    const nextOpen = Array.from({ length: total }, (_, i) => i).find((i) => !(i in next));
+    setActiveLeft(nextOpen ?? null);
   };
 
   // Run Code in browser
@@ -209,6 +248,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       isCorrect = selectedOptionId === currentChallenge.correctOptionId;
     } else if (currentChallenge.type === 'spot_bug') {
       isCorrect = selectedBugLine === currentChallenge.buggyLineIndex;
+    } else if (currentChallenge.type === 'matching') {
+      const pairs = currentChallenge.matchPairs || [];
+      isCorrect = pairs.length > 0 && pairs.every((_, i) => matches[i] === i);
     } else if (isWebRunner) {
       const graded = gradeWebCode(userCode, currentChallenge.webChecks);
       setWebResults(graded);
@@ -248,6 +290,13 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       setSelectedOptionId(null);
     } else if (currentChallenge.type === 'spot_bug') {
       setSelectedBugLine(null);
+    } else if (currentChallenge.type === 'matching') {
+      // Keep the pairs that were right; clear only the wrong ones
+      const kept: Record<number, number> = {};
+      for (const [l, r] of Object.entries(matches)) if (Number(l) === r) kept[r] = r;
+      setMatches(kept);
+      const total = currentChallenge.matchPairs?.length || 0;
+      setActiveLeft(Array.from({ length: total }, (_, i) => i).find((i) => !(i in kept)) ?? null);
     }
   };
 
@@ -286,6 +335,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     }
     if (currentChallenge.type === 'spot_bug') {
       return selectedBugLine !== null;
+    }
+    if (currentChallenge.type === 'matching') {
+      return Object.keys(matches).length === (currentChallenge.matchPairs?.length || 0);
     }
     if (currentChallenge.type === 'code_runner') {
       return userCode.trim().length > 0;
@@ -539,6 +591,79 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* 6. MATCHING */}
+            {currentChallenge.type === 'matching' && (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">Tap an item on the left, then its match on the right:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    {currentChallenge.matchPairs?.map((pair, leftIdx) => {
+                      const matchedTo = matches[leftIdx];
+                      const isMatched = matchedTo !== undefined;
+                      const isActive = activeLeft === leftIdx && status === 'unsubmitted';
+                      const judged = status === 'retry' || status === 'wrong';
+                      return (
+                        <button
+                          key={leftIdx}
+                          onClick={() => handleSelectLeft(leftIdx)}
+                          disabled={status !== 'unsubmitted'}
+                          aria-pressed={isActive}
+                          aria-label={`${pair.left}${isMatched ? `, matched with ${currentChallenge.matchPairs![matchedTo].right}` : ''}`}
+                          className={`w-full min-h-[48px] p-3 rounded-xl border-2 text-left font-mono text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                            judged && isMatched
+                              ? matchedTo === leftIdx
+                                ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                                : 'bg-rose-50 border-rose-500 text-rose-900'
+                              : isActive
+                              ? 'bg-emerald-50 border-emerald-500 text-slate-900'
+                              : isMatched
+                              ? 'bg-slate-100 border-slate-400 text-slate-800'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                          }`}
+                        >
+                          <span className="w-5 h-5 shrink-0 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center tabular-nums">
+                            {leftIdx + 1}
+                          </span>
+                          <span className="min-w-0 break-words">{pair.left}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-2">
+                    {matchRightOrder.map((pairIdx) => {
+                      const pair = currentChallenge.matchPairs?.[pairIdx];
+                      if (!pair) return null;
+                      const leftEntry = Object.entries(matches).find(([, r]) => r === pairIdx);
+                      const leftIdx = leftEntry ? Number(leftEntry[0]) : null;
+                      return (
+                        <button
+                          key={pairIdx}
+                          onClick={() => handleSelectRight(pairIdx)}
+                          disabled={status !== 'unsubmitted' || activeLeft === null}
+                          aria-label={`${pair.right}${leftIdx !== null ? `, matched with item ${leftIdx + 1}` : ''}`}
+                          className={`w-full min-h-[48px] p-3 rounded-xl border-2 text-left text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer disabled:cursor-default ${
+                            leftIdx !== null
+                              ? 'bg-slate-100 border-slate-400 text-slate-800'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                          }`}
+                        >
+                          <span
+                            className={`w-5 h-5 shrink-0 rounded-full text-xs flex items-center justify-center tabular-nums ${
+                              leftIdx !== null ? 'bg-slate-900 text-white' : 'border-2 border-dashed border-slate-300'
+                            }`}
+                            aria-hidden="true"
+                          >
+                            {leftIdx !== null ? leftIdx + 1 : ''}
+                          </span>
+                          <span className="min-w-0 break-words">{pair.right}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
