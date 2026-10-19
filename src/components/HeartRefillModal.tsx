@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
 import { sound } from '../utils/soundEffects';
-import { X, Heart, Gem, Dumbbell, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, Heart, Circle, Dumbbell, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface HeartRefillModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
 
   if (!isOpen) return null;
 
-  // Mini review drill questions to earn hearts back for free
+  // Mini review drill questions to earn life points back for free
   const drillQuestions = [
     {
       q: 'Which function prints text to the screen in Python?',
@@ -53,7 +53,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
         setDrillStep((prev) => prev + 1);
         setSelectedDrillOption(null);
       } else {
-        // Complete drill and restore all hearts!
+        // Complete drill and restore all life points
         refillHearts();
         setDrillSuccess(true);
         sound.playVictory();
@@ -65,7 +65,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Hearts" onClose={onClose}>
+    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Life points" onClose={onClose}>
       <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
         <button
           onClick={onClose}
@@ -81,12 +81,12 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
 
             <div className="space-y-1">
               <h3 className="text-2xl font-extrabold text-slate-900">
-                {stats.hearts === 0 ? 'Out of Hearts!' : 'Heart Sanctuary'}
+                {stats.hearts === 0 ? 'Out of life points' : 'Life point sanctuary'}
               </h3>
               <p className="text-sm text-slate-600">
                 {stats.hearts === 0
-                  ? 'Keep mistakes from stopping your progress! Practice to earn hearts back or refill with gems.'
-                  : `You currently have ${stats.hearts} of ${stats.maxHearts} hearts.`}
+                  ? 'Take a free practice drill to earn your life points back, or refill them with gold rings.'
+                  : `You have ${stats.hearts} of ${stats.maxHearts} life points.`}
               </p>
             </div>
 
@@ -102,39 +102,39 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
                   </div>
                   <div>
                     <div className="font-bold text-sm text-slate-900 group-hover:text-emerald-700">
-                      Free Heart Practice Drill
+                      Free practice drill
                     </div>
                     <div className="text-xs text-slate-500">
-                      Answer 3 quick review questions to refill all hearts
+                      Answer 3 quick review questions to refill all life points
                     </div>
                   </div>
                 </div>
                 <span className="text-xs font-extrabold text-emerald-700 uppercase">FREE</span>
               </button>
 
-              {/* Option 2: Gem Refill */}
+              {/* Option 2: gold ring refill */}
               <button
                 onClick={() => {
                   if (refillHeartsWithGems()) {
                     onClose();
                   } else {
-                    alert('Not enough gems! Complete lessons to earn gems.');
+                    alert('You need 20 gold rings for a refill. Finish lessons to earn more.');
                   }
                 }}
                 disabled={stats.gems < 20}
-                className="w-full p-4 border-2 border-slate-200 hover:border-cyan-400 rounded-2xl flex items-center justify-between cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full p-4 border-2 border-slate-200 hover:border-yellow-400 rounded-2xl flex items-center justify-between cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                     <Heart className="w-5 h-5 fill-rose-500" />
                   </div>
                   <div>
-                    <div className="font-bold text-sm text-slate-900">Refill Full Hearts</div>
-                    <div className="text-xs text-slate-500">Instantly replenish all 5 hearts</div>
+                    <div className="font-bold text-sm text-slate-900">Refill all life points</div>
+                    <div className="text-xs text-slate-500">Get all 5 life points back now</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-cyan-600 font-bold text-sm">
-                  <Gem className="w-4 h-4 fill-cyan-400" />
+                <div className="flex items-center gap-1 text-amber-700 font-bold text-sm">
+                  <Circle strokeWidth={3} className="w-4 h-4 text-yellow-500" />
                   <span>20</span>
                 </div>
               </button>
@@ -145,7 +145,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
                   if (buyStreakFreeze()) {
                     alert('Streak Freeze purchased! Your streak is protected.');
                   } else {
-                    alert('Need 50 gems for a Streak Freeze!');
+                    alert('You need 50 gold rings for a streak freeze. Finish lessons to earn more.');
                   }
                 }}
                 disabled={stats.gems < 50}
@@ -160,8 +160,8 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
                     <div className="text-xs text-slate-500">Protects your streak if you miss a day</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-cyan-600 font-bold text-sm">
-                  <Gem className="w-4 h-4 fill-cyan-400" />
+                <div className="flex items-center gap-1 text-amber-700 font-bold text-sm">
+                  <Circle strokeWidth={3} className="w-4 h-4 text-yellow-500" />
                   <span>50</span>
                 </div>
               </button>
@@ -170,9 +170,9 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
         ) : drillSuccess ? (
           <div className="text-center py-6 space-y-4">
             <CheckCircle2 className="w-14 h-14 text-emerald-500 mx-auto" />
-            <h3 className="text-2xl font-extrabold text-slate-900">Hearts Restored!</h3>
+            <h3 className="text-2xl font-extrabold text-slate-900">Life points restored</h3>
             <p className="text-sm text-slate-600">
-              You crushed the drill. All 5 hearts are refilled and ready for new coding challenges!
+              You crushed the drill. All 5 life points are refilled and ready for new coding challenges!
             </p>
             <button
               onClick={() => {
@@ -187,7 +187,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
         ) : (
           <div className="space-y-5">
             <div className="flex items-center justify-between text-xs font-bold text-emerald-600">
-              <span>Heart Drill · Question {drillStep + 1} of 3</span>
+              <span>Practice drill · Question {drillStep + 1} of 3</span>
             </div>
 
             <h4 className="text-lg font-bold text-slate-900">

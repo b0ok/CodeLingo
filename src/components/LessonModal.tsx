@@ -242,7 +242,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       sound.playSuccess();
       setStatus('correct');
     } else if (attempt === 0) {
-      // First miss costs one heart and earns a second try with the hint open.
+      // First miss costs one life point and earns a second try with the hint open.
       sound.playError();
       setStatus('retry');
       setShowHint(true);
@@ -347,7 +347,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
           />
         </div>
 
-        {/* Hearts Remaining */}
+        {/* Life points remaining */}
         <div className="flex items-center gap-1.5 text-rose-500 font-bold text-sm">
           <Heart className="w-5 h-5 fill-rose-500" />
           <span className="tabular-nums">
@@ -737,9 +737,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                 <div className="text-xl font-extrabold text-amber-600 tabular-nums">+{lesson.xpReward}</div>
                 <div className="text-xs font-bold text-amber-800 uppercase mt-0.5">Total XP</div>
               </div>
-              <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-2xl">
-                <div className="text-xl font-extrabold text-cyan-600 tabular-nums">+{lesson.gemReward}</div>
-                <div className="text-xs font-bold text-cyan-800 uppercase mt-0.5">Gems</div>
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                <div className="text-xl font-extrabold text-amber-700 tabular-nums">+{lesson.gemReward}</div>
+                <div className="text-xs font-bold text-amber-900 uppercase mt-0.5">Gold rings</div>
               </div>
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
                 <div className="text-xl font-extrabold text-rose-600 tabular-nums">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { getRoadmapProgress } from '../data/roadmapProgress';
-import { Flame, Gem, Trophy, ChevronRight, ShieldCheck, Sparkles, Target, Settings2, Check, Plus, Minus, CheckSquare, Shuffle, Play, Compass, Brain } from 'lucide-react';
+import { Flame, Circle, Trophy, ChevronRight, ShieldCheck, Sparkles, Target, Settings2, Check, Plus, Minus, CheckSquare, Shuffle, Play, Compass, Brain } from 'lucide-react';
 import { sound } from '../utils/soundEffects';
 import { HabitRoutinePrompt } from './HabitRoutinePrompt';
 import { CAREER_TRACKS } from '../data/pythonRoadmap';
@@ -391,8 +391,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                       </div>
                       {/* Reward text */}
                       <div className="flex items-center gap-2 mt-0.5 text-xs font-semibold text-slate-500">
-                        <span className="flex items-center gap-0.5 text-cyan-600 font-bold">
-                          <Gem className="w-2.5 h-2.5 fill-cyan-400" />
+                        <span className="flex items-center gap-0.5 text-amber-700 font-bold">
+                          <Circle strokeWidth={3} className="w-2.5 h-2.5 text-yellow-500" />
                           <span>+{task.rewardGems}</span>
                         </span>
                         <span>·</span>
