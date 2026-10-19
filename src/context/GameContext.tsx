@@ -3,6 +3,9 @@ import { UserStats, DailyQuest, LeaderboardEntry, Badge, LeagueTier, LanguageId,
 import { INITIAL_BADGES } from '../data/badges';
 import { INITIAL_LEADERBOARD_USERS } from '../data/leaderboard';
 import { sound } from '../utils/soundEffects';
+import { supabase, useSession } from '../utils/supabase';
+import { CloudState, Rows, pick, merge, hasProgress, toRows, changedRows, pull, push } from '../utils/cloudSync';
+import { SyncChoiceDialog } from '../components/SyncChoiceDialog';
 import {
   PersonalizedGoalReminder,
   NotificationPermissionState,
@@ -72,7 +75,11 @@ interface GameContextType {
   roadmapModalNodeId?: string;
   openRoadmapModal: (nodeId?: string, tab?: 'roadmap' | 'checkin' | 'track') => void;
   closeRoadmapModal: () => void;
+  syncStatus: SyncStatus;
 }
+
+export type SyncStatus = 'off' | 'loading' | 'saved' | 'saving' | 'offline';
+const SYNCED_USER_KEY = 'codelingo_synced_user';
 
 const STORAGE_KEY = 'codelingo_user_stats_v2';
 const QUESTS_KEY = 'codelingo_quests_v2';
@@ -162,13 +169,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           dailyGoalTarget: parsed.dailyGoalTarget || 50,
           activeLanguage: parsed.activeLanguage || 'python',
           subscriptionTier: parsed.subscriptionTier || 'free',
-          notificationsEnabled: parsed.notificationsEnabled ?? true,
           dailyRoutineTime: parsed.dailyRoutineTime || '20:00',
-          receivedHighFives: parsed.receivedHighFives || 7,
-          sentHighFives: parsed.sentHighFives || 3,
           completedChallenges: parsed.completedChallenges || [],
           inactivityIntervalSec: parsed.inactivityIntervalSec || 60,
-          inactivityAlertsEnabled: parsed.inactivityAlertsEnabled ?? true,
         };
       }
     } catch {
@@ -326,6 +329,98 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   }, [stats]);
+
+  // ---------- Cloud progress (signed-in learners) ----------
+  // ponytail: last write wins between devices; fine for one learner switching devices, not for two at once.
+  const session = useSession();
+  const userId = session?.user.id ?? null;
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('off');
+  const [syncChoice, setSyncChoice] = useState<{ local: CloudState; cloud: CloudState } | null>(null);
+  const lastPushed = useRef<Rows | null>(null);
+  const statsRef = useRef(stats);
+  statsRef.current = stats;
+
+  const applyCloud = useCallback((s: CloudState) => {
+    setStats((prev) => ({ ...prev, ...s }));
+    setBadges((prev) => prev.map((b) => (s.unlockedBadgeIds.includes(b.id) ? { ...b, isUnlocked: true, currentProgress: b.maxProgress } : b)));
+    sound.setMuted(!s.soundEnabled);
+  }, []);
+
+  // Save everything that changed since the last save.
+  const flush = useCallback(async () => {
+    if (!supabase || !userId || !lastPushed.current) return;
+    const rows = toRows(pick(statsRef.current));
+    const diff = changedRows(rows, lastPushed.current);
+    if (!Object.keys(diff).length) return;
+    setSyncStatus('saving');
+    try {
+      await push(supabase, userId, diff);
+      lastPushed.current = rows;
+      setSyncStatus('saved');
+    } catch {
+      setSyncStatus('offline'); // the next change or tab switch tries again
+    }
+  }, [userId]);
+
+  const finishLink = useCallback(async (result: CloudState, cloud: CloudState) => {
+    if (!supabase || !userId) return;
+    applyCloud(result);
+    try {
+      await push(supabase, userId, changedRows(toRows(result), toRows(cloud)));
+      lastPushed.current = toRows(result);
+      localStorage.setItem(SYNCED_USER_KEY, userId);
+      setSyncStatus('saved');
+    } catch {
+      lastPushed.current = toRows(cloud);
+      setSyncStatus('offline');
+    }
+  }, [userId, applyCloud]);
+
+  // On sign-in: load the account, and decide what happens to this device's progress.
+  useEffect(() => {
+    lastPushed.current = null;
+    setSyncChoice(null);
+    if (!supabase || !userId) { setSyncStatus('off'); return; }
+    let cancelled = false;
+    setSyncStatus('loading');
+    pull(supabase, userId).then((cloud) => {
+      if (cancelled) return;
+      const local = pick(statsRef.current);
+      const linked = localStorage.getItem(SYNCED_USER_KEY) === userId;
+      if (!hasProgress(cloud)) finishLink(merge(local, cloud), cloud); // new account: bring this device's progress in
+      else if (linked || !hasProgress(local)) {
+        applyCloud(cloud);
+        lastPushed.current = toRows(cloud);
+        localStorage.setItem(SYNCED_USER_KEY, userId);
+        setSyncStatus('saved');
+      } else setSyncChoice({ local, cloud });
+    }).catch(() => !cancelled && setSyncStatus('offline'));
+    return () => { cancelled = true; };
+  }, [userId, applyCloud, finishLink]);
+
+  // Save a moment after progress changes.
+  useEffect(() => {
+    if (!lastPushed.current) return;
+    const timer = setTimeout(flush, 1500);
+    return () => clearTimeout(timer);
+  }, [stats, flush]);
+
+  // Leaving the tab saves now; coming back picks up progress made on another device.
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    const onVisibility = async () => {
+      if (!lastPushed.current) return;
+      if (document.visibilityState === 'hidden') { flush(); return; }
+      await flush();
+      try {
+        const cloud = await pull(supabase!, userId);
+        applyCloud(cloud);
+        lastPushed.current = toRows(cloud);
+      } catch { /* stay on local data until the next try */ }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [userId, flush, applyCloud]);
 
   useEffect(() => {
     localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
@@ -817,16 +912,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         snoozeInactivityReminder,
         targetCareerTrack: stats.targetCareerTrack || 'ai-ml',
         setTargetCareerTrack,
-        checkedInNodes: stats.checkedInNodes || ['rm-print-io'],
+        checkedInNodes: stats.checkedInNodes || [],
         markNodeCheckedIn,
         isRoadmapModalOpen,
         roadmapModalInitialTab,
         roadmapModalNodeId,
         openRoadmapModal,
         closeRoadmapModal,
+        syncStatus,
       }}
     >
       {children}
+      {syncChoice && (
+        <SyncChoiceDialog
+          local={syncChoice.local}
+          cloud={syncChoice.cloud}
+          onChoose={(choice) => {
+            const { local, cloud } = syncChoice;
+            setSyncChoice(null);
+            finishLink(choice === 'combine' ? merge(local, cloud) : cloud, cloud);
+          }}
+        />
+      )}
     </GameContext.Provider>
   );
 };
