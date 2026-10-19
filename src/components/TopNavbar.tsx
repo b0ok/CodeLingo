@@ -3,11 +3,11 @@ import { useGame } from '../context/GameContext';
 import { PATHWAYS_DATA } from '../data/curriculum';
 import { getRoadmapProgress } from '../data/roadmapProgress';
 import { LanguageId } from '../types';
-import { Flame, Heart, Circle, Volume2, VolumeX, Code2, ChevronDown, Check, Crown, Bell, BellRing, Radio, Compass } from 'lucide-react';
+import { Flame, Heart, Circle, Settings, Code2, ChevronDown, Check, Crown, Bell, BellRing, Radio, Compass } from 'lucide-react';
 
 interface TopNavbarProps {
-  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile';
-  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile') => void;
+  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings';
+  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings') => void;
   onOpenHeartModal: () => void;
   onOpenMonetizationModal: () => void;
 }
@@ -20,7 +20,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 }) => {
   const {
     stats,
-    toggleSound,
     activeLanguage,
     setActiveLanguage,
     notificationPermission,
@@ -34,7 +33,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile'; label: string }[] = [
+  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings'; label: string }[] = [
     { id: 'learn', label: 'Learn' },
     { id: 'practice', label: 'Practice' },
     { id: 'challenges', label: 'Challenges' },
@@ -333,18 +332,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             )}
           </div>
 
-          {/* Sound Toggle */}
+          {/* Settings */}
           <button
-            onClick={toggleSound}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-            aria-label="Sound effects"
-            aria-pressed={stats.soundEnabled}
+            onClick={() => setActiveTab('settings')}
+            className={`p-2 rounded-lg transition-colors cursor-pointer ${activeTab === 'settings' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+            aria-label="Settings"
+            aria-current={activeTab === 'settings' ? 'page' : undefined}
           >
-            {stats.soundEnabled ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4 text-slate-500" />
-            )}
+            <Settings className="w-4 h-4" aria-hidden="true" />
           </button>
 
         </div>
