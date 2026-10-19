@@ -6,6 +6,9 @@ import { supabase, useSession } from '../utils/supabase';
 import { AccountDialog } from './Onboarding';
 import { HabitRoutinePrompt } from './HabitRoutinePrompt';
 import { Modal } from './Modal';
+import { TriangleAlert } from 'lucide-react';
+
+const DELETE_PHRASE = 'delete my account';
 
 const DAILY_GOALS = [
   { xp: 20, label: 'Casual', minutes: 5 },
@@ -58,6 +61,33 @@ export const SettingsView: React.FC<{ onOpenPlans: () => void; onStartQuickLesso
   const [confirm, setConfirm] = useState<'clear' | 'delete' | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [typedEmail, setTypedEmail] = useState('');
+  const [typedPhrase, setTypedPhrase] = useState('');
+  const [fieldError, setFieldError] = useState<{ email?: string; phrase?: string }>({});
+
+  const closeConfirm = () => {
+    if (busy) return;
+    setConfirm(null);
+    setProblem(null);
+    setTypedEmail('');
+    setTypedPhrase('');
+    setFieldError({});
+  };
+
+  // Both must match before anything is deleted.
+  const confirmDelete = () => {
+    const errors: { email?: string; phrase?: string } = {};
+    if (typedEmail.trim().toLowerCase() !== (session?.user.email || '').toLowerCase()) {
+      errors.email = "That doesn't match the email on this account.";
+    }
+    if (typedPhrase.trim().toLowerCase() !== DELETE_PHRASE) {
+      errors.phrase = `Type "${DELETE_PHRASE}" exactly.`;
+    }
+    setFieldError(errors);
+    if (errors.email) document.getElementById('delete-email')?.focus();
+    else if (errors.phrase) document.getElementById('delete-phrase')?.focus();
+    else deleteAccount();
+  };
 
   const deleteAccount = async () => {
     if (!supabase) return;
@@ -201,7 +231,7 @@ export const SettingsView: React.FC<{ onOpenPlans: () => void; onStartQuickLesso
         <Modal
           className="fixed inset-0 z-50 bg-slate-900/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
           label={confirm === 'delete' ? 'Delete your account?' : 'Clear this device?'}
-          onClose={() => { if (!busy) { setConfirm(null); setProblem(null); } }}
+          onClose={closeConfirm}
         >
           <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-4">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
@@ -214,18 +244,46 @@ export const SettingsView: React.FC<{ onOpenPlans: () => void; onStartQuickLesso
                   ? "This removes progress saved in this browser. You'll stay signed in, and your account keeps everything."
                   : `This removes your ${stats.xp.toLocaleString()} XP, ${stats.completedLessons.length} completed lessons and streak from this browser. Without an account, it can't be undone.`}
             </p>
+            {confirm === 'delete' && (
+              <>
+                <p className="flex gap-2 p-3 bg-rose-50 border border-rose-200 rounded-2xl text-sm text-rose-900">
+                  <TriangleAlert className="w-5 h-5 shrink-0 text-rose-600" aria-hidden="true" />
+                  <span><strong>Warning:</strong> deleting is permanent. We can't restore your account or progress afterwards.</span>
+                </p>
+                <div className="space-y-1.5">
+                  <label htmlFor="delete-email" className="block font-bold text-slate-800">Enter your account's email</label>
+                  <input
+                    id="delete-email" type="email" autoComplete="off" value={typedEmail} onChange={(e) => setTypedEmail(e.target.value)}
+                    className="w-full p-3 border border-slate-300 rounded-xl text-base aria-[invalid=true]:border-rose-500"
+                    aria-invalid={!!fieldError.email} aria-describedby={fieldError.email ? 'delete-email-error' : undefined}
+                  />
+                  {fieldError.email && <p id="delete-email-error" className="text-sm text-rose-700">{fieldError.email}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="delete-phrase" className="block font-bold text-slate-800">
+                    Type <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">{DELETE_PHRASE}</span> to confirm
+                  </label>
+                  <input
+                    id="delete-phrase" autoComplete="off" spellCheck={false} value={typedPhrase} onChange={(e) => setTypedPhrase(e.target.value)}
+                    className="w-full p-3 border border-slate-300 rounded-xl text-base aria-[invalid=true]:border-rose-500"
+                    aria-invalid={!!fieldError.phrase} aria-describedby={fieldError.phrase ? 'delete-phrase-error' : undefined}
+                  />
+                  {fieldError.phrase && <p id="delete-phrase-error" className="text-sm text-rose-700">{fieldError.phrase}</p>}
+                </div>
+              </>
+            )}
             {problem && <p role="alert" className="text-sm text-rose-700">{problem}</p>}
             <button
               disabled={busy}
               onClick={() => {
-                if (confirm === 'delete') deleteAccount();
+                if (confirm === 'delete') confirmDelete();
                 else { clearThisDevice(); window.location.reload(); }
               }}
               className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl cursor-pointer disabled:opacity-60"
             >
               {confirm === 'delete' ? (busy ? 'Deleting…' : 'Delete my account') : 'Clear this device'}
             </button>
-            <button disabled={busy} onClick={() => { setConfirm(null); setProblem(null); }} className="w-full py-3 border-2 border-slate-300 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 cursor-pointer">
+            <button disabled={busy} onClick={closeConfirm} className="w-full py-3 border-2 border-slate-300 text-slate-800 font-bold rounded-2xl hover:bg-slate-50 cursor-pointer">
               {confirm === 'delete' ? 'Keep my account' : 'Keep my progress'}
             </button>
           </div>
