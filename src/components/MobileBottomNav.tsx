@@ -2,8 +2,8 @@ import React from 'react';
 import { BookOpen, Dumbbell, Trophy, UserRound, MessagesSquare, ChefHat } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile';
-  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile') => void;
+  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings';
+  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings') => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({

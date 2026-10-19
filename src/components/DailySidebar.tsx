@@ -3,7 +3,6 @@ import { useGame } from '../context/GameContext';
 import { getRoadmapProgress } from '../data/roadmapProgress';
 import { Flame, Circle, Trophy, ChevronRight, ShieldCheck, Sparkles, Target, Settings2, Check, Plus, Minus, CheckSquare, Shuffle, Play, Compass, Brain } from 'lucide-react';
 import { sound } from '../utils/soundEffects';
-import { HabitRoutinePrompt } from './HabitRoutinePrompt';
 import { CAREER_TRACKS } from '../data/pythonRoadmap';
 import { WEB_CAREER_TRACKS } from '../data/webRoadmap';
 import { JS_CAREER_TRACKS } from '../data/jsRoadmap';
@@ -671,7 +670,6 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
       )}
 
       {/* 5. Daily Habit Engine & Routine Prompts */}
-      <HabitRoutinePrompt onStartQuickLesson={onStartQuickLesson || onOpenShop} />
 
       {/* 6. Mascot Daily Coder Tip */}
       <div className="p-4 bg-emerald-50/80 border border-emerald-200/60 rounded-3xl space-y-2">
