@@ -9,7 +9,7 @@ const base: CloudState = {
   targetCareerTrack: 'ai-ml', soundEnabled: true, dailyGoalTarget: 50, dailyRoutineTime: '20:00',
   profile: {
     displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '',
-    snippetLanguage: 'python', snippetCode: '', showcaseStats: [], spaceHtml: '', spaceCss: '',
+    snippetLanguage: 'python', snippetCode: '', showcaseStats: [], spaceHtml: '', spaceCss: '', layout: 'standard',
   },
 };
 
@@ -25,7 +25,7 @@ const laptop: CloudState = {
   profile: {
     displayName: 'T3', avatar: 'fox', bio: 'Learning SQL', banner: 'sunset', featuredBadges: ['first_strike'],
     frame: 'gold', status: 'Cooking SQL', snippetLanguage: 'sql', snippetCode: 'SELECT 1;',
-    showcaseStats: ['streak', 'perfect'], spaceHtml: '<h1>Hi</h1>', spaceCss: 'h1 { color: red; }',
+    showcaseStats: ['streak', 'perfect'], spaceHtml: '<h1>Hi</h1>', spaceCss: 'h1 { color: red; }', layout: 'custom',
   },
 };
 

@@ -41,7 +41,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     { id: 'challenges', label: 'Challenges' },
     { id: 'leagues', label: 'Leagues' },
     { id: 'feed', label: 'Feed' },
-    { id: 'profile', label: 'Profile' },
+    { id: 'profile', label: 'myProfile' },
   ];
 
   // Close dropdowns on outside click

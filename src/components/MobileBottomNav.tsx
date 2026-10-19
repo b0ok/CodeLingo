@@ -16,7 +16,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     { id: 'challenges' as const, label: 'Challenges', icon: ChefHat },
     { id: 'leagues' as const, label: 'Leagues', icon: Trophy },
     { id: 'feed' as const, label: 'Feed', icon: MessagesSquare },
-    { id: 'profile' as const, label: 'Profile', icon: UserRound },
+    { id: 'profile' as const, label: 'myProfile', icon: UserRound },
   ];
 
   return (
