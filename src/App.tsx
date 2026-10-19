@@ -67,7 +67,14 @@ function AppContent() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6 flex gap-8 items-start justify-center">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 pt-6 flex gap-6 items-start justify-center">
+        {/* Left desktop sidebar: daily goal and streak */}
+        <DailySidebar
+          side="left"
+          onOpenLeagues={() => setActiveTab('leagues')}
+          onOpenShop={() => setIsMonetizationModalOpen(true)}
+        />
+
         {/* Center Main Stage */}
         <div className="flex-1 min-w-0 w-full max-w-3xl">
           {activeTab === 'learn' && (
@@ -103,8 +110,9 @@ function AppContent() {
 
         </div>
 
-        {/* Right Desktop Sidebar: Daily Streak Calendar, Quests, Pyto Tips, Habit Engine */}
+        {/* Right desktop sidebar: league, mastery track and tip */}
         <DailySidebar
+          side="right"
           onOpenLeagues={() => setActiveTab('leagues')}
           onOpenShop={() => setIsMonetizationModalOpen(true)}
           onStartQuickLesson={() => {
