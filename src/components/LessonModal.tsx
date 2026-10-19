@@ -32,7 +32,13 @@ interface LessonModalProps {
 }
 
 export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => {
-  const { stats, loseHeart, gainXpAndGems } = useGame();
+  const { stats, loseHeart, gainXpAndGems, trackActivity } = useGame();
+  // Counts toward the "Practice for 5 minutes" task while this screen is open and visible.
+  useEffect(() => {
+    const timer = setInterval(() => document.visibilityState === 'visible' && trackActivity('practiceMinutes'), 60000);
+    return () => clearInterval(timer);
+  }, [trackActivity]);
+
   const [firstTime] = useState(() => !stats.completedLessons.includes(lesson.id));
   const [earned, setEarned] = useState({ xp: 0, rings: 0 });
 
@@ -244,6 +250,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     if (isCorrect) {
       sound.playSuccess();
       setStatus('correct');
+      if (currentChallenge.type === 'spot_bug') trackActivity('bugs');
     } else if (attempt === 0) {
       // First miss costs one life point and earns a second try with the hint open.
       sound.playError();
