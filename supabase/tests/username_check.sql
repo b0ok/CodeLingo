@@ -13,6 +13,14 @@ begin
     ('f4ck_this', 'not_allowed'), ('sh1t_coder', 'not_allowed'), ('a55', 'not_allowed'),
     ('big_dick', 'not_allowed'), ('f_u_c_k', 'not_allowed'), ('sexy_dev', 'not_allowed'),
     ('n4zi', 'not_allowed'), ('hell', 'not_allowed'),
+    -- derogatory: identity words, slurs, hate references
+    ('smalljew', 'not_allowed'), ('small_jew', 'not_allowed'), ('j3w_coder', 'not_allowed'), ('gay_loser', 'not_allowed'),
+    ('g4y_coder', 'not_allowed'), ('muslim_hater', 'not_allowed'), ('dumb_lesbian', 'not_allowed'), ('tranny_dev', 'not_allowed'),
+    ('spic_dev', 'not_allowed'), ('coon_hunter', 'not_allowed'), ('paki_boy', 'not_allowed'), ('retard_dev', 'not_allowed'),
+    ('midget_mike', 'not_allowed'), ('user1488', 'not_allowed'), ('kkk_member', 'not_allowed'), ('whitepower', 'not_allowed'),
+    -- innocent words that contain a blocked one
+    ('jewel_maker', 'ok'), ('spicy_coder', 'ok'), ('raccoon_dev', 'ok'), ('japan_fan', 'ok'), ('pakistan_dev', 'ok'),
+    ('christian_dev', 'ok'), ('mohammed_codes', 'ok'), ('aryan_dev', 'ok'), ('scunthorpe', 'ok'), ('player88', 'ok'),
     ('admin', 'reserved'), ('admin_bob', 'reserved'), ('codelingo_team', 'reserved'), ('pyto', 'reserved'),
     ('ab', 'invalid'), ('1coder', 'invalid'), ('has space', 'invalid'), ('way_too_long_username_here', 'invalid')
   ) as t(name, expected) loop
