@@ -1,4 +1,4 @@
-// Pro "My Space": the learner's own HTML and CSS, shown in a locked-down frame.
+// Pro "myProfile": the learner's own HTML and CSS, shown in a locked-down frame.
 // Three layers keep it safe for learners 13 and up:
 //   1. sanitizeSpaceHtml strips scripts, embeds, forms, event handlers, links and outside sources;
 //   2. the frame is sandboxed with no permissions, so nothing can run even if something slips through;
