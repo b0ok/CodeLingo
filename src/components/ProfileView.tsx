@@ -6,11 +6,14 @@ import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
 import { Modal } from './Modal';
 import { Check, Lock, Pencil } from 'lucide-react';
+import { supabase, useSession } from '../utils/supabase';
+import { UsernameField, useUsernameCheck } from './UsernameField';
 
 const DEFAULT_PROFILE: ProfileCustomization = { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] };
 
 export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans }) => {
   const { stats, badges, currentLeague } = useGame();
+  const session = useSession();
   const [editing, setEditing] = useState(false);
   const profile = { ...DEFAULT_PROFILE, ...stats.profile };
   const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
@@ -44,6 +47,15 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
           <h2 id="profile-heading" className="mt-3 text-2xl font-extrabold text-slate-900 tracking-tight [overflow-wrap:anywhere]">
             {profile.displayName || 'Learner'}
           </h2>
+          {profile.username ? (
+            <p className="text-slate-600">@{profile.username}</p>
+          ) : (
+            session && (
+              <button onClick={() => setEditing(true)} className="text-sm font-bold text-emerald-700 underline cursor-pointer">
+                Claim your @username
+              </button>
+            )
+          )}
           {profile.bio ? (
             <p className="mt-1 text-slate-700 [overflow-wrap:anywhere]">{profile.bio}</p>
           ) : (
@@ -77,15 +89,44 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
 
 const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => void; onOpenPlans: () => void }> = ({ profile, onClose, onOpenPlans }) => {
   const { badges, updateProfile } = useGame();
+  const session = useSession();
   const [draft, setDraft] = useState(profile);
+  const [username, setUsername] = useState(profile.username || '');
+  const { status: usernameStatus, suggestions } = useUsernameCheck(session ? username : '', profile.username || undefined);
+  const [triedSubmit, setTriedSubmit] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [proNote, setProNote] = useState<string | null>(null);
   const limits = LIMITS.free; // ponytail: Pro limits apply once Pro status is read from the server (build plan PR 11)
   const unlocked = badges.filter((b) => b.isUnlocked);
   const set = (patch: Partial<ProfileCustomization>) => setDraft((d) => ({ ...d, ...patch }));
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTriedSubmit(true);
+    setSaveError(null);
+    const changedName = !!session && !!username && username !== (profile.username || '');
+    if (changedName) {
+      if (usernameStatus !== 'ok') {
+        document.getElementById('username')?.focus();
+        return;
+      }
+      // Claimed directly on the server, which has the final say on uniqueness and the word filter.
+      setSaving(true);
+      const { error } = await supabase!.from('profiles').update({ username }).eq('id', session!.user.id);
+      setSaving(false);
+      if (error) {
+        setSaveError(
+          error.code === '23505' ? 'Someone just took that username. Pick another one.'
+            : error.code === '23514' ? "That username isn't allowed. Pick another one."
+            : "Your username couldn't be saved. Check your connection and try again.",
+        );
+        document.getElementById('username')?.focus();
+        return;
+      }
+    }
     updateProfile({
+      ...(changedName ? { username } : {}),
       displayName: draft.displayName.trim().slice(0, 40),
       bio: draft.bio.trim().slice(0, limits.bio),
       avatar: draft.avatar,
@@ -111,6 +152,12 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
               <p className="font-extrabold text-slate-900 truncate">{draft.displayName || 'Learner'}</p>
             </div>
           </div>
+
+          {session ? (
+            <UsernameField value={username} onChange={setUsername} status={usernameStatus} suggestions={suggestions} showError={triedSubmit} />
+          ) : (
+            <p className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600">Create an account in Settings to claim a @username.</p>
+          )}
 
           <div className="space-y-1.5">
             <label htmlFor="edit-name" className="block font-bold text-slate-800">Display name</label>
@@ -197,9 +244,10 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
           </section>
         </div>
 
+        {saveError && <p role="alert" className="px-6 pb-3 text-sm text-rose-700">{saveError}</p>}
         <div className="sticky bottom-0 p-4 bg-white border-t border-slate-200 flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 py-3 border-2 border-slate-300 rounded-2xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">Cancel</button>
-          <button type="submit" className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold cursor-pointer">Save profile</button>
+          <button type="submit" disabled={saving} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold cursor-pointer disabled:opacity-60">{saving ? 'Saving…' : 'Save profile'}</button>
         </div>
       </form>
     </Modal>

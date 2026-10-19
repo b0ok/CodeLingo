@@ -26,7 +26,7 @@ import { useSession, flushPendingProfile } from './utils/supabase';
 const initialStage = loadStage();
 
 function AppContent() {
-  const { activeLanguage, stats } = useGame();
+  const { activeLanguage, stats, updateProfile } = useGame();
   const session = useSession();
   const [stage, setStageState] = useState<OnboardingStage>(initialStage);
   const setStage = (s: OnboardingStage) => { saveStage(s); setStageState(s); };
@@ -40,7 +40,7 @@ function AppContent() {
   // Signing in (including from the emailed link) saves onboarding choices and skips the intro.
   useEffect(() => {
     if (!session) return;
-    flushPendingProfile(session);
+    flushPendingProfile(session).then((username) => username && updateProfile({ username }));
     if (stage === 'intro') setStage('done');
   }, [session]);
 

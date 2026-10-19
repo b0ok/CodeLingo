@@ -49,7 +49,12 @@ const back = fromRows({
   achievements: r.achievements,
   xpLog: r.xpLog,
 });
-assert.deepEqual({ ...back, completedLessons: back.completedLessons.sort() }, { ...m, completedLessons: m.completedLessons.sort() });
+// The username is claimed on the server, so sync reads it but never sends it.
+assert.equal('username' in r.profile, false);
+assert.deepEqual(
+  { ...back, completedLessons: back.completedLessons.sort() },
+  { ...m, completedLessons: m.completedLessons.sort(), profile: { ...m.profile, username: '' } },
+);
 
 // Only changes are re-sent.
 assert.deepEqual(changedRows(r, r), {});
