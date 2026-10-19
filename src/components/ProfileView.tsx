@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { LEAGUE_CONFIG } from '../data/leaderboard';
 import { BadgesView } from './BadgesView';
+import { AccountDialog } from './Onboarding';
+import { supabase, useSession } from '../utils/supabase';
 
 export const ProfileView: React.FC = () => {
   const { stats, leaderboard, currentLeague } = useGame();
   const me = leaderboard.find((u) => u.isUser);
   const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
+  const session = useSession();
+  const [accountMode, setAccountMode] = useState<'create' | 'signin' | null>(null);
 
   const tiles = [
     { label: 'Total XP', value: stats.xp.toLocaleString() },
@@ -41,6 +45,28 @@ export const ProfileView: React.FC = () => {
           ))}
         </dl>
       </section>
+
+      {supabase && (
+        <section aria-labelledby="account-heading" className="max-w-3xl mx-auto p-5 bg-white border border-slate-200 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 id="account-heading" className="font-extrabold text-slate-900">Account</h3>
+            <p className="text-sm text-slate-600 [overflow-wrap:anywhere]">
+              {session ? `Signed in as ${session.user.email}` : 'Create a free account to keep your progress safe.'}
+            </p>
+          </div>
+          {session ? (
+            <button onClick={() => supabase!.auth.signOut()} className="px-4 py-2 border-2 border-slate-300 rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">
+              Sign out
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={() => setAccountMode('signin')} className="px-4 py-2 border-2 border-slate-300 rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">Sign in</button>
+              <button onClick={() => setAccountMode('create')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold cursor-pointer">Create account</button>
+            </div>
+          )}
+        </section>
+      )}
+      {accountMode && <AccountDialog mode={accountMode} onClose={() => setAccountMode(null)} />}
 
       <BadgesView />
     </div>
