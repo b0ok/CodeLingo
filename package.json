@@ -8,7 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check:curriculum": "tsx scripts/check-curriculum.ts",
+    "verify:snippets": "tsx scripts/verify-snippets.ts",
+    "export:review": "tsx scripts/export-review.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -31,6 +34,7 @@
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "pyodide": "^314.0.7",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"

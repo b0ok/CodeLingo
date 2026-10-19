@@ -8,7 +8,7 @@ export const LeaderboardView: React.FC = () => {
   const { leaderboard, currentLeague, stats, cheerLeaderboardUser } = useGame();
   const [selectedLeague, setSelectedLeague] = useState<LeagueTier>(currentLeague);
 
-  const leagueTiers: LeagueTier[] = ['Bronze', 'Silver', 'Gold', 'Sapphire', 'Ruby', 'Diamond'];
+  const leagueTiers: LeagueTier[] = ['Bronze', 'Silver', 'Gold', 'Sapphire', 'Ruby', 'Diamond', 'Legend'];
   const leagueInfo = LEAGUE_CONFIG[selectedLeague];
 
   // User rank in the current leaderboard
@@ -40,7 +40,9 @@ export const LeaderboardView: React.FC = () => {
                 <span>{selectedLeague} League</span>
               </h2>
               <p className="text-xs text-slate-300">
-                Top {leagueInfo.promotionSlots} Pythonistas advance to the next league on Sunday!
+                {leagueInfo.promotionSlots > 0
+                  ? `Top ${leagueInfo.promotionSlots} advance to the next league on Sunday.`
+                  : `The top league. Stay out of the bottom ${leagueInfo.demotionSlots} to keep your spot.`}
               </p>
             </div>
           </div>
@@ -58,10 +60,15 @@ export const LeaderboardView: React.FC = () => {
                     <ChevronUp className="w-4 h-4 text-emerald-400" />
                     <span>You're in the Promotion Zone! (Rank #{userRank})</span>
                   </>
+                ) : leagueInfo.promotionSlots === 0 ? (
+                  <>
+                    <Minus className="w-4 h-4 text-slate-500" />
+                    <span>Current Rank: #{userRank}</span>
+                  </>
                 ) : (
                   <>
                     <Minus className="w-4 h-4 text-slate-500" />
-                    <span>Current Rank: #{userRank} · Earn {leaderboard[leagueInfo.promotionSlots - 1]?.xp - (userEntry?.xp || 0) + 10} more XP to reach top 5</span>
+                    <span>Current Rank: #{userRank} · Earn {leaderboard[leagueInfo.promotionSlots - 1]?.xp - (userEntry?.xp || 0) + 10} more XP to reach top {leagueInfo.promotionSlots}</span>
                   </>
                 )}
               </div>

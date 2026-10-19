@@ -127,7 +127,7 @@ export const WEB_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Create navigation links with <a> href, and embed accessible media with <img> alt text.',
         keyConcepts: ['<a href>', 'target="_blank"', 'rel="noopener noreferrer"', '<img src alt>'],
         unitId: 'web-unit-1',
-        lessonIds: ['web-lesson-1-1'],
+        lessonIds: ['web-lesson-1-2'],
         importance: 'essential',
         icon: 'globe',
         antiBlindQuestion:

@@ -46,9 +46,9 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
       description: 'Everything you need to build a consistent coding habit.',
       color: 'border-slate-200 bg-white',
       features: [
-        '5 Hearts / day with practice refill drills',
+        '5 life points / day with practice refill drills',
         'Full access to all 4 Language Pathways (Python, JS, SQL, Web)',
-        'Weekly Competitive Bronze-Diamond Leagues',
+        'Weekly Competitive Bronze-to-Legend Leagues',
         'Standard Sandbox Playground',
         'Daily Streak & Goal Tracker',
       ],
@@ -60,10 +60,10 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
       price: '$4.99/mo',
       badge: 'Most Popular',
       popular: true,
-      description: 'Zero heart anxiety, personalized review drills, and fast progress.',
+      description: 'No life point worries, personalized review drills, and fast progress.',
       color: 'border-amber-400 bg-gradient-to-b from-amber-50/50 to-white shadow-md ring-2 ring-amber-400/40',
       features: [
-        '♾️ UNLIMITED Hearts — never fail or wait to practice',
+        '♾️ UNLIMITED life points — never fail or wait to practice',
         '1 Free Streak Freeze recharged every week',
         'Bug Slaying & Syntax Sprint Practice Gauntlets',
         'Novice Timed Challenge Mode (+50% XP Boost)',
@@ -79,7 +79,7 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
       description: 'The hardcore developer tier for mastery, clean code grading, and speed.',
       color: 'border-emerald-500 bg-gradient-to-b from-emerald-50/60 to-white shadow-lg ring-2 ring-emerald-500/40',
       features: [
-        '♾️ Unlimited Hearts & Double XP Multiplier',
+        '♾️ Unlimited life points & Double XP Multiplier',
         '👨‍🍳 Exclusive "LET ME COOK" Terminal Matrix Arena',
         'Automated Cleanliness & Algorithmic Efficiency Scorecard',
         'PEP8 & Cyclomatic Complexity Code Analysis',
@@ -105,7 +105,7 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
               Fuel Your Coding Journey
             </h2>
             <p className="text-sm text-slate-500 max-w-xl">
-              Learn for free forever, or upgrade for unlimited hearts, personalized review drills, and the hardcore <strong>LET ME COOK</strong> efficiency arena.
+              Learn for free forever, or upgrade for unlimited life points, personalized review drills, and the hardcore <strong>LET ME COOK</strong> efficiency arena.
             </p>
           </div>
 

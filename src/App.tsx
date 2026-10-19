@@ -8,9 +8,9 @@ import { LessonPath } from './components/LessonPath';
 import { LessonModal } from './components/LessonModal';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { LeaderboardView } from './components/LeaderboardView';
-import { BadgesView } from './components/BadgesView';
+import { ProfileView } from './components/ProfileView';
+import { FeedView } from './components/FeedView';
 import { PracticeView } from './components/PracticeView';
-import { PlaygroundView } from './components/PlaygroundView';
 import { ChallengesView } from './components/ChallengesView';
 import { DailySidebar } from './components/DailySidebar';
 import { BadgeUnlockModal } from './components/BadgeUnlockModal';
@@ -20,7 +20,7 @@ import { RoadmapModal } from './components/RoadmapModal';
 
 function AppContent() {
   const { activeLanguage } = useGame();
-  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'badges' | 'playground'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile'>('learn');
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
@@ -60,9 +60,9 @@ function AppContent() {
 
           {activeTab === 'leagues' && <LeaderboardView />}
 
-          {activeTab === 'badges' && <BadgesView />}
+          {activeTab === 'feed' && <FeedView />}
+          {activeTab === 'profile' && <ProfileView />}
 
-          {activeTab === 'playground' && <PlaygroundView />}
         </div>
 
         {/* Right Desktop Sidebar: Daily Streak Calendar, Quests, Pyto Tips, Habit Engine */}
@@ -96,7 +96,7 @@ function AppContent() {
         />
       )}
 
-      {/* Heart Refill & Free Practice Drill Modal */}
+      {/* Life point refill & free practice drill modal */}
       <HeartRefillModal
         isOpen={isHeartModalOpen}
         onClose={() => setIsHeartModalOpen(false)}

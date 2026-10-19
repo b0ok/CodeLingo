@@ -114,7 +114,7 @@ export const INITIAL_BADGES: Badge[] = [
     name: 'Flawless Pythonista',
     category: 'special',
     tier: 'silver',
-    description: 'Finish 3 lessons with 100% accuracy and 0 hearts lost.',
+    description: 'Finish 3 lessons with 100% accuracy and 0 life points lost.',
     requirement: '3 perfect lessons',
     currentProgress: 0,
     maxProgress: 3,

@@ -5,6 +5,7 @@ import { SCHEDULED_CHALLENGES } from '../data/challenges';
 import { ScheduledChallenge, ChallengeGameMode, CookEvaluation } from '../types';
 import { evaluateCookSubmission } from '../utils/cookGrader';
 import { runUnifiedCode } from '../utils/codeRunner';
+import { preloadPython, pythonStatus } from '../utils/pythonRunner';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import {
@@ -32,6 +33,9 @@ export const ChallengesView: React.FC = () => {
   const { stats, gainXpAndGems, markChallengeCompleted } = useGame();
 
   const [activeChallenge, setActiveChallenge] = useState<ScheduledChallenge>(SCHEDULED_CHALLENGES[0]);
+  useEffect(() => {
+    if (activeChallenge.language === 'python') preloadPython();
+  }, [activeChallenge.language]);
   const [gameMode, setGameMode] = useState<ChallengeGameMode>('regular');
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -91,22 +95,24 @@ export const ChallengesView: React.FC = () => {
     }
   };
 
-  const handleRunTest = () => {
+  const handleRunTest = async () => {
     sound.playTap();
-    const result = runUnifiedCode(code, 'python');
+    if (activeChallenge.language === 'python' && pythonStatus() !== 'ready') setOutput('Starting Python (the first run downloads about 12 MB)…');
+    const result = await runUnifiedCode(code, activeChallenge.language);
     setOutput(result.output);
     setError(result.error || null);
     if (result.success) sound.playTap();
     else sound.playError();
   };
 
-  const handleSubmitCook = () => {
+  const handleSubmitCook = async () => {
     const timeTaken = activeChallenge.timeLimitSec - timeLeft;
-    const evaluation = evaluateCookSubmission(
+    const evaluation = await evaluateCookSubmission(
       code,
       activeChallenge.expectedOutput,
       timeTaken,
-      activeChallenge.timeLimitSec
+      activeChallenge.timeLimitSec,
+      activeChallenge.language
     );
 
     setCookResult(evaluation);
@@ -480,7 +486,7 @@ export const ChallengesView: React.FC = () => {
                 </h3>
                 <p className="text-xs text-slate-500">
                   {cookResult.passed
-                    ? `Earned +${Math.round(activeChallenge.xpReward * (gameMode === 'novice' ? 1.5 : 1))} XP and gems!`
+                    ? `Earned +${Math.round(activeChallenge.xpReward * (gameMode === 'novice' ? 1.5 : 1))} XP and gold rings!`
                     : 'Output did not match the expected target. Keep tweaking!'}
                 </p>
               </div>

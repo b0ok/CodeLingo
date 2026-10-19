@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
-import { LessonNode, Challenge } from '../types';
+import { LessonNode, Challenge, LanguageId } from '../types';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
-import { runUnifiedCode } from '../utils/codeRunner';
+import { runUnifiedCode, passesTestCases, gradeWebCode, WebGradeResult } from '../utils/codeRunner';
 import { sound } from '../utils/soundEffects';
+import { pickChallenges, shuffle } from '../utils/lessonSession';
+import { describeAnswer } from '../utils/answers';
+import { preloadPython, pythonStatus } from '../utils/pythonRunner';
 import confetti from 'canvas-confetti';
-import { X, Heart, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Play, Sparkles, RefreshCw, HelpCircle } from 'lucide-react';
+import { X, Heart, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Play, Sparkles, RotateCcw, HelpCircle, XCircle } from 'lucide-react';
+
+const LANGUAGE_LABELS: Record<LanguageId, string> = {
+  python: 'Python',
+  javascript: 'JavaScript',
+  sql: 'SQL',
+  web: 'HTML & CSS',
+};
+
+const CODE_PLACEHOLDERS: Record<LanguageId, string> = {
+  python: '# Write your Python code here',
+  javascript: '// Write your JavaScript code here',
+  sql: '-- Write your SQL query here',
+  web: '<!-- Write your HTML and CSS here -->',
+};
 
 interface LessonModalProps {
   lesson: LessonNode;
@@ -40,33 +57,69 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
   const [runnerError, setRunnerError] = useState<string | null>(null);
   const [isRunningCode, setIsRunningCode] = useState(false);
 
-  // Evaluation status: 'unsubmitted' | 'correct' | 'wrong'
-  const [status, setStatus] = useState<'unsubmitted' | 'correct' | 'wrong'>('unsubmitted');
+  // 6. matching: matches maps a left index to the pair index chosen on the right
+  const [matchRightOrder, setMatchRightOrder] = useState<number[]>([]);
+  const [matches, setMatches] = useState<Record<number, number>>({});
+  const [activeLeft, setActiveLeft] = useState<number | null>(null);
+
+  const [webResults, setWebResults] = useState<WebGradeResult | null>(null);
+  const [optionOrder, setOptionOrder] = useState<string[]>([]);
+
+  // 'retry' = first miss (hint shown, one more try); 'wrong' = second miss (answer shown)
+  const [status, setStatus] = useState<'unsubmitted' | 'retry' | 'correct' | 'wrong'>('unsubmitted');
+  const [attempt, setAttempt] = useState(0);
   const [showHint, setShowHint] = useState(false);
 
-  const currentChallenge: Challenge = lesson.challenges[currentChallengeIndex];
-  const progressPercent = ((currentChallengeIndex) / lesson.challenges.length) * 100;
+  // Each time the lesson opens it draws a fresh set from the lesson's pool
+  const [challenges] = useState(() => pickChallenges(lesson.challenges));
+  const currentChallenge: Challenge = challenges[currentChallengeIndex];
+  const challengeLang: LanguageId = lesson.id.startsWith('js-')
+    ? 'javascript'
+    : lesson.id.startsWith('sql-')
+    ? 'sql'
+    : lesson.id.startsWith('web-')
+    ? 'web'
+    : 'python';
+  const isWebRunner = currentChallenge.type === 'code_runner' && !!currentChallenge.webChecks?.length;
+  const progressPercent = ((currentChallengeIndex) / challenges.length) * 100;
 
   // Initialize per-challenge state
   useEffect(() => {
     setStatus('unsubmitted');
+    setAttempt(0);
     setShowHint(false);
 
     if (currentChallenge.type === 'token_fill') {
       setFilledTokens([]);
       setAvailableTokens([...(currentChallenge.tokens || [])]);
     } else if (currentChallenge.type === 'parsons') {
-      const initialIds = (currentChallenge.parsonsLines || []).map((l) => l.id);
-      // Shuffle initial order slightly if needed, or use as provided
-      setOrderedLineIds(initialIds);
+      const ids = (currentChallenge.parsonsLines || []).map((l) => l.id);
+      const solved = (currentChallenge.correctParsonsOrder || []).join();
+      let shuffled = ids;
+      for (let tries = 0; ids.length > 1 && tries < 10 && shuffled.join() === solved; tries++) {
+        shuffled = shuffle(ids);
+      }
+      if (shuffled.join() === solved) shuffled = [...ids].reverse();
+      setOrderedLineIds(shuffled);
     } else if (currentChallenge.type === 'predict_output' || currentChallenge.type === 'concept_quiz') {
       setSelectedOptionId(null);
+      // Authored options often list the answer first; shuffle so position gives nothing away.
+      setOptionOrder(shuffle((currentChallenge.options || []).map((o) => o.id)));
     } else if (currentChallenge.type === 'spot_bug') {
       setSelectedBugLine(null);
+    } else if (currentChallenge.type === 'matching') {
+      const indexes = (currentChallenge.matchPairs || []).map((_, i) => i);
+      let order = shuffle(indexes);
+      // Never line every answer up beside its term
+      if (indexes.length > 1 && order.every((v, i) => v === i)) order = [...indexes.slice(1), indexes[0]];
+      setMatchRightOrder(order);
+      setMatches({});
+      setActiveLeft(0);
     } else if (currentChallenge.type === 'code_runner') {
       setUserCode(currentChallenge.starterCode || '');
       setRunnerOutput('');
       setRunnerError(null);
+      setWebResults(null);
     }
   }, [currentChallengeIndex, lesson]);
 
@@ -100,27 +153,64 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     setOrderedLineIds(copy);
   };
 
-  // Run Code in browser
-  const handleExecuteCode = () => {
+  // Matching: pick a term, then its partner. Picking a matched term unpairs it.
+  const handleSelectLeft = (leftIdx: number) => {
+    if (status !== 'unsubmitted') return;
     sound.playTap();
-    setIsRunningCode(true);
-    setTimeout(() => {
-      const challengeLang = lesson.id.startsWith('js-') ? 'javascript' : lesson.id.startsWith('sql-') ? 'sql' : lesson.id.startsWith('web-') ? 'web' : 'python';
-      const result = runUnifiedCode(userCode, challengeLang);
-      setIsRunningCode(false);
-      setRunnerOutput(result.output);
-      setRunnerError(result.error || null);
+    if (leftIdx in matches) {
+      const next = { ...matches };
+      delete next[leftIdx];
+      setMatches(next);
+    }
+    setActiveLeft(leftIdx);
+  };
 
-      if (result.success) {
-        sound.playTap();
-      } else {
-        sound.playError();
-      }
-    }, 150);
+  const handleSelectRight = (pairIdx: number) => {
+    if (status !== 'unsubmitted' || activeLeft === null) return;
+    sound.playTap();
+    const next: Record<number, number> = {};
+    for (const [l, r] of Object.entries(matches)) if (r !== pairIdx) next[Number(l)] = r;
+    next[activeLeft] = pairIdx;
+    setMatches(next);
+    const total = currentChallenge.matchPairs?.length || 0;
+    const nextOpen = Array.from({ length: total }, (_, i) => i).find((i) => !(i in next));
+    setActiveLeft(nextOpen ?? null);
+  };
+
+  // Python downloads on first use; start it as soon as a lesson with Python code opens
+  useEffect(() => {
+    if (challengeLang === 'python' && challenges.some((c) => c.type === 'code_runner')) preloadPython();
+  }, []);
+
+  // Runs the learner's code and shows the output; returns the result for grading
+  const runCode = async () => {
+    setIsRunningCode(true);
+    setRunnerError(null);
+    if (challengeLang === 'python' && pythonStatus() !== 'ready') setRunnerOutput('Starting Python (the first run downloads about 12 MB)…');
+    const result = await runUnifiedCode(userCode, challengeLang);
+    setIsRunningCode(false);
+    setRunnerOutput(result.output);
+    setRunnerError(result.error || null);
+    return result;
+  };
+
+  // Run Code in browser
+  const handleExecuteCode = async () => {
+    sound.playTap();
+    if (isWebRunner) {
+      setWebResults(gradeWebCode(userCode, currentChallenge.webChecks));
+      return;
+    }
+    const result = await runCode();
+    if (result.success) {
+      sound.playTap();
+    } else {
+      sound.playError();
+    }
   };
 
   // Check Answer Handler
-  const handleCheckAnswer = () => {
+  const handleCheckAnswer = async () => {
     let isCorrect = false;
 
     if (currentChallenge.type === 'token_fill') {
@@ -137,31 +227,58 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       isCorrect = selectedOptionId === currentChallenge.correctOptionId;
     } else if (currentChallenge.type === 'spot_bug') {
       isCorrect = selectedBugLine === currentChallenge.buggyLineIndex;
+    } else if (currentChallenge.type === 'matching') {
+      const pairs = currentChallenge.matchPairs || [];
+      isCorrect = pairs.length > 0 && pairs.every((_, i) => matches[i] === i);
+    } else if (isWebRunner) {
+      const graded = gradeWebCode(userCode, currentChallenge.webChecks);
+      setWebResults(graded);
+      isCorrect = graded.passed;
     } else if (currentChallenge.type === 'code_runner') {
-      const challengeLang = lesson.id.startsWith('js-') ? 'javascript' : lesson.id.startsWith('sql-') ? 'sql' : lesson.id.startsWith('web-') ? 'web' : 'python';
-      const result = runUnifiedCode(userCode, challengeLang);
-      const actual = result.output.trim();
-      isCorrect =
-        result.success &&
-        (currentChallenge.testCases || []).every((tc) => actual.includes(tc.expectedOutput.trim()));
-      setRunnerOutput(result.output);
-      setRunnerError(result.error || null);
+      isCorrect = passesTestCases(await runCode(), currentChallenge.testCases);
     }
 
     if (isCorrect) {
       sound.playSuccess();
       setStatus('correct');
+    } else if (attempt === 0) {
+      // First miss costs one life point and earns a second try with the hint open.
+      sound.playError();
+      setStatus('retry');
+      setShowHint(true);
+      setHeartsLostInSession((prev) => prev + 1);
+      loseHeart();
     } else {
       sound.playError();
       setStatus('wrong');
-      setHeartsLostInSession((prev) => prev + 1);
-      loseHeart();
+    }
+  };
+
+  // Clear the previous answer (keeping parsons order and code, which are edited in place)
+  const handleTryAgain = () => {
+    sound.playTap();
+    setAttempt(1);
+    setStatus('unsubmitted');
+    if (currentChallenge.type === 'token_fill') {
+      setFilledTokens([]);
+      setAvailableTokens([...(currentChallenge.tokens || [])]);
+    } else if (currentChallenge.type === 'predict_output' || currentChallenge.type === 'concept_quiz') {
+      setSelectedOptionId(null);
+    } else if (currentChallenge.type === 'spot_bug') {
+      setSelectedBugLine(null);
+    } else if (currentChallenge.type === 'matching') {
+      // Keep the pairs that were right; clear only the wrong ones
+      const kept: Record<number, number> = {};
+      for (const [l, r] of Object.entries(matches)) if (Number(l) === r) kept[r] = r;
+      setMatches(kept);
+      const total = currentChallenge.matchPairs?.length || 0;
+      setActiveLeft(Array.from({ length: total }, (_, i) => i).find((i) => !(i in kept)) ?? null);
     }
   };
 
   // Move to next challenge or complete lesson
   const handleContinue = () => {
-    if (currentChallengeIndex + 1 < lesson.challenges.length) {
+    if (currentChallengeIndex + 1 < challenges.length) {
       setCurrentChallengeIndex((prev) => prev + 1);
     } else {
       // Completed full lesson!
@@ -182,7 +299,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
 
   // Is check button enabled?
   const canCheck = () => {
-    if (status !== 'unsubmitted') return false;
+    if (status !== 'unsubmitted' || isRunningCode) return false;
     if (currentChallenge.type === 'token_fill') {
       return filledTokens.length === (currentChallenge.blankCount || 1);
     }
@@ -194,6 +311,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     }
     if (currentChallenge.type === 'spot_bug') {
       return selectedBugLine !== null;
+    }
+    if (currentChallenge.type === 'matching') {
+      return Object.keys(matches).length === (currentChallenge.matchPairs?.length || 0);
     }
     if (currentChallenge.type === 'code_runner') {
       return userCode.trim().length > 0;
@@ -227,7 +347,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
           />
         </div>
 
-        {/* Hearts Remaining */}
+        {/* Life points remaining */}
         <div className="flex items-center gap-1.5 text-rose-500 font-bold text-sm">
           <Heart className="w-5 h-5 fill-rose-500" />
           <span className="tabular-nums">
@@ -245,7 +365,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
-                  {lesson.title} · Challenge {currentChallengeIndex + 1} of {lesson.challenges.length}
+                  {lesson.title} · Challenge {currentChallengeIndex + 1} of {challenges.length}
                 </span>
 
                 <button
@@ -285,7 +405,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                             key={idx}
                             onClick={() => tokenInSlot && handleRemoveFilledToken(blankIdx)}
                             className={`inline-flex items-center justify-center min-w-[70px] h-9 px-3 rounded-lg border-2 text-sm font-bold cursor-pointer transition ${
-                              tokenInSlot
+                              tokenInSlot && (status === 'retry' || status === 'wrong')
+                                ? 'bg-rose-500 border-rose-400 text-white shadow-sm'
+                                : tokenInSlot
                                 ? 'bg-emerald-500 border-emerald-400 text-white shadow-sm'
                                 : 'bg-slate-800 border-dashed border-slate-600 text-slate-400'
                             }`}
@@ -377,7 +499,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  {currentChallenge.options?.map((option) => {
+                  {optionOrder
+                    .map((id) => currentChallenge.options?.find((o) => o.id === id))
+                    .map((option) => {
+                    if (!option) return null;
                     const isSelected = selectedOptionId === option.id;
                     return (
                       <button
@@ -446,18 +571,91 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
               </div>
             )}
 
+            {/* 6. MATCHING */}
+            {currentChallenge.type === 'matching' && (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">Tap an item on the left, then its match on the right:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    {currentChallenge.matchPairs?.map((pair, leftIdx) => {
+                      const matchedTo = matches[leftIdx];
+                      const isMatched = matchedTo !== undefined;
+                      const isActive = activeLeft === leftIdx && status === 'unsubmitted';
+                      const judged = status === 'retry' || status === 'wrong';
+                      return (
+                        <button
+                          key={leftIdx}
+                          onClick={() => handleSelectLeft(leftIdx)}
+                          disabled={status !== 'unsubmitted'}
+                          aria-pressed={isActive}
+                          aria-label={`${pair.left}${isMatched ? `, matched with ${currentChallenge.matchPairs![matchedTo].right}` : ''}`}
+                          className={`w-full min-h-[48px] p-3 rounded-xl border-2 text-left font-mono text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
+                            judged && isMatched
+                              ? matchedTo === leftIdx
+                                ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                                : 'bg-rose-50 border-rose-500 text-rose-900'
+                              : isActive
+                              ? 'bg-emerald-50 border-emerald-500 text-slate-900'
+                              : isMatched
+                              ? 'bg-slate-100 border-slate-400 text-slate-800'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                          }`}
+                        >
+                          <span className="w-5 h-5 shrink-0 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center tabular-nums">
+                            {leftIdx + 1}
+                          </span>
+                          <span className="min-w-0 break-words">{pair.left}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-2">
+                    {matchRightOrder.map((pairIdx) => {
+                      const pair = currentChallenge.matchPairs?.[pairIdx];
+                      if (!pair) return null;
+                      const leftEntry = Object.entries(matches).find(([, r]) => r === pairIdx);
+                      const leftIdx = leftEntry ? Number(leftEntry[0]) : null;
+                      return (
+                        <button
+                          key={pairIdx}
+                          onClick={() => handleSelectRight(pairIdx)}
+                          disabled={status !== 'unsubmitted' || activeLeft === null}
+                          aria-label={`${pair.right}${leftIdx !== null ? `, matched with item ${leftIdx + 1}` : ''}`}
+                          className={`w-full min-h-[48px] p-3 rounded-xl border-2 text-left text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer disabled:cursor-default ${
+                            leftIdx !== null
+                              ? 'bg-slate-100 border-slate-400 text-slate-800'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                          }`}
+                        >
+                          <span
+                            className={`w-5 h-5 shrink-0 rounded-full text-xs flex items-center justify-center tabular-nums ${
+                              leftIdx !== null ? 'bg-slate-900 text-white' : 'border-2 border-dashed border-slate-300'
+                            }`}
+                            aria-hidden="true"
+                          >
+                            {leftIdx !== null ? leftIdx + 1 : ''}
+                          </span>
+                          <span className="min-w-0 break-words">{pair.right}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 5. CODE RUNNER (Interactive Python Playground Drill) */}
             {currentChallenge.type === 'code_runner' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500">Python Editor</span>
+                  <span className="text-xs font-semibold text-slate-500">{LANGUAGE_LABELS[challengeLang]} Editor</span>
                   <button
                     onClick={handleExecuteCode}
                     disabled={isRunningCode}
                     className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-sm"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Run Code</span>
+                    <span>{isWebRunner ? 'Run Checks' : 'Run Code'}</span>
                   </button>
                 </div>
 
@@ -465,14 +663,45 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                   <textarea
                     value={userCode}
                     onChange={(e) => setUserCode(e.target.value)}
-                    rows={5}
+                    rows={isWebRunner ? 9 : 5}
                     spellCheck={false}
+                    aria-label={`${LANGUAGE_LABELS[challengeLang]} code`}
                     className="w-full p-4 bg-slate-900 text-emerald-400 font-mono text-sm rounded-2xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="# Write your Python code here"
+                    placeholder={CODE_PLACEHOLDERS[challengeLang]}
                   />
                 </div>
 
-                {/* Console Output */}
+                {isWebRunner ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Live preview: sandboxed with no permissions, so scripts never run */}
+                    <iframe
+                      title="Page preview"
+                      sandbox=""
+                      srcDoc={userCode}
+                      className="w-full h-48 bg-white rounded-xl border border-slate-200"
+                    />
+                    <ul className="p-3 bg-white rounded-xl border border-slate-200 text-sm space-y-1.5" aria-label="Checks">
+                      {currentChallenge.webChecks!.map((check, idx) => {
+                        const result = webResults?.results[idx];
+                        return (
+                          <li key={idx} className="flex items-start gap-2">
+                            {!result ? (
+                              <span className="w-4 h-4 mt-0.5 shrink-0 rounded-full border-2 border-slate-300" aria-hidden="true" />
+                            ) : result.passed ? (
+                              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+                            ) : (
+                              <XCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" aria-hidden="true" />
+                            )}
+                            <span className={result && !result.passed ? 'text-rose-700' : 'text-slate-700'}>
+                              {check.label}
+                              {result && <span className="sr-only">{result.passed ? ' (passed)' : ' (not yet)'}</span>}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : (
                 <div className="p-3 bg-slate-950 text-slate-300 rounded-xl font-mono text-xs border border-slate-800 min-h-[50px]">
                   <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Terminal Console:</div>
                   {runnerError ? (
@@ -483,6 +712,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                     <span className="text-slate-600">Press "Run Code" or "Check Answer" to test output</span>
                   )}
                 </div>
+                )}
               </div>
             )}
 
@@ -497,7 +727,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                 Lesson Complete! 🎉
               </h2>
               <p className="text-slate-600 max-w-md mx-auto">
-                You just leveled up your Python powers! Pyto is proud of your dedication.
+                You just leveled up your {LANGUAGE_LABELS[challengeLang]} skills! Pyto is proud of your dedication.
               </p>
             </div>
 
@@ -507,13 +737,13 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                 <div className="text-xl font-extrabold text-amber-600 tabular-nums">+{lesson.xpReward}</div>
                 <div className="text-xs font-bold text-amber-800 uppercase mt-0.5">Total XP</div>
               </div>
-              <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-2xl">
-                <div className="text-xl font-extrabold text-cyan-600 tabular-nums">+{lesson.gemReward}</div>
-                <div className="text-xs font-bold text-cyan-800 uppercase mt-0.5">Gems</div>
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                <div className="text-xl font-extrabold text-amber-700 tabular-nums">+{lesson.gemReward}</div>
+                <div className="text-xs font-bold text-amber-900 uppercase mt-0.5">Gold rings</div>
               </div>
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
                 <div className="text-xl font-extrabold text-rose-600 tabular-nums">
-                  {heartsLostInSession === 0 ? '100%' : `${Math.round(((lesson.challenges.length - heartsLostInSession) / lesson.challenges.length) * 100)}%`}
+                  {heartsLostInSession === 0 ? '100%' : `${Math.round(((challenges.length - heartsLostInSession) / challenges.length) * 100)}%`}
                 </div>
                 <div className="text-xs font-bold text-rose-800 uppercase mt-0.5">Accuracy</div>
               </div>
@@ -535,6 +765,8 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
           className={`border-t px-4 sm:px-6 py-4 transition-colors shrink-0 ${
             status === 'correct'
               ? 'bg-emerald-50 border-emerald-200'
+              : status === 'retry'
+              ? 'bg-amber-50 border-amber-200'
               : status === 'wrong'
               ? 'bg-rose-50 border-rose-200'
               : 'bg-white border-slate-200'
@@ -543,6 +775,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
           <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             
             {/* Feedback message when submitted */}
+            <div role="status" className="min-w-0 w-full sm:w-auto sm:flex-1">
             {status === 'correct' ? (
               <div className="flex items-center gap-3 text-emerald-800">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 shrink-0" />
@@ -551,11 +784,24 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                   <div className="text-xs text-emerald-700 leading-snug">{currentChallenge.explanation}</div>
                 </div>
               </div>
-            ) : status === 'wrong' ? (
-              <div className="flex items-center gap-3 text-rose-800">
-                <AlertCircle className="w-8 h-8 text-rose-600 shrink-0" />
+            ) : status === 'retry' ? (
+              <div className="flex items-center gap-3 text-amber-900">
+                <RotateCcw className="w-8 h-8 text-amber-600 shrink-0" />
                 <div>
-                  <div className="font-extrabold text-base">Not quite yet</div>
+                  <div className="font-extrabold text-base">Not quite. You get one more try.</div>
+                  <div className="text-xs text-amber-800 leading-snug">Read the hint above, then try again.</div>
+                </div>
+              </div>
+            ) : status === 'wrong' ? (
+              <div className="flex items-start gap-3 text-rose-800">
+                <AlertCircle className="w-8 h-8 text-rose-600 shrink-0" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="font-extrabold text-base">Here's the answer</div>
+                  {describeAnswer(currentChallenge) && (
+                    <pre className="max-h-32 overflow-auto p-2 bg-white border border-rose-200 rounded-lg text-xs font-mono text-slate-800 whitespace-pre-wrap">
+                      {describeAnswer(currentChallenge)}
+                    </pre>
+                  )}
                   <div className="text-xs text-rose-700 leading-snug">
                     {currentChallenge.bugExplanation || currentChallenge.explanation}
                   </div>
@@ -566,9 +812,17 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                 Tap your answer and press Check to continue.
               </div>
             )}
+            </div>
 
             {/* Action Button */}
-            {status === 'unsubmitted' ? (
+            {status === 'retry' ? (
+              <button
+                onClick={handleTryAgain}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-600/20 active:scale-[0.98] transition cursor-pointer min-h-[44px] shrink-0"
+              >
+                Try again
+              </button>
+            ) : status === 'unsubmitted' ? (
               <button
                 onClick={handleCheckAnswer}
                 disabled={!canCheck()}

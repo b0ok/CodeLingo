@@ -106,7 +106,7 @@ export const PYTHON_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Understand stdout, formatting with f-strings, and console parameters (sep, end).',
         keyConcepts: ['print()', 'f-strings', 'sep & end params', 'stdout'],
         unitId: 'unit-1',
-        lessonIds: ['lesson-1-1'],
+        lessonIds: ['lesson-1-1', 'lesson-1-2', 'lesson-1-3'],
         importance: 'essential',
         icon: 'terminal',
         antiBlindQuestion: 'Why are f-strings generally preferred over old-style "%" formatting or string concatenation with "+"? What happens under the hood when you evaluate an expression inside { }?',

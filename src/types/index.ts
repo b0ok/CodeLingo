@@ -4,7 +4,8 @@ export type ChallengeType =
   | 'predict_output'   // Multiple choice predicting Python stdout
   | 'spot_bug'         // Tap the buggy code line or pick the fix
   | 'code_runner'      // Live interactive coding with automated test cases
-  | 'concept_quiz';    // Quick concept comprehension check
+  | 'concept_quiz'     // Quick concept comprehension check
+  | 'matching';        // Pair each term on the left with its match on the right
 
 export interface ParsonsLine {
   id: string;
@@ -16,6 +17,18 @@ export interface TestCase {
   name: string;
   input?: string;
   expectedOutput: string;
+  contains?: boolean; // pass if output includes expectedOutput (default: whole output must match)
+}
+
+// One requirement for an HTML/CSS code_runner challenge, checked against the rendered page.
+// Every element matching `selector` must satisfy the listed computed styles, attributes and text.
+export interface WebCheck {
+  label: string; // shown to the student, e.g. "The nav uses display: flex"
+  selector: string;
+  count?: number; // exact number of matches (default: at least one)
+  style?: Record<string, string>; // computed values, e.g. { display: 'flex', 'padding-top': '16px' }
+  attr?: Record<string, string>; // '' means the attribute only has to exist
+  text?: string; // trimmed textContent must include this
 }
 
 export interface Challenge {
@@ -44,6 +57,9 @@ export interface Challenge {
   }[];
   correctOptionId?: string;
 
+  // For matching (shown left column in order, right column shuffled)
+  matchPairs?: { left: string; right: string }[];
+
   // For spot_bug
   buggyCodeLines?: string[];
   buggyLineIndex?: number; // 0-indexed
@@ -53,6 +69,7 @@ export interface Challenge {
   starterCode?: string;
   solutionHint?: string;
   testCases?: TestCase[];
+  webChecks?: WebCheck[]; // used instead of testCases for HTML/CSS challenges
 
   hint: string;
   explanation: string;
@@ -95,7 +112,7 @@ export interface Unit {
   nodes: LessonNode[];
 }
 
-export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Sapphire' | 'Ruby' | 'Diamond';
+export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Sapphire' | 'Ruby' | 'Diamond' | 'Legend';
 
 export interface LeaderboardEntry {
   id: string;
@@ -246,6 +263,7 @@ export type RoadmapPhaseId =
   | 'responsive-modern'
   // JavaScript phases
   | 'js-basics'
+  | 'js-control-flow'
   | 'js-data-structures'
   | 'js-functions-closures'
   | 'js-oop-prototypes'
