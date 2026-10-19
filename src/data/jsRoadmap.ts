@@ -34,7 +34,7 @@ export const JS_CAREER_TRACKS: CareerTrack[] = [
     targetRole: 'Senior React / Frontend Engineer',
     icon: 'sparkles',
     color: 'amber',
-    essentialPhases: ['js-basics', 'js-data-structures', 'js-functions-closures', 'js-async-event-loop', 'js-dom-apis', 'js-modern-modules'],
+    essentialPhases: ['js-basics', 'js-control-flow', 'js-data-structures', 'js-functions-closures', 'js-async-event-loop', 'js-dom-apis', 'js-modern-modules'],
     keyTools: ['React', 'Next.js', 'TypeScript', 'Tailwind', 'Vite'],
     recommendedDailyMinutes: 25,
   },
@@ -45,7 +45,7 @@ export const JS_CAREER_TRACKS: CareerTrack[] = [
     targetRole: 'Full-Stack Software Engineer',
     icon: 'layers',
     color: 'cyan',
-    essentialPhases: ['js-basics', 'js-data-structures', 'js-functions-closures', 'js-oop-prototypes', 'js-async-event-loop', 'js-modern-modules', 'js-advanced-patterns'],
+    essentialPhases: ['js-basics', 'js-control-flow', 'js-data-structures', 'js-functions-closures', 'js-oop-prototypes', 'js-async-event-loop', 'js-modern-modules', 'js-advanced-patterns'],
     keyTools: ['TypeScript', 'Node.js', 'Express', 'PostgreSQL', 'Prisma'],
     recommendedDailyMinutes: 30,
   },
@@ -56,7 +56,7 @@ export const JS_CAREER_TRACKS: CareerTrack[] = [
     targetRole: 'Backend Node.js Engineer',
     icon: 'server',
     color: 'emerald',
-    essentialPhases: ['js-basics', 'js-functions-closures', 'js-oop-prototypes', 'js-async-event-loop', 'js-modern-modules', 'js-advanced-patterns'],
+    essentialPhases: ['js-basics', 'js-control-flow', 'js-functions-closures', 'js-oop-prototypes', 'js-async-event-loop', 'js-modern-modules', 'js-advanced-patterns'],
     keyTools: ['Node.js', 'Fastify', 'Redis', 'Docker', 'Event Loop Profiler'],
     recommendedDailyMinutes: 25,
   },
@@ -67,26 +67,42 @@ export const JS_CAREER_TRACKS: CareerTrack[] = [
     targetRole: 'Serverless / Cloud Developer',
     icon: 'cpu',
     color: 'purple',
-    essentialPhases: ['js-basics', 'js-data-structures', 'js-async-event-loop', 'js-modern-modules'],
+    essentialPhases: ['js-basics', 'js-control-flow', 'js-data-structures', 'js-async-event-loop', 'js-modern-modules'],
     keyTools: ['AWS Lambda', 'Cloudflare Workers', 'GraphQL', 'Terraform'],
     recommendedDailyMinutes: 20,
   },
 ];
 
 export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
-  // ================= PHASE 1: JAVASCRIPT BASICS & SCOPE =================
+  // ================= PHASE 1: JAVASCRIPT BASICS, VARIABLES & TYPES =================
   {
     id: 'js-basics',
     phaseNumber: 1,
-    title: 'JavaScript Basics & Variable Scoping',
-    subtitle: 'let vs const vs var, Hoisting & TDZ',
-    description: 'Learn memory bindings, block scoping, data types, and strict equality (===) without type coercion surprises.',
+    title: 'JavaScript Basics, Variables & Types',
+    subtitle: 'Console, Strings, let/const/var & Coercion',
+    description: 'Run your first statements, declare variables with the right keyword, and predict how JavaScript converts between types.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Scope Navigator',
     color: 'amber',
     accentBg: 'bg-amber-500/10',
     borderClass: 'border-amber-400/40',
     nodes: [
+      {
+        id: 'js-rm-console-strings',
+        phaseId: 'js-basics',
+        title: 'Console Output, Strings & Template Literals',
+        roadmapCategory: 'Introduction / Strings',
+        description: 'Log values with console.log(), build strings with template literals, and use common string methods.',
+        keyConcepts: ['console.log()', 'Template literals (`${}`)', 'String methods', 'Strings are immutable'],
+        unitId: 'js-unit-1',
+        lessonIds: ['js-lesson-1-1', 'js-lesson-1-2'],
+        importance: 'essential',
+        icon: 'terminal',
+        antiBlindQuestion:
+          'Why are template literals preferred over string concatenation with +, and why does calling "name.toUpperCase()" leave the original "name" unchanged?',
+        sampleAnswerHint:
+          'Template literals embed any expression inside ${} and support multi-line text, so they are easier to read and avoid accidental number/string concatenation. Strings are immutable primitives: methods like toUpperCase() return a brand new string and never modify the original.',
+      },
       {
         id: 'js-rm-variables-tdz',
         phaseId: 'js-basics',
@@ -104,11 +120,43 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
           'Both var and let are hoisted during the creation phase of the execution context. However, var is initialized with undefined immediately, whereas let and const remain in the uninitialized Temporal Dead Zone until their line of declaration executes. Accessing an uninitialized binding throws ReferenceError.',
       },
       {
-        id: 'js-rm-types-equality',
+        id: 'js-rm-type-conversion',
         phaseId: 'js-basics',
-        title: 'Data Types, Primitives vs References & ===',
+        title: 'Data Types, typeof & Type Coercion',
+        roadmapCategory: 'JavaScript Basics / Type Casting',
+        description: 'Recognize the 7 primitive types, inspect values with typeof, and tell explicit conversion apart from implicit coercion.',
+        keyConcepts: ['7 primitives vs objects', 'typeof (and typeof null)', 'Explicit: Number(), String(), Boolean()', 'Implicit coercion with + and -'],
+        unitId: 'js-unit-2',
+        lessonIds: ['js-lesson-2-2', 'js-lesson-2-3'],
+        importance: 'essential',
+        icon: 'shuffle',
+        antiBlindQuestion:
+          'Why does "5" + 3 produce "53" while "5" - 3 produces 2? How would you write the code so the intent is obvious?',
+        sampleAnswerHint:
+          'The + operator also means string concatenation, so if either side is a string the other is converted to a string. The - operator only works on numbers, so "5" is converted to 5. Converting explicitly with Number("5") + 3 states the intent and avoids relying on coercion rules.',
+      },
+    ],
+  },
+
+  // ================= PHASE 2: CONTROL FLOW, EQUALITY & ERRORS =================
+  {
+    id: 'js-control-flow',
+    phaseNumber: 2,
+    title: 'Control Flow, Equality & Errors',
+    subtitle: 'Comparisons, Loops & try/catch',
+    description: 'Compare values safely, repeat work with the right loop, and handle failures with throw and try/catch/finally.',
+    roadmapShUrl: 'https://roadmap.sh/javascript',
+    badge: 'Flow Controller',
+    color: 'orange',
+    accentBg: 'bg-orange-500/10',
+    borderClass: 'border-orange-400/40',
+    nodes: [
+      {
+        id: 'js-rm-types-equality',
+        phaseId: 'js-control-flow',
+        title: 'Equality: ==, === & Object.is()',
         roadmapCategory: 'JavaScript Basics / Types & Operators',
-        description: 'Distinguish stack-allocated primitives from heap-allocated objects, and prevent implicit type coercion bugs.',
+        description: 'Prevent implicit coercion bugs with strict equality and handle the NaN and -0 edge cases with Object.is().',
         keyConcepts: ['7 Primitives vs Objects', 'Type Coercion', 'Strict Equality (===)', 'NaN vs Object.is()'],
         unitId: 'js-unit-3',
         lessonIds: ['js-lesson-3-1'],
@@ -119,21 +167,53 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         sampleAnswerHint:
           'With loose equality (==), JS applies abstract equality coercion algorithms: [] is converted to primitive string "" then to number 0, and false is coerced to number 0 (0 == 0 is true!). But in boolean context, any object/array is truthy. Strict equality (===) checks both type and value without coercion, immediately returning false.',
       },
+      {
+        id: 'js-rm-loops',
+        phaseId: 'js-control-flow',
+        title: 'Loops: for, while, for...of & for...in',
+        roadmapCategory: 'Control Flow / Loops and Iterations',
+        description: 'Choose the right loop for arrays, objects and conditions, and steer it with break and continue.',
+        keyConcepts: ['for / while / do...while', 'for...of (values)', 'for...in (keys)', 'break & continue'],
+        unitId: 'js-unit-3',
+        lessonIds: ['js-lesson-3-3'],
+        importance: 'essential',
+        icon: 'repeat',
+        antiBlindQuestion:
+          'What is the difference between "for...of" and "for...in" when looping over an array, and why is for...in a poor choice for arrays?',
+        sampleAnswerHint:
+          'for...of iterates over the values of any iterable (arrays, strings, Maps, Sets). for...in iterates over enumerable property keys as strings, including inherited ones, so on an array it gives "0", "1", ... and can pick up extra properties. Use for...of for array values and for...in (or Object.keys) for object keys.',
+      },
+      {
+        id: 'js-rm-error-handling',
+        phaseId: 'js-control-flow',
+        title: 'Exceptions: throw, try/catch/finally & Error Objects',
+        roadmapCategory: 'Control Flow / Exception Handling',
+        description: 'Signal failures with throw new Error(), recover with try/catch, and guarantee cleanup with finally.',
+        keyConcepts: ['throw new Error()', 'try / catch / finally', 'Error name, message & stack', 'Custom error classes'],
+        unitId: 'js-unit-3',
+        lessonIds: ['js-lesson-3-4'],
+        importance: 'essential',
+        icon: 'alert-triangle',
+        antiBlindQuestion:
+          'Why should you "throw new Error(message)" instead of "throw message", and when does a finally block run?',
+        sampleAnswerHint:
+          'An Error object carries a name, message and stack trace, so the catch block and logs can show where the failure happened; a thrown string has none of that. finally runs after try/catch on every path: normal completion, a caught error, or even a return inside try.',
+      },
     ],
   },
 
-  // ================= PHASE 2: DATA STRUCTURES & MODERN ES6+ =================
+  // ================= PHASE 3: DATA STRUCTURES & MODERN ES6+ =================
   {
     id: 'js-data-structures',
-    phaseNumber: 2,
+    phaseNumber: 3,
     title: 'Data Structures & Modern ES6+',
-    subtitle: 'Arrays, Objects, Destructuring & Rest/Spread',
-    description: 'Master higher-order array methods (map, filter, reduce), object destructuring, and immutable data handling.',
+    subtitle: 'Arrays, Objects, Map, Set & JSON',
+    description: 'Master higher-order array methods, destructuring and spread, keyed collections, and JSON serialization.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Structure Artisan',
-    color: 'orange',
-    accentBg: 'bg-orange-500/10',
-    borderClass: 'border-orange-400/40',
+    color: 'yellow',
+    accentBg: 'bg-yellow-500/10',
+    borderClass: 'border-yellow-400/40',
     nodes: [
       {
         id: 'js-rm-array-methods',
@@ -167,16 +247,32 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         sampleAnswerHint:
           'The spread operator creates a shallow copy: top-level primitive values are duplicated, but nested objects/arrays are copied by memory reference! Mutating clone.user.name will also mutate original.user.name. structuredClone() performs a recursive deep copy, ensuring zero shared references.',
       },
+      {
+        id: 'js-rm-map-set-json',
+        phaseId: 'js-data-structures',
+        title: 'Map, Set, WeakMap & JSON',
+        roadmapCategory: 'Data Structures / Keyed Collections & Structured Data',
+        description: 'Use Map for any-type keys, Set for unique values, and JSON.stringify/parse to serialize data.',
+        keyConcepts: ['Map vs plain object', 'Set for uniqueness', 'WeakMap & WeakSet', 'JSON.stringify / JSON.parse'],
+        unitId: 'js-unit-4',
+        lessonIds: ['js-lesson-4-3'],
+        importance: 'essential',
+        icon: 'database',
+        antiBlindQuestion:
+          'When would you choose a Map over a plain object, and what data is lost when you call JSON.stringify() on an object?',
+        sampleAnswerHint:
+          'A Map accepts keys of any type (objects, numbers), keeps insertion order, has a size property and no inherited keys. JSON.stringify drops functions, undefined values and symbols, turns Dates into strings, and cannot represent Maps, Sets or circular references.',
+      },
     ],
   },
 
-  // ================= PHASE 3: FUNCTIONS, SCOPE & CLOSURES =================
+  // ================= PHASE 4: FUNCTIONS, SCOPE & CLOSURES =================
   {
     id: 'js-functions-closures',
-    phaseNumber: 3,
+    phaseNumber: 4,
     title: 'Functions, Scope & Closures',
-    subtitle: 'Lexical Environments & Data Encapsulation',
-    description: 'Demystify how functions remember their outer variable scope even after the outer function has finished executing.',
+    subtitle: 'Parameters, Closures, Arrows & this',
+    description: 'Write flexible functions, understand how closures remember their scope, and control what "this" refers to.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Closure Master',
     color: 'teal',
@@ -206,8 +302,8 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         roadmapCategory: 'Functions & Scope / Arrow Functions',
         description: 'Understand lexical this binding, constructor capabilities, and arguments object differences.',
         keyConcepts: ['Lexical this', 'arguments keyword', 'Constructor functions (new)', 'Implicit return'],
-        unitId: 'js-unit-5',
-        lessonIds: ['js-lesson-5-2'],
+        unitId: 'js-unit-3',
+        lessonIds: ['js-lesson-3-2'],
         importance: 'essential',
         icon: 'sparkles',
         antiBlindQuestion:
@@ -215,16 +311,48 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         sampleAnswerHint:
           'Traditional functions bind "this" dynamically based on HOW they are called at runtime (caller binding). Arrow functions do NOT have their own "this"; they inherit "this" lexically from their enclosing scope. Furthermore, arrow functions lack internal [[Construct]] methods and prototype properties, so calling new on them throws a TypeError.',
       },
+      {
+        id: 'js-rm-function-params',
+        phaseId: 'js-functions-closures',
+        title: 'Default Params, Rest, IIFEs & Recursion',
+        roadmapCategory: 'Functions / Function Parameters & Recursion',
+        description: 'Give parameters defaults, collect extra arguments with rest, and solve problems recursively with a base case.',
+        keyConcepts: ['Default parameters', 'Rest parameters (...args)', 'arguments object', 'Recursion & base cases'],
+        unitId: 'js-unit-5',
+        lessonIds: ['js-lesson-5-2'],
+        importance: 'essential',
+        icon: 'function-square',
+        antiBlindQuestion:
+          'What happens if a recursive function has no reachable base case, and why are rest parameters preferred over the arguments object?',
+        sampleAnswerHint:
+          'Without a base case every call adds a new frame to the call stack until the engine throws "RangeError: Maximum call stack size exceeded". Rest parameters give a real array (with map, filter, ...), are explicit in the signature, and work in arrow functions, which have no arguments object.',
+      },
+      {
+        id: 'js-rm-this-binding',
+        phaseId: 'js-functions-closures',
+        title: 'The this Keyword: call, apply & bind',
+        roadmapCategory: 'Functions / Using this Keyword & Explicit Binding',
+        description: 'Predict what "this" refers to in methods, plain functions and event handlers, and fix it with call, apply and bind.',
+        keyConcepts: ['this in a method', 'this in a plain function (strict mode)', 'call vs apply', 'bind() for callbacks'],
+        unitId: 'js-unit-5',
+        lessonIds: ['js-lesson-5-3'],
+        importance: 'essential',
+        icon: 'link',
+        antiBlindQuestion:
+          'Why does "const read = counter.read; read();" lose access to counter\'s properties, and how does bind() fix it?',
+        sampleAnswerHint:
+          '"this" is decided by how a function is called, not where it is defined. Calling counter.read() sets this to counter, but calling the detached read() has no receiver, so this is undefined in strict mode. counter.read.bind(counter) returns a new function whose this is permanently counter.',
+      },
     ],
   },
 
-  // ================= PHASE 4: OBJECT-ORIENTED JS & PROTOTYPES =================
+  // ================= PHASE 5: PROTOTYPES & OBJECT-ORIENTED JS =================
   {
     id: 'js-oop-prototypes',
-    phaseNumber: 4,
+    phaseNumber: 5,
     title: 'Prototypes & Object-Oriented JS',
-    subtitle: 'Prototypal Inheritance, ES6 Classes & this Binding',
-    description: 'Understand the underlying prototype chain that powers JavaScript objects beneath the ES6 class syntax sugar.',
+    subtitle: 'Prototypal Inheritance & ES6 Classes',
+    description: 'Understand the prototype chain that powers JavaScript objects beneath the ES6 class syntax.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Prototype Wizard',
     color: 'purple',
@@ -239,7 +367,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Learn how JavaScript walks up the __proto__ chain to resolve inherited methods and properties.',
         keyConcepts: ['prototype vs __proto__', 'Object.getPrototypeOf()', 'Prototypal Inheritance', 'Object.prototype'],
         unitId: 'js-unit-6',
-        lessonIds: ['js-lesson-6-1'],
+        lessonIds: ['js-lesson-6-2'],
         importance: 'essential',
         icon: 'cpu',
         antiBlindQuestion:
@@ -255,7 +383,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Use modern class syntax, constructor methods, super calls, and hard private fields (#field).',
         keyConcepts: ['class', 'constructor', 'super()', 'extends', 'Private fields (#)'],
         unitId: 'js-unit-6',
-        lessonIds: ['js-lesson-6-2'],
+        lessonIds: ['js-lesson-6-1'],
         importance: 'essential',
         icon: 'terminal',
         antiBlindQuestion:
@@ -266,19 +394,35 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
     ],
   },
 
-  // ================= PHASE 5: ASYNC JAVASCRIPT & THE EVENT LOOP =================
+  // ================= PHASE 6: ASYNCHRONOUS JS & THE EVENT LOOP =================
   {
     id: 'js-async-event-loop',
-    phaseNumber: 5,
+    phaseNumber: 6,
     title: 'Asynchronous JS & The Event Loop',
-    subtitle: 'Call Stack, Microtasks, Promises & async/await',
-    description: 'Master the single-threaded asynchronous runtime: Call Stack, Web APIs, Microtask Queue, and async/await.',
+    subtitle: 'Timers, Callbacks, Promises & async/await',
+    description: 'Master the single-threaded asynchronous runtime: timers, callbacks, the microtask queue, and async/await.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Async Alchemist',
     color: 'emerald',
     accentBg: 'bg-emerald-500/10',
     borderClass: 'border-emerald-400/40',
     nodes: [
+      {
+        id: 'js-rm-callbacks-timers',
+        phaseId: 'js-async-event-loop',
+        title: 'setTimeout, setInterval & Callbacks',
+        roadmapCategory: 'Asynchronous JS / Timers & Callbacks',
+        description: 'Schedule work with timers, pass callbacks, and recognize the "callback hell" that promises were designed to fix.',
+        keyConcepts: ['setTimeout / clearTimeout', 'setInterval / clearInterval', 'Callbacks', 'Callback hell'],
+        unitId: 'js-unit-7',
+        lessonIds: ['js-lesson-7-2'],
+        importance: 'essential',
+        icon: 'clock',
+        antiBlindQuestion:
+          'Does setTimeout(fn, 0) run fn immediately? Explain what actually happens.',
+        sampleAnswerHint:
+          'No. setTimeout hands the callback to the browser timer and returns at once. After at least the given delay, the callback joins the task queue, and the event loop only runs it once the call stack is empty and all microtasks have finished, so synchronous code after setTimeout always runs first.',
+      },
       {
         id: 'js-rm-event-loop',
         phaseId: 'js-async-event-loop',
@@ -303,7 +447,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Write clean asynchronous code with async/await, handle errors with try/catch, and coordinate parallel requests with Promise.all().',
         keyConcepts: ['async / await', 'Promise.all vs Promise.allSettled', 'try / catch / finally', 'Error handling'],
         unitId: 'js-unit-7',
-        lessonIds: ['js-lesson-7-2'],
+        lessonIds: ['js-lesson-7-3'],
         importance: 'essential',
         icon: 'trending-up',
         antiBlindQuestion:
@@ -314,13 +458,13 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
     ],
   },
 
-  // ================= PHASE 6: DOM MANIPULATION & WEB APIS =================
+  // ================= PHASE 7: DOM MANIPULATION & WEB APIS =================
   {
     id: 'js-dom-apis',
-    phaseNumber: 6,
+    phaseNumber: 7,
     title: 'DOM Manipulation & Web APIs',
     subtitle: 'Event Bubbling, Delegation & fetch()',
-    description: 'Interact with the living browser DOM, handle user events with delegation, and communicate with backend REST APIs.',
+    description: 'Interact with the browser DOM, handle user events with delegation, and talk to backend APIs.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'DOM Commander',
     color: 'cyan',
@@ -335,7 +479,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Leverage event propagation through the DOM to handle dynamic list items with a single listener.',
         keyConcepts: ['Event Bubbling', 'Event Capturing', 'event.target vs event.currentTarget', 'Event Delegation'],
         unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-1'],
+        lessonIds: ['js-lesson-8-2'],
         importance: 'essential',
         icon: 'globe',
         antiBlindQuestion:
@@ -351,7 +495,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Send HTTP requests, parse JSON responses, handle network failures, and persist state across page reloads.',
         keyConcepts: ['fetch(url, options)', 'response.ok & response.json()', 'localStorage vs sessionStorage', 'AbortController'],
         unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-1'],
+        lessonIds: ['js-lesson-8-3'],
         importance: 'essential',
         icon: 'terminal',
         antiBlindQuestion:
@@ -362,13 +506,13 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
     ],
   },
 
-  // ================= PHASE 7: MODERN ES6+ & MODULES =================
+  // ================= PHASE 8: MODERN SYNTAX & MODULES =================
   {
     id: 'js-modern-modules',
-    phaseNumber: 7,
-    title: 'Modern ES6+ Syntax & Modules',
-    subtitle: 'Optional Chaining, Nullish Coalescing & Imports',
-    description: 'Write bulletproof modern JavaScript with safe property traversal (?.) and defensive null handling (??).',
+    phaseNumber: 8,
+    title: 'Modern Syntax & Modules',
+    subtitle: 'Optional Chaining, Nullish Coalescing & ES Modules',
+    description: 'Write defensive modern JavaScript with ?. and ??, and split code into modules with import and export.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Modern Syntax Pro',
     color: 'rose',
@@ -383,7 +527,7 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         description: 'Safely access deeply nested object properties and distinguish false/0 from null/undefined.',
         keyConcepts: ['user?.profile?.avatar', '?? vs ||', 'Short-circuiting', 'Falsy vs Nullish'],
         unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-2'],
+        lessonIds: ['js-lesson-8-1'],
         importance: 'essential',
         icon: 'sliders',
         antiBlindQuestion:
@@ -391,16 +535,32 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
         sampleAnswerHint:
           'The logical OR (||) operator triggers on any falsy value (false, 0, "", null, undefined, NaN). If count is 0, count || 10 incorrectly overwrites it with 10. The nullish coalescing operator (??) ONLY triggers if the value is strictly null or undefined, preserving valid numbers like 0 or boolean false.',
       },
+      {
+        id: 'js-rm-modules-esm',
+        phaseId: 'js-modern-modules',
+        title: 'ES Modules vs CommonJS',
+        roadmapCategory: 'Modules in JavaScript / ESM & CommonJS',
+        description: 'Share code between files with named and default exports, and know how ES modules differ from require().',
+        keyConcepts: ['export / import', 'Named vs default exports', 'CommonJS require()', 'Static imports & tree-shaking'],
+        unitId: 'js-unit-8',
+        lessonIds: ['js-lesson-8-4'],
+        importance: 'essential',
+        icon: 'package',
+        antiBlindQuestion:
+          'What is the practical difference between ES module "import" and CommonJS "require()", and why does it matter for bundle size?',
+        sampleAnswerHint:
+          'ES module imports are static declarations resolved before the code runs, so tools can see exactly what is used and drop the rest (tree-shaking). require() is an ordinary function call evaluated at runtime, can be conditional, and returns the whole module.exports object, so bundlers cannot safely remove unused code.',
+      },
     ],
   },
 
-  // ================= PHASE 8: PERFORMANCE & ADVANCED PATTERNS =================
+  // ================= PHASE 9: ADVANCED PERFORMANCE & PATTERNS =================
   {
     id: 'js-advanced-patterns',
-    phaseNumber: 8,
+    phaseNumber: 9,
     title: 'Advanced Performance & Patterns',
-    subtitle: 'Debounce, Throttle, Memory Leaks & Garbage Collection',
-    description: 'Optimize high-frequency event handlers, avoid memory leaks, and master senior engineering patterns.',
+    subtitle: 'Generators, Debounce, Throttle & Memory',
+    description: 'Produce values lazily, tame high-frequency events, and keep memory from leaking in long-running apps.',
     roadmapShUrl: 'https://roadmap.sh/javascript',
     badge: 'Senior Architect',
     color: 'violet',
@@ -408,20 +568,52 @@ export const JS_ROADMAP_PHASES: RoadmapPhase[] = [
     borderClass: 'border-violet-400/40',
     nodes: [
       {
+        id: 'js-rm-iterators-generators',
+        phaseId: 'js-advanced-patterns',
+        title: 'Iterators & Generators',
+        roadmapCategory: 'Iterators and Generators',
+        description: 'Make objects iterable with Symbol.iterator and produce values lazily with function* and yield.',
+        keyConcepts: ['Iteration protocol', 'Symbol.iterator', 'function* & yield', 'Lazy sequences'],
+        unitId: 'js-unit-9',
+        lessonIds: ['js-lesson-9-1'],
+        importance: 'recommended',
+        icon: 'list',
+        antiBlindQuestion:
+          'What does calling a generator function return, and why can a generator describe an infinite sequence without running out of memory?',
+        sampleAnswerHint:
+          'Calling a generator function runs none of its body; it returns an iterator. Each next() call resumes until the next yield and pauses again, keeping local state. Values are produced one at a time on demand, so an infinite while(true) generator only ever holds the current value.',
+      },
+      {
         id: 'js-rm-debounce-throttle',
         phaseId: 'js-advanced-patterns',
         title: 'Debounce vs Throttle & Performance',
         roadmapCategory: 'Advanced Patterns / Optimization',
         description: 'Limit rapid execution of scroll, resize, and search input handlers.',
         keyConcepts: ['Debounce (waits for silence)', 'Throttle (guarantees interval)', 'requestAnimationFrame', 'Memory leak prevention'],
-        unitId: 'js-unit-8',
-        lessonIds: ['js-lesson-8-2'],
+        unitId: 'js-unit-9',
+        lessonIds: ['js-lesson-9-2'],
         importance: 'recommended',
         icon: 'zap',
         antiBlindQuestion:
           'What is the real-world difference between Debounce and Throttle? In which scenarios would you choose a debounce over a throttle?',
         sampleAnswerHint:
           'Debounce delays function execution until a specified delay has passed since the LAST event fired (ideal for search autocomplete where you wait for the user to stop typing). Throttle guarantees execution at regular periodic intervals regardless of event frequency (ideal for window scroll or resize events where continuous UI updates are required).',
+      },
+      {
+        id: 'js-rm-memory-gc',
+        phaseId: 'js-advanced-patterns',
+        title: 'Memory Management & Garbage Collection',
+        roadmapCategory: 'Memory Management / Garbage Collection',
+        description: 'Understand reachability-based garbage collection and find the listeners, timers and caches that leak memory.',
+        keyConcepts: ['Memory lifecycle', 'Reachability & mark-and-sweep', 'Common leaks (listeners, timers)', 'DevTools memory profiling'],
+        unitId: 'js-unit-9',
+        lessonIds: ['js-lesson-9-3'],
+        importance: 'recommended',
+        icon: 'cpu',
+        antiBlindQuestion:
+          'JavaScript has automatic garbage collection, so how can a web app still leak memory? Give a concrete example.',
+        sampleAnswerHint:
+          'The garbage collector frees only objects that are unreachable from roots like globals and the call stack. A listener added to window that closes over a big array keeps that array reachable forever unless removeEventListener is called; uncleared setInterval callbacks and ever-growing caches leak the same way.',
       },
     ],
   },

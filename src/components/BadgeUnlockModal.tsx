@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
-import { Award, Gem, Sparkles, X } from 'lucide-react';
+import { Award, Circle, Sparkles, X } from 'lucide-react';
 
 export const BadgeUnlockModal: React.FC = () => {
   const { newlyUnlockedBadge, dismissBadgeNotification } = useGame();
@@ -50,8 +50,8 @@ export const BadgeUnlockModal: React.FC = () => {
         </div>
 
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-amber-900">
-          <Gem className="w-4 h-4 text-cyan-500 fill-cyan-400" />
-          <span>Reward: +25 Gems credited to your vault!</span>
+          <Circle strokeWidth={3} className="w-4 h-4 text-yellow-500" />
+          <span>Reward: +25 gold rings</span>
         </div>
 
         <button

@@ -4,6 +4,7 @@ import { PATHWAYS_DATA, getPathway } from '../data/curriculum';
 import { LessonNode } from '../types';
 import { Dumbbell, ShieldAlert, Zap, Repeat, Heart, Play } from 'lucide-react';
 import { PytoMascot } from './PytoMascot';
+import { PlaygroundView } from './PlaygroundView';
 
 interface PracticeViewProps {
   onStartLesson: (lesson: LessonNode) => void;
@@ -15,6 +16,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   onOpenHeartModal,
 }) => {
   const { stats, activeLanguage } = useGame();
+  const [mode, setMode] = useState<'drills' | 'sandbox'>('drills');
   const currentPathway = getPathway(activeLanguage);
 
   // Dynamic practice modules mapped to current pathway
@@ -162,8 +164,35 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
     }
   };
 
+  const modeSwitch = (
+    <div role="group" aria-label="Practice mode" className="max-w-3xl mx-auto flex gap-1.5 p-1 bg-slate-100 rounded-2xl w-fit">
+      {(['drills', 'sandbox'] as const).map((m) => (
+        <button
+          key={m}
+          onClick={() => setMode(m)}
+          aria-pressed={mode === m}
+          className={`py-2 px-5 text-sm font-bold rounded-xl cursor-pointer ${
+            mode === m ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          {m === 'drills' ? 'Drills' : 'Sandbox'}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (mode === 'sandbox') {
+    return (
+      <div className="space-y-6">
+        {modeSwitch}
+        <PlaygroundView />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-24 xl:pb-12">
+      {modeSwitch}
       
       {/* Header Banner */}
       <div className="p-6 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl shadow-lg border border-indigo-800/60 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -182,7 +211,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         <PytoMascot mood="happy" size="md" showHat={true} />
       </div>
 
-      {/* Heart Recovery Card */}
+      {/* Life point recovery card */}
       <div className="p-5 bg-rose-50 border-2 border-rose-200/80 rounded-2xl flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -190,10 +219,10 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           </div>
           <div>
             <h3 className="font-extrabold text-base text-rose-950">
-              Free Heart Sanctuary ({stats.hearts}/{stats.maxHearts} Hearts)
+              Life point sanctuary ({stats.hearts}/{stats.maxHearts} life points)
             </h3>
             <p className="text-xs text-rose-700">
-              Did a hard challenge cost you a heart? Take an unlimited free review drill to restore all hearts.
+              Did a hard challenge cost you a life point? Take a free review drill to restore them all.
             </p>
           </div>
         </div>
