@@ -140,13 +140,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     } else if (currentChallenge.type === 'code_runner') {
       const challengeLang = lesson.id.startsWith('js-') ? 'javascript' : lesson.id.startsWith('sql-') ? 'sql' : lesson.id.startsWith('web-') ? 'web' : 'python';
       const result = runUnifiedCode(userCode, challengeLang);
-      const expected = currentChallenge.testCases?.[0]?.expectedOutput.trim() || '';
       const actual = result.output.trim();
-      if (challengeLang === 'sql') {
-        isCorrect = result.success && (actual.includes('users') || actual.includes('|') || actual.includes('row'));
-      } else {
-        isCorrect = result.success && (expected ? actual.includes(expected) : true);
-      }
+      isCorrect =
+        result.success &&
+        (currentChallenge.testCases || []).every((tc) => actual.includes(tc.expectedOutput.trim()));
       setRunnerOutput(result.output);
       setRunnerError(result.error || null);
     }

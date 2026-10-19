@@ -7,6 +7,7 @@ import { HabitRoutinePrompt } from './HabitRoutinePrompt';
 import { CAREER_TRACKS } from '../data/pythonRoadmap';
 import { WEB_CAREER_TRACKS } from '../data/webRoadmap';
 import { JS_CAREER_TRACKS } from '../data/jsRoadmap';
+import { SQL_CAREER_TRACKS } from '../data/sqlRoadmap';
 
 interface DailySidebarProps {
   onOpenLeagues: () => void;
@@ -562,12 +563,14 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
       </div>
 
       {/* 4.5 Curriculum Roadmap & Agent Check-in Card */}
-      {(stats.activeLanguage === 'python' || stats.activeLanguage === 'web' || stats.activeLanguage === 'javascript') && (
+      {(stats.activeLanguage === 'python' || stats.activeLanguage === 'web' || stats.activeLanguage === 'javascript' || stats.activeLanguage === 'sql') && (
         <div className={`p-5 bg-gradient-to-br ${
           stats.activeLanguage === 'web'
             ? 'from-indigo-950 via-slate-900 to-purple-950 border-indigo-500/20'
             : stats.activeLanguage === 'javascript'
             ? 'from-amber-950 via-slate-900 to-slate-900 border-amber-500/20'
+            : stats.activeLanguage === 'sql'
+            ? 'from-cyan-950 via-slate-900 to-slate-900 border-cyan-500/20'
             : 'from-emerald-950 via-slate-900 to-slate-900 border-emerald-500/20'
         } text-white rounded-3xl shadow-sm border space-y-3`}>
           <div className="flex items-center justify-between">
@@ -577,6 +580,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   ? 'bg-indigo-500/20 border-indigo-400/30 text-indigo-400'
                   : stats.activeLanguage === 'javascript'
                   ? 'bg-amber-500/20 border-amber-400/30 text-amber-400'
+                  : stats.activeLanguage === 'sql'
+                  ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-400'
                   : 'bg-emerald-500/20 border-emerald-400/30 text-emerald-400'
               } border flex items-center justify-center`}>
                 <Compass className="w-4 h-4" />
@@ -587,12 +592,16 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                     ? 'text-indigo-400'
                     : stats.activeLanguage === 'javascript'
                     ? 'text-amber-400'
+                    : stats.activeLanguage === 'sql'
+                    ? 'text-cyan-400'
                     : 'text-emerald-400'
                 }`}>
                   {stats.activeLanguage === 'web'
                     ? 'HTML & CSS Dual-Track'
                     : stats.activeLanguage === 'javascript'
                     ? 'JavaScript Mastery Track'
+                    : stats.activeLanguage === 'sql'
+                    ? 'SQL Mastery Track'
                     : 'Python Mastery Track'}
                 </span>
                 <h4 className="text-xs font-extrabold text-white leading-tight">
@@ -601,6 +610,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                       ? WEB_CAREER_TRACKS.find((t) => t.id === targetCareerTrack)?.name || 'Frontend Engineer'
                       : stats.activeLanguage === 'javascript'
                       ? JS_CAREER_TRACKS.find((t) => t.id === targetCareerTrack)?.name || 'Full-Stack TS Engineer'
+                      : stats.activeLanguage === 'sql'
+                      ? SQL_CAREER_TRACKS.find((t) => t.id === targetCareerTrack)?.name || 'Data Analyst'
                       : CAREER_TRACKS.find((t) => t.id === targetCareerTrack)?.name || 'AI Engineer'
                   }
                 </h4>
@@ -611,6 +622,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                 ? 'text-indigo-300 bg-indigo-950/80 border-indigo-500/30'
                 : stats.activeLanguage === 'javascript'
                 ? 'text-amber-300 bg-amber-950/80 border-amber-500/30'
+                : stats.activeLanguage === 'sql'
+                ? 'text-cyan-300 bg-cyan-950/80 border-cyan-500/30'
                 : 'text-emerald-300 bg-emerald-950/80 border-emerald-500/30'
             } px-2 py-0.5 rounded-full border`}>
               {(() => {
@@ -625,6 +638,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               ? 'Intertwined lessons pair semantic HTML with CSS Box Model, Flexbox & Grid to build real components.'
               : stats.activeLanguage === 'javascript'
               ? 'Anti-blind check-ins verify that you understand Event Loop microtasks, closures, and object prototypes.'
+              : stats.activeLanguage === 'sql'
+              ? 'Anti-blind check-ins verify that you understand NULL logic, join fan-out, and transaction guarantees.'
               : 'Anti-blind check-ins verify that you understand the underlying memory models and edge cases.'}
           </p>
 
@@ -636,6 +651,8 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   ? 'bg-indigo-500 hover:bg-indigo-400'
                   : stats.activeLanguage === 'javascript'
                   ? 'bg-amber-500 hover:bg-amber-400'
+                  : stats.activeLanguage === 'sql'
+                  ? 'bg-cyan-400 hover:bg-cyan-300'
                   : 'bg-emerald-500 hover:bg-emerald-400'
               } text-slate-950 font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
             >
