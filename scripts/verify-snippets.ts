@@ -10,25 +10,8 @@ import { tmpdir } from 'node:os';
 import { PYTHON_UNITS, JAVASCRIPT_UNITS, WEB_UNITS, SQL_UNITS } from '../src/data/curriculum';
 import { SAMPLE_SQL_DB } from '../src/utils/codeRunner';
 import type { Challenge, LanguageId, TestCase } from '../src/types';
-import { SOLUTIONS } from './solutions';
+import { SOLUTIONS, SKIP, PINNED_OUTPUT } from './solutions';
 import { SCHEDULED_CHALLENGES } from '../src/data/challenges';
-
-// Snippets that cannot run outside a browser or only describe timing.
-// Each one needs a human check; the reason is printed in the report.
-export const SKIP: Record<string, string> = {
-  'js-u7-l3-c4': 'timing question (sequential vs parallel awaits); checked by hand 2026-10-19',
-  'js-u8-l2-c3': 'needs a browser DOM (event bubbling); checked by hand 2026-10-19',
-  'js-u8-l3-c4': 'needs browser localStorage; checked by hand 2026-10-19',
-  'web-u2-l1-c1': 'CSS specificity; checked by hand 2026-10-19',
-  'web-u2-l2-c1': 'CSS margin collapsing; checked by hand 2026-10-19',
-};
-
-// For options written as a description ("RANK = 4, DENSE_RANK = 3"), the real output
-// was checked by hand against the marked option once and is pinned here, so any later
-// change to the snippet shows up as a mismatch.
-export const PINNED_OUTPUT: Record<string, string> = {
-  'sql-u9-l1-c1': '100 | 1 | 1\n90 | 2 | 2\n90 | 2 | 2\n80 | 4 | 3',
-};
 
 type Run = { ok: boolean; out: string; error?: string };
 
