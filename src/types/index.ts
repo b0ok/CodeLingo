@@ -205,9 +205,9 @@ export interface ProfileCustomization {
   snippetLanguage?: LanguageId; // Pro: pinned code snippet
   snippetCode?: string;
   showcaseStats?: string[]; // stat ids from data/profileStats, in the order shown
-  spaceHtml?: string; // Pro: My Space
+  spaceHtml?: string; // Pro: myProfile
   spaceCss?: string;
-  layout?: 'standard' | 'custom'; // Pro: 'custom' turns My Space into the whole profile page
+  layout?: 'standard' | 'custom'; // Pro: 'custom' turns myProfile into the whole profile page
 }
 
 export interface UserStats {

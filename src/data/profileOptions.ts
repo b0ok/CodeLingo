@@ -85,7 +85,7 @@ export const PRO_EXTRAS = [
   'Feature 6 badges',
   'Pin a code snippet to your profile',
   'Show 8 stats instead of 4',
-  'My Space: design your own profile section with HTML and CSS',
+  'myProfile: design your own profile with HTML and CSS',
 ];
 
 // Pro looks only show while Pro is active; the choice is kept so it comes back on renewal.

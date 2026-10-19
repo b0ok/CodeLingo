@@ -15,7 +15,7 @@ import { Check, Crown, Lock, Pencil } from 'lucide-react';
 import { supabase, useSession } from '../utils/supabase';
 import { UsernameField, useUsernameCheck } from './UsernameField';
 
-// The live values {{tags}} in My Space fill in with.
+// The live values {{tags}} in myProfile fill in with.
 function spaceData(profile: ProfileCustomization, stats: UserStats, badges: Badge[], pro: boolean): SpaceData {
   const owned = stats.ownedItems || [];
   const all = showcaseStats(stats, badges);
@@ -171,9 +171,9 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
 
       {pro && profile.spaceHtml && (
         <section aria-labelledby="my-space-heading" className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-          <h3 id="my-space-heading" className="px-6 pt-5 pb-3 font-extrabold text-slate-900">My space</h3>
+          <h3 id="my-space-heading" className="px-6 pt-5 pb-3 font-extrabold text-slate-900">myProfile</h3>
           <iframe
-            title={`${profile.displayName || 'Learner'}'s space`}
+            title={`${profile.displayName || 'Learner'}'s myProfile`}
             sandbox=""
             srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '', spaceData(profile, stats, badges, pro))}
             className="w-full h-[360px] border-t border-slate-200 bg-white"
@@ -448,7 +448,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
 
           {pro && (
             <section aria-labelledby="space-editor" className="space-y-3">
-              <h3 id="space-editor" className="font-bold text-slate-800">My space</h3>
+              <h3 id="space-editor" className="font-bold text-slate-800">myProfile</h3>
               <p className="text-sm text-slate-600">
                 Design your own section with HTML and CSS. Scripts, links and outside images are removed, so keep it to your own words and styles.
               </p>
@@ -460,7 +460,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
                 ))}
               </div>
               <fieldset>
-                <legend className="text-sm font-bold text-slate-800 mb-1">Show My Space as</legend>
+                <legend className="text-sm font-bold text-slate-800 mb-1">Show myProfile as</legend>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {([['standard', 'A section on my profile'], ['custom', 'My whole profile page']] as const).map(([value, label]) => (
                     <label key={value} className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
@@ -489,13 +489,13 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
               <textarea id="space-css" value={draft.spaceCss || ''} onChange={(e) => set({ spaceCss: e.target.value })} maxLength={SPACE_LIMITS.css} rows={6} spellCheck={false} className="w-full p-3 bg-slate-900 text-sky-300 font-mono text-sm rounded-xl" aria-describedby="space-css-count" />
               <p id="space-css-count" className="text-xs text-slate-600 tabular-nums">{(draft.spaceCss || '').length} / {SPACE_LIMITS.css}</p>
               <p className="text-sm font-bold text-slate-800">Preview</p>
-              <iframe title="My space preview" sandbox="" srcDoc={spaceDocument(draft.spaceHtml || '', draft.spaceCss || '', spaceData(draft, stats, badges, pro))} className={`w-full ${draft.layout === 'custom' ? 'h-96' : 'h-64'} border border-slate-200 rounded-xl bg-white`} />
+              <iframe title="myProfile preview" sandbox="" srcDoc={spaceDocument(draft.spaceHtml || '', draft.spaceCss || '', spaceData(draft, stats, badges, pro))} className={`w-full ${draft.layout === 'custom' ? 'h-96' : 'h-64'} border border-slate-200 rounded-xl bg-white`} />
             </section>
           )}
 
           {pro ? (
             <p className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-sm font-bold text-emerald-800">
-              <Crown className="w-4 h-4" aria-hidden="true" /> Pro is on: gradients, frames, status line, 160-character bio, 6 badges, 8 stats, a pinned snippet and My Space.
+              <Crown className="w-4 h-4" aria-hidden="true" /> Pro is on: gradients, frames, status line, 160-character bio, 6 badges, 8 stats, a pinned snippet and myProfile.
             </p>
           ) : (
           <section aria-labelledby="pro-extras" className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
