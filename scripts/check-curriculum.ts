@@ -13,6 +13,7 @@ import { PLAYGROUND_TEMPLATES } from '../src/utils/pythonRunner';
 import { SCHEDULED_CHALLENGES } from '../src/data/challenges';
 import type { Challenge, LanguageId, Unit } from '../src/types';
 import { SOLUTIONS } from './solutions';
+import { pickChallenges, SESSION_SIZE } from '../src/utils/lessonSession';
 
 
 const TRACKS: [LanguageId, Unit[], { id: string; nodes: any[] }[]][] = [
@@ -21,7 +22,7 @@ const TRACKS: [LanguageId, Unit[], { id: string; nodes: any[] }[]][] = [
   ['web', WEB_UNITS, WEB_ROADMAP_PHASES],
   ['sql', SQL_UNITS, SQL_ROADMAP_PHASES],
 ];
-const MIN_CHALLENGES = 3;
+const MIN_CHALLENGES = 7; // pool size; each session draws SESSION_SIZE of them
 
 const service = readFileSync(new URL('../src/utils/agentCheckinService.ts', import.meta.url), 'utf8');
 const problems: string[] = [];
@@ -95,6 +96,18 @@ for (const [lang, units, phases] of TRACKS) {
         fail(`${lesson.id}: unit/index fields out of sync`);
       if (lesson.challenges.length < MIN_CHALLENGES)
         fail(`${lesson.id}: only ${lesson.challenges.length} challenges`);
+      // Session draws: right size, authored order, code exercise included, nothing starved
+      const seen = new Set<string>();
+      const hasCode = lesson.challenges.some((c) => c.type === 'code_runner');
+      for (let i = 0; i < 300; i++) {
+        const picked = pickChallenges(lesson.challenges);
+        const idx = picked.map((c) => lesson.challenges.indexOf(c));
+        if (picked.length !== Math.min(SESSION_SIZE, lesson.challenges.length) || idx.some((v, k) => k > 0 && v <= idx[k - 1]))
+          { fail(`${lesson.id}: bad session draw`); break; }
+        if (hasCode && !picked.some((c) => c.type === 'code_runner')) { fail(`${lesson.id}: session missed the code exercise`); break; }
+        picked.forEach((c) => seen.add(c.id));
+      }
+      if (seen.size < lesson.challenges.length) fail(`${lesson.id}: some challenges never get drawn`);
       for (const c of lesson.challenges) {
         challenges++;
         if (challengeIds.has(c.id)) fail(`duplicate challenge ${c.id}`);
