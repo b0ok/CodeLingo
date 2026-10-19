@@ -37,7 +37,7 @@ export const WEB_UNITS: Unit[] = [
           },
           {
             id: 'web-u1-l1-c2',
-            type: 'predict_output',
+            type: 'concept_quiz',
             title: 'Semantic Heading Hierarchy',
             instruction: 'Which heading tag denotes the highest level of hierarchy for SEO and screen readers?',
             codeSnippet: '<h1>Modern Web Apps</h1>\n<h2>Architecture</h2>\n<h3>Components</h3>',
@@ -305,7 +305,7 @@ export const WEB_UNITS: Unit[] = [
           },
           {
             id: 'web-u3-l1-c2',
-            type: 'predict_output',
+            type: 'concept_quiz',
             title: 'Button vs Anchor Semantics',
             instruction: 'Which element is semantically correct for opening an on-page modal popup?',
             codeSnippet: 'Option A: <button type="button">Open Modal</button>\nOption B: <a href="#">Open Modal</a>\nOption C: <div onclick="openModal()">Open Modal</div>',
@@ -375,7 +375,7 @@ export const WEB_UNITS: Unit[] = [
           },
           {
             id: 'web-u4-l1-c2',
-            type: 'predict_output',
+            type: 'concept_quiz',
             title: 'Axis Swap in Column Mode',
             instruction: 'When flex-direction is set to "column", which property controls vertical positioning?',
             codeSnippet: '.stack {\n  display: flex;\n  flex-direction: column;\n  justify-content: space-between;\n}',
@@ -511,7 +511,7 @@ export const WEB_UNITS: Unit[] = [
           },
           {
             id: 'web-u6-l1-c2',
-            type: 'predict_output',
+            type: 'concept_quiz',
             title: 'Accessible Keyboard Focus',
             instruction: 'Why should you use :focus-visible instead of removing outlines with outline: none?',
             codeSnippet: 'button:focus-visible {\n  outline: 2px solid #10b981;\n  outline-offset: 2px;\n}',

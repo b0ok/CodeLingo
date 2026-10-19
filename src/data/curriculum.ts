@@ -1656,7 +1656,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'predict_output',
             title: 'Reading Lines',
             instruction: 'What is the type returned by f.readlines()?',
-            codeSnippet: '# Assuming file has 3 lines of text:\n# lines = f.readlines()\n# print(type(lines))',
+            codeSnippet: 'with open("notes.txt", "w") as f:\n    f.write("one\\ntwo\\nthree\\n")\n\nwith open("notes.txt") as f:\n    lines = f.readlines()\nprint(type(lines))',
             options: [
               { id: 'opt-1', text: "<class 'list'>" },
               { id: 'opt-2', text: "<class 'str'>" },

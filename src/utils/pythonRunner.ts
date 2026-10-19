@@ -150,6 +150,21 @@ export function runPythonCode(code: string, mockInputs: string[] = []): Executio
       },
       abs: (v: number) => Math.abs(v),
       enumerate: (items: unknown[], start: number = 0) => [...items].map((v, i) => [i + start, v]),
+      __get: (obj: Record<string, unknown>, key: string, fallback: unknown = null) =>
+        obj != null && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : fallback,
+      __slice: (seq: string | unknown[], start: number | null, stop: number | null, step: number | null) => {
+        const items = typeof seq === 'string' ? [...seq] : seq;
+        const n = items.length;
+        const s = step ?? 1;
+        if (s === 0) throw new Error('ValueError: slice step cannot be zero');
+        const clamp = (i: number | null, fallback: number) =>
+          i === null ? fallback : i < 0 ? Math.max(n + i, s < 0 ? -1 : 0) : Math.min(i, s < 0 ? n - 1 : n);
+        const from = clamp(start, s > 0 ? 0 : n - 1);
+        const to = clamp(stop, s > 0 ? n : -1);
+        const out: unknown[] = [];
+        for (let i = from; s > 0 ? i < to : i > to; i += s) out.push(items[i]);
+        return typeof seq === 'string' ? out.join('') : out;
+      },
       round: (v: number, decimals?: number) => {
         if (decimals !== undefined) {
           const factor = Math.pow(10, decimals);
@@ -270,6 +285,17 @@ function transpilePythonToJs(pyCode: string): string {
         .replace(/\bsuper\(\)\.__init__\(/g, 'super(')
         .replace(/\bself\./g, 'this.')
         .replace(/\[\s*-\s*(\d+)\s*\]/g, '.at(-$1)')
+        // seq[a:b:c] -> __slice(seq, a, b, c)
+        .replace(/([\w.)\]]+)\[([^\[\]:]*):([^\[\]:]*)(?::([^\[\]]*))?\]/g, (_m, seq, a, b, c) =>
+          `__slice(${seq}, ${a.trim() || 'null'}, ${b.trim() || 'null'}, ${(c || '').trim() || 'null'})`
+        )
+        // dict methods on plain objects
+        .replace(/([\w.]+)\.values\(\)/g, 'Object.values($1)')
+        .replace(/([\w.]+)\.keys\(\)/g, 'Object.keys($1)')
+        .replace(/([\w.]+)\.items\(\)/g, 'Object.entries($1)')
+        .replace(/([\w.]+)\.get\(/g, '__get($1, ')
+        .replace(/\.upper\(\)/g, '.toUpperCase()')
+        .replace(/\.lower\(\)/g, '.toLowerCase()')
         .replace(/(^|[^.\w])([A-Z]\w*)\(/g, (m, pre, name) => (classNames.has(name) ? `${pre}new ${name}(` : m))
     );
 
