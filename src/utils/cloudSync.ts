@@ -13,7 +13,7 @@ export type CloudState = Pick<
   UserStats,
   | 'xp' | 'gems' | 'hearts' | 'streak' | 'highestStreak' | 'streakFreeze' | 'currentLeague' | 'leagueWeeklyXp'
   | 'lastActiveDate' | 'completedLessons' | 'nodeStars' | 'history' | 'unlockedBadgeIds' | 'checkedInNodes'
-  | 'completedChallenges' | 'activeLanguage' | 'targetCareerTrack' | 'soundEnabled' | 'dailyGoalTarget' | 'dailyRoutineTime'
+  | 'completedChallenges' | 'ownedItems' | 'activeLanguage' | 'targetCareerTrack' | 'soundEnabled' | 'dailyGoalTarget' | 'dailyRoutineTime'
 > & { profile: ProfileCustomization };
 
 export function pick(s: UserStats): CloudState {
@@ -22,7 +22,7 @@ export function pick(s: UserStats): CloudState {
     streakFreeze: s.streakFreeze, currentLeague: s.currentLeague, leagueWeeklyXp: s.leagueWeeklyXp,
     lastActiveDate: s.lastActiveDate, completedLessons: s.completedLessons, nodeStars: s.nodeStars,
     history: s.history, unlockedBadgeIds: s.unlockedBadgeIds, checkedInNodes: s.checkedInNodes || [],
-    completedChallenges: s.completedChallenges || [], activeLanguage: s.activeLanguage,
+    completedChallenges: s.completedChallenges || [], ownedItems: s.ownedItems || [], activeLanguage: s.activeLanguage,
     targetCareerTrack: s.targetCareerTrack, soundEnabled: s.soundEnabled,
     dailyGoalTarget: s.dailyGoalTarget, dailyRoutineTime: s.dailyRoutineTime,
     profile: { ...DEFAULT_PROFILE, ...s.profile },
@@ -58,6 +58,7 @@ export function merge(a: CloudState, b: CloudState): CloudState {
     unlockedBadgeIds: union(a.unlockedBadgeIds, b.unlockedBadgeIds),
     checkedInNodes: union(a.checkedInNodes, b.checkedInNodes),
     completedChallenges: union(a.completedChallenges, b.completedChallenges),
+    ownedItems: union(a.ownedItems, b.ownedItems),
   };
 }
 
@@ -67,7 +68,7 @@ export interface Rows {
   progress: Record<string, unknown>;
   profile: Record<string, unknown>;
   lessons: { lesson_id: string; stars: number }[];
-  achievements: { kind: 'badge' | 'milestone' | 'challenge'; item_id: string }[];
+  achievements: { kind: 'badge' | 'milestone' | 'challenge' | 'item'; item_id: string }[];
   xpLog: { day: string; xp: number }[];
 }
 
@@ -91,6 +92,7 @@ export function toRows(s: CloudState): Rows {
       ...s.unlockedBadgeIds.map((id) => ({ kind: 'badge' as const, item_id: id })),
       ...(s.checkedInNodes || []).map((id) => ({ kind: 'milestone' as const, item_id: id })),
       ...s.completedChallenges.map((id) => ({ kind: 'challenge' as const, item_id: id })),
+      ...(s.ownedItems || []).map((id) => ({ kind: 'item' as const, item_id: id })),
     ],
     xpLog: Object.entries(s.history).map(([day, xp]) => ({ day, xp: Math.max(0, Math.round(xp)) })),
   };
@@ -107,7 +109,7 @@ export function fromRows(r: { progress: Row; profile: Row; lessons: Row[]; achie
     completedLessons: r.lessons.map((l) => l.lesson_id),
     nodeStars: Object.fromEntries(r.lessons.map((l) => [l.lesson_id, l.stars])),
     history: Object.fromEntries(r.xpLog.map((x) => [x.day, x.xp])),
-    unlockedBadgeIds: kind('badge'), checkedInNodes: kind('milestone'), completedChallenges: kind('challenge'),
+    unlockedBadgeIds: kind('badge'), checkedInNodes: kind('milestone'), completedChallenges: kind('challenge'), ownedItems: kind('item'),
     activeLanguage: r.profile.active_language, targetCareerTrack: r.profile.career_goal ?? undefined,
     soundEnabled: r.profile.sound_enabled, dailyGoalTarget: r.profile.daily_goal_xp,
     dailyRoutineTime: (r.profile.reminder_time || '20:00').slice(0, 5),

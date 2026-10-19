@@ -253,6 +253,7 @@ export interface UserStats {
     | 'sql-dba';
   checkedInNodes?: string[]; // Node IDs verified through Agent check-in
   profile?: ProfileCustomization;
+  ownedItems?: string[]; // ring shop purchases (avatar, frame and banner ids)
   learningLanguages?: LanguageId[]; // every course picked in onboarding; the first is where they start
   agentCheckinsCount?: number;
 }

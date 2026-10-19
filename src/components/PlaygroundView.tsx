@@ -8,7 +8,13 @@ import { useGame } from '../context/GameContext';
 import { Play, RotateCcw, Copy, Check, Terminal, Sparkles, BookOpen, Code2 } from 'lucide-react';
 
 export const PlaygroundView: React.FC = () => {
-  const { activeLanguage } = useGame();
+  const { activeLanguage, trackActivity } = useGame();
+  // Counts toward the "Practice for 5 minutes" task while this screen is open and visible.
+  useEffect(() => {
+    const timer = setInterval(() => document.visibilityState === 'visible' && trackActivity('practiceMinutes'), 60000);
+    return () => clearInterval(timer);
+  }, [trackActivity]);
+
   const [selectedLang, setSelectedLang] = useState<LanguageId>(activeLanguage || 'python');
   useEffect(() => {
     if (selectedLang === 'python') preloadPython();
@@ -48,6 +54,7 @@ export const PlaygroundView: React.FC = () => {
 
     if (result.success) {
       sound.playSuccess();
+      trackActivity('sandboxRuns');
     } else {
       sound.playError();
     }

@@ -27,7 +27,7 @@ function loadFeed(): FeedState {
 }
 
 export const FeedView: React.FC = () => {
-  const { stats, badges, leaderboard } = useGame();
+  const { stats, badges, leaderboard, trackActivity } = useGame();
   const [feed, setFeed] = useState<FeedState>(loadFeed);
   const [draft, setDraft] = useState('');
 
@@ -44,11 +44,13 @@ export const FeedView: React.FC = () => {
     setDraft('');
   };
 
-  const toggleHighFive = (id: string) =>
+  const toggleHighFive = (id: string) => {
+    if (!feed.highFived.includes(id)) trackActivity('cheers');
     setFeed((f) => ({
       ...f,
       highFived: f.highFived.includes(id) ? f.highFived.filter((x) => x !== id) : [...f.highFived, id],
     }));
+  };
 
   // Activity cards built from progress that already exists
   const activity: FeedItem[] = [
