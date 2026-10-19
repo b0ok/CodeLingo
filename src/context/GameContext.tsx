@@ -42,6 +42,7 @@ interface GameContextType {
   placeOutOfLessons: (lessonIds: string[]) => void;
   setLearningLanguages: (langs: LanguageId[]) => void;
   updateProfile: (patch: Partial<ProfileCustomization>) => void;
+  buyItem: (id: string, price: number) => boolean;
   newlyUnlockedBadge: Badge | null;
   rewardEvents: { title: string; rings: number }[];
   dismissRewardEvents: () => void;
@@ -122,6 +123,7 @@ const DEFAULT_STATS: UserStats = {
   targetCareerTrack: 'ai-ml',
   checkedInNodes: [],
   agentCheckinsCount: 0,
+  ownedItems: [],
   profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
 };
 
@@ -702,6 +704,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const buyItem = (id: string, price: number): boolean => {
+    if (stats.gems < price || (stats.ownedItems || []).includes(id)) return false;
+    sound.playGem();
+    setStats((prev) => ({ ...prev, gems: prev.gems - price, ownedItems: [...(prev.ownedItems || []), id] }));
+    return true;
+  };
+
   const updateProfile = (patch: Partial<ProfileCustomization>) => {
     setStats((prev) => ({ ...prev, profile: { ...DEFAULT_STATS.profile!, ...prev.profile, ...patch } }));
   };
@@ -915,6 +924,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         placeOutOfLessons,
         setLearningLanguages,
         updateProfile,
+        buyItem,
         newlyUnlockedBadge,
         rewardEvents,
         dismissRewardEvents,

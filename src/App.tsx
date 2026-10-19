@@ -17,6 +17,7 @@ import { ChallengesView } from './components/ChallengesView';
 import { DailySidebar } from './components/DailySidebar';
 import { BadgeUnlockModal } from './components/BadgeUnlockModal';
 import { RewardToast } from './components/RewardToast';
+import { RingShop } from './components/RingShop';
 import { MonetizationModal } from './components/MonetizationModal';
 import { InactivityReminderModal } from './components/InactivityReminderModal';
 import { RoadmapModal } from './components/RoadmapModal';
@@ -35,6 +36,7 @@ function AppContent() {
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
 
   const currentUnits = getUnitsForLanguage(activeLanguage);
 
@@ -65,6 +67,7 @@ function AppContent() {
         setActiveTab={setActiveTab}
         onOpenHeartModal={() => setIsHeartModalOpen(true)}
         onOpenMonetizationModal={() => setIsMonetizationModalOpen(true)}
+        onOpenShop={() => setIsShopOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -98,7 +101,7 @@ function AppContent() {
           {activeTab === 'leagues' && <LeaderboardView />}
 
           {activeTab === 'feed' && <FeedView />}
-          {activeTab === 'profile' && <ProfileView onOpenPlans={() => setIsMonetizationModalOpen(true)} />}
+          {activeTab === 'profile' && <ProfileView onOpenPlans={() => setIsMonetizationModalOpen(true)} onOpenShop={() => setIsShopOpen(true)} />}
           {activeTab === 'settings' && (
             <SettingsView
               onOpenPlans={() => setIsMonetizationModalOpen(true)}
@@ -173,6 +176,7 @@ function AppContent() {
       {/* Achievement Badge Unlock Celebration Modal */}
       <BadgeUnlockModal />
       <RewardToast />
+      {isShopOpen && <RingShop onClose={() => setIsShopOpen(false)} />}
 
       {/* Web Inactivity & Personalized Daily Coding Goal Reminder */}
       <InactivityReminderModal
