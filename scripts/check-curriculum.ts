@@ -10,6 +10,7 @@ import { SQL_ROADMAP_PHASES } from '../src/data/sqlRoadmap';
 import { getPhaseDiagnosticQuestions } from '../src/utils/agentCheckinService';
 import { runUnifiedCode, passesTestCases, MULTI_LANG_TEMPLATES } from '../src/utils/codeRunner';
 import { SCHEDULED_CHALLENGES } from '../src/data/challenges';
+import { PRO_CHALLENGES } from '../src/data/proChallenges';
 import type { Challenge, LanguageId, Unit } from '../src/types';
 import { SOLUTIONS } from './solutions';
 import { pickChallenges, SESSION_SIZE } from '../src/utils/lessonSession';
@@ -151,6 +152,17 @@ for (const ch of SCHEDULED_CHALLENGES) {
     if (await passes(ch.starterCode)) fail(`${ch.id}: starter code already passes`);
     for (const w of s.wrong) if (await passes(w)) fail(`${ch.id}: wrong answer passes: ${w}`);
   }
+}
+
+// Onboarding pro challenges: the reference passes, starters and known wrong answers fail.
+for (const ch of Object.values(PRO_CHALLENGES)) {
+  if (ch.language === 'web') continue; // graded on a rendered page; covered by the browser test
+  const s = SOLUTIONS[ch.id];
+  const passes = async (code: string) => passesTestCases(await runUnifiedCode(code, ch.language), ch.testCases);
+  if (!s) { fail(`${ch.id}: no reference solution`); continue; }
+  if (!(await passes(s.right))) fail(`${ch.id}: reference solution fails: ${(await runUnifiedCode(s.right, ch.language)).output}`);
+  if (await passes(ch.starterCode)) fail(`${ch.id}: starter code already passes`);
+  for (const w of s.wrong) if (await passes(w)) fail(`${ch.id}: wrong answer passes: ${w}`);
 }
 
 // The playground's example programs must run cleanly.

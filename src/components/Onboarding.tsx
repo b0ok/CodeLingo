@@ -7,8 +7,11 @@ import { SQL_CAREER_TRACKS } from '../data/sqlRoadmap';
 import { WEB_CAREER_TRACKS } from '../data/webRoadmap';
 import { Challenge, LanguageId, UserStats } from '../types';
 import { Modal } from './Modal';
+import { PRO_CHALLENGES } from '../data/proChallenges';
+import { runUnifiedCode, passesTestCases, gradeWebCode } from '../utils/codeRunner';
+import { preloadPython } from '../utils/pythonRunner';
 import { sendSignInLink, savePendingProfile } from '../utils/supabase';
-import { ArrowLeft, Check, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, Mail, ShieldCheck, X } from 'lucide-react';
 
 // ---------- Where the learner is in onboarding (kept in this browser) ----------
 
@@ -82,14 +85,17 @@ const inputClass =
 
 // ---------- Before the first lesson ----------
 
-type IntroStep = 'welcome' | 'course' | 'goal' | 'level' | 'placement' | 'placed' | 'daily';
+type IntroStep = 'welcome' | 'course' | 'goal' | 'level' | 'placement' | 'placed' | 'pro' | 'cooked' | 'humbled' | 'daily';
+const LEVEL_BRANCH: IntroStep[] = ['placement', 'placed', 'pro', 'cooked', 'humbled'];
 const NUMBERED: IntroStep[] = ['course', 'goal', 'level', 'daily'];
 
 export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLessonIds: string[]) => void }> = ({ onFinish }) => {
-  const { setActiveLanguage, setTargetCareerTrack, setDailyGoalTarget, placeOutOfLessons } = useGame();
+  const { setActiveLanguage, setTargetCareerTrack, setDailyGoalTarget, placeOutOfLessons, setLearningLanguages, gainXpAndGems } = useGame();
   const [step, setStep] = useState<IntroStep>('welcome');
   const [history, setHistory] = useState<IntroStep[]>([]);
-  const [lang, setLang] = useState<LanguageId>('python');
+  const [picked, setPicked] = useState<LanguageId[]>([]);
+  const [courseError, setCourseError] = useState(false);
+  const lang: LanguageId = picked[0] || 'python';
   const [answers, setAnswers] = useState<boolean[]>([]);
   const [signingIn, setSigningIn] = useState(false);
   const heading = useHeadingFocus(`${step}-${answers.length}`);
@@ -98,7 +104,7 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
   const back = () => {
     const prev = history[history.length - 1];
     if (!prev) return;
-    if (step === 'placement' || step === 'placed' || (step === 'daily' && prev === 'placed')) {
+    if (LEVEL_BRANCH.includes(step) || (step === 'daily' && LEVEL_BRANCH.includes(prev))) {
       setAnswers([]);
       setHistory((h) => h.slice(0, h.lastIndexOf('level')));
       setStep('level');
@@ -120,7 +126,7 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
     onFinish(lang, skipped);
   };
 
-  const stepNumber = NUMBERED.indexOf(step === 'placement' || step === 'placed' ? 'level' : step);
+  const stepNumber = NUMBERED.indexOf(LEVEL_BRANCH.includes(step) ? 'level' : step);
   const h1 = 'text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight outline-none [text-wrap:balance]';
 
   return (
@@ -162,12 +168,43 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
         {step === 'course' && (
           <section className="space-y-4">
             <h1 ref={heading} tabIndex={-1} className={h1}>What do you want to learn?</h1>
-            {COURSES.map((c) => (
-              <button key={c.id} className={choiceClass} onClick={() => { setLang(c.id); setActiveLanguage(c.id); setAnswers([]); go('goal'); }}>
-                <span className="block font-bold text-slate-900">{getPathway(c.id).name}</span>
-                <span className="block text-sm text-slate-600 mt-0.5">{c.outcome}</span>
-              </button>
-            ))}
+            <p className="text-slate-600">Pick all that apply. You'll start with the first one you pick.</p>
+            {COURSES.map((c) => {
+              const order = picked.indexOf(c.id);
+              return (
+                <button
+                  key={c.id}
+                  aria-pressed={order >= 0}
+                  className={`${choiceClass} flex items-center gap-3 ${order >= 0 ? 'border-emerald-500 bg-emerald-50' : ''}`}
+                  onClick={() => {
+                    setCourseError(false);
+                    setPicked((p) => (p.includes(c.id) ? p.filter((x) => x !== c.id) : [...p, c.id]));
+                  }}
+                >
+                  <span className="flex-1">
+                    <span className="block font-bold text-slate-900">{getPathway(c.id).name}</span>
+                    <span className="block text-sm text-slate-600 mt-0.5">{c.outcome}</span>
+                  </span>
+                  {order === 0 && <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg">Start here</span>}
+                  <span aria-hidden="true" className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 ${order >= 0 ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300'}`}>
+                    {order >= 0 && <Check className="w-4 h-4" />}
+                  </span>
+                </button>
+              );
+            })}
+            {courseError && <p role="alert" className="text-sm text-rose-700">Pick at least one course to continue.</p>}
+            <button
+              className={primaryClass}
+              onClick={() => {
+                if (!picked.length) { setCourseError(true); return; }
+                setActiveLanguage(picked[0]);
+                setLearningLanguages(picked);
+                setAnswers([]);
+                go('goal');
+              }}
+            >
+              Continue
+            </button>
           </section>
         )}
 
@@ -188,15 +225,19 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
           <section className="space-y-4">
             <h1 ref={heading} tabIndex={-1} className={h1}>Where are you starting?</h1>
             <button className={choiceClass} onClick={() => { setAnswers([]); go('daily'); }}>
-              <span className="block font-bold text-slate-900">I'm brand new</span>
-              <span className="block text-sm text-slate-600 mt-0.5">Start from the first lesson</span>
+              <span className="block font-bold text-slate-900">Noob</span>
+              <span className="block text-sm text-slate-600 mt-0.5">It's okay to be a noob. We all gotta start somewhere.</span>
             </button>
             {questions.length > 0 && (
               <button className={choiceClass} onClick={() => { setAnswers([]); go('placement'); }}>
-                <span className="block font-bold text-slate-900">I know some already</span>
-                <span className="block text-sm text-slate-600 mt-0.5">Take a {questions.length}-question check and skip what you know</span>
+                <span className="block font-bold text-slate-900">Novice</span>
+                <span className="block text-sm text-slate-600 mt-0.5">Take a {questions.length}-question check and skip what you know.</span>
               </button>
             )}
+            <button className={choiceClass} onClick={() => { setAnswers([]); if (lang === 'python') preloadPython(); go('pro'); }}>
+              <span className="block font-bold text-slate-900">Pro</span>
+              <span className="block text-sm text-slate-600 mt-0.5">Throw me in. LET ME COOK.</span>
+            </button>
           </section>
         )}
 
@@ -240,6 +281,44 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
           </section>
         )}
 
+        {step === 'pro' && (
+          <ProCook
+            lang={lang}
+            heading={heading}
+            onPass={() => {
+              gainXpAndGems(50, 25);
+              setAnswers(questions.map(() => true)); // counts as acing the placement check
+              go('cooked');
+            }}
+            onGiveUp={() => go('humbled')}
+          />
+        )}
+
+        {step === 'cooked' && (
+          <section className="space-y-4">
+            <p className="text-sm font-bold text-amber-700 uppercase tracking-wider">Let me cook · passed</p>
+            <h1 ref={heading} tabIndex={-1} className={h1}>You cooked.</h1>
+            <p className="text-slate-600">
+              That's one of the hardest challenges we have, solved on your first day. +50 XP and 25 gold rings.
+              {placedUnit > 0 && ` We skipped the first ${placedUnit} units. They stay open if you want a refresher.`}
+            </p>
+            <button onClick={() => go('daily')} className={primaryClass}>Continue</button>
+          </section>
+        )}
+
+        {step === 'humbled' && (
+          <section className="space-y-4">
+            <h1 ref={heading} tabIndex={-1} className={h1}>Humbled? That's part of it.</h1>
+            <p className="text-slate-600">That one trips up plenty of experienced coders. Let's find the level that fits you.</p>
+            {questions.length > 0 && (
+              <button onClick={() => { setAnswers([]); go('placement'); }} className={primaryClass}>Take the {questions.length}-question check</button>
+            )}
+            <button onClick={() => { setAnswers([]); go('daily'); }} className="w-full py-3.5 border-2 border-slate-300 text-slate-800 font-bold rounded-2xl hover:bg-white cursor-pointer">
+              Start from the beginning
+            </button>
+          </section>
+        )}
+
         {step === 'daily' && (
           <section className="space-y-4">
             <h1 ref={heading} tabIndex={-1} className={h1}>How much time a day?</h1>
@@ -258,6 +337,77 @@ export const OnboardingIntro: React.FC<{ onFinish: (lang: LanguageId, skippedLes
 
       {signingIn && <AccountDialog mode="signin" onClose={() => setSigningIn(false)} />}
     </div>
+  );
+};
+
+// ---------- Pro: one hard challenge ----------
+
+const ProCook: React.FC<{
+  lang: LanguageId;
+  heading: React.RefObject<HTMLHeadingElement | null>;
+  onPass: () => void;
+  onGiveUp: () => void;
+}> = ({ lang, heading, onPass, onGiveUp }) => {
+  const ch = PRO_CHALLENGES[lang];
+  const [code, setCode] = useState(ch.starterCode);
+  const [checking, setChecking] = useState(false);
+  const [feedback, setFeedback] = useState<{ output?: string; checks?: { label: string; passed: boolean }[] } | null>(null);
+  const [tries, setTries] = useState(0);
+
+  const check = async () => {
+    setChecking(true);
+    setTries((t) => t + 1);
+    if (ch.webChecks) {
+      const r = gradeWebCode(code, ch.webChecks);
+      setChecking(false);
+      if (r.passed) return onPass();
+      setFeedback({ checks: r.results });
+      return;
+    }
+    const r = await runUnifiedCode(code, ch.language);
+    setChecking(false);
+    if (passesTestCases(r, ch.testCases)) return onPass();
+    setFeedback({ output: r.error || r.output || '(no output)' });
+  };
+
+  return (
+    <section className="space-y-4">
+      <p className="text-sm font-bold text-amber-700 uppercase tracking-wider">Let me cook · {getPathway(lang).name}</p>
+      <h1 ref={heading} tabIndex={-1} className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight outline-none">{ch.title}</h1>
+      <p className="text-slate-700 [text-wrap:pretty]">{ch.prompt}</p>
+      <label htmlFor="pro-code" className="sr-only">Your code</label>
+      <textarea
+        id="pro-code"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        spellCheck={false}
+        rows={12}
+        className="w-full p-4 bg-slate-900 text-emerald-300 font-mono text-sm rounded-2xl leading-relaxed focus-visible:outline-2 focus-visible:outline-emerald-500"
+      />
+      {feedback && (
+        <div role="status" className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-2 text-sm">
+          <p className="font-bold text-rose-900">Not quite{tries > 1 ? ` (try ${tries})` : ''}. Keep cooking.</p>
+          {feedback.output && (
+            <>
+              <p className="text-rose-900">Your output:</p>
+              <pre className="p-3 bg-white border border-rose-200 rounded-xl whitespace-pre-wrap font-mono text-slate-800">{feedback.output}</pre>
+            </>
+          )}
+          {feedback.checks && (
+            <ul className="space-y-1">
+              {feedback.checks.map((c) => (
+                <li key={c.label} className="flex gap-2 text-slate-800">
+                  {c.passed ? <Check className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" aria-hidden="true" /> : <X className="w-4 h-4 mt-0.5 text-rose-600 shrink-0" aria-hidden="true" />}
+                  <span><span className="sr-only">{c.passed ? 'Passed: ' : 'Missing: '}</span>{c.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      <button onClick={check} disabled={checking} className={primaryClass}>{checking ? 'Checking…' : 'Run and check'}</button>
+      <button onClick={onGiveUp} className="w-full py-3 text-slate-600 font-bold cursor-pointer">I give up</button>
+    </section>
   );
 };
 
@@ -438,6 +588,9 @@ export const WelcomeDialog: React.FC<{ onDone: () => void }> = ({ onDone }) => {
         <ul className="space-y-3">
           <li className="flex gap-3"><Check className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /><span><strong>{getPathway(activeLanguage).name}</strong>, {minutes} minutes a day</span></li>
           <li className="flex gap-3"><Check className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /><span>This week: 5 lessons</span></li>
+          {(stats.learningLanguages || []).length > 1 && (
+            <li className="flex gap-3"><Check className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /><span>Also on your list: {(stats.learningLanguages || []).slice(1).map((l) => getPathway(l).name).join(', ')}. Switch from the course menu any time.</span></li>
+          )}
           {next && <li className="flex gap-3"><Check className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /><span>Next up: {next.title}</span></li>}
         </ul>
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
