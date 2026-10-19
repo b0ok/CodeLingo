@@ -1,195 +1,152 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
-import { SubscriptionTier } from '../types';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
-import { X, Check, Sparkles, Zap, Flame, Crown, Terminal, ShieldCheck, Heart } from 'lucide-react';
+import { X, Check, Crown, ShieldCheck, Info } from 'lucide-react';
 
 interface MonetizationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Prices from the business plan (US dollars). Stripe replaces the test switch in build plan PR 9.
+const PRICES = {
+  monthly: { amount: '$6.99', per: '/ month', note: 'Billed monthly' },
+  yearly: { amount: '$49.99', per: '/ year', note: 'Just $4.17 a month, save 40%' },
+};
+
+const FREE_FEATURES = [
+  'Every lesson in all 4 courses',
+  '5 life points that refill, plus free practice drills',
+  '3 AI check-ins a week',
+  'Leagues, streaks, the Feed and the Sandbox',
+  'A profile with 20 avatars, 6 banners and 3 featured badges',
+];
+
+const PRO_FEATURES = [
+  'Unlimited life points',
+  '30 AI check-ins a month',
+  'Streak repair',
+  'Pro profile: gradient banners, avatar frames, status line, pinned code snippet, 6 featured badges',
+  'Early access to new courses',
+];
+
 export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, onClose }) => {
   const { stats, setSubscriptionTier } = useGame();
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   if (!isOpen) return null;
 
-  const handleSelectTier = (tier: SubscriptionTier) => {
-    sound.playVictory();
+  const isPro = stats.subscriptionTier === 'pro' || stats.subscriptionTier === 'novice'; // novice: retired plan name
+  const price = PRICES[billing];
+
+  const choose = (tier: 'free' | 'pro') => {
     setSubscriptionTier(tier);
-    confetti({
-      particleCount: 75,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+    if (tier === 'pro') {
+      sound.playVictory();
+      confetti({ particleCount: 75, spread: 70, origin: { y: 0.6 }, disableForReducedMotion: true });
+    }
     onClose();
   };
 
-  const tiers: Array<{
-    id: SubscriptionTier;
-    name: string;
-    price: string;
-    badge: string;
-    description: string;
-    popular?: boolean;
-    color: string;
-    features: string[];
-    cta: string;
-  }> = [
-    {
-      id: 'free',
-      name: 'Free Starter',
-      price: '$0',
-      badge: 'Current Standard',
-      description: 'Everything you need to build a consistent coding habit.',
-      color: 'border-slate-200 bg-white',
-      features: [
-        '5 life points / day with practice refill drills',
-        'Full access to all 4 Language Pathways (Python, JS, SQL, Web)',
-        'Weekly Competitive Bronze-to-Legend Leagues',
-        'Standard Sandbox Playground',
-        'Daily Streak & Goal Tracker',
-      ],
-      cta: stats.subscriptionTier === 'free' ? 'Current Plan' : 'Downgrade to Free',
-    },
-    {
-      id: 'novice',
-      name: 'Novice Coder',
-      price: '$4.99/mo',
-      badge: 'Most Popular',
-      popular: true,
-      description: 'No life point worries, personalized review drills, and fast progress.',
-      color: 'border-amber-400 bg-gradient-to-b from-amber-50/50 to-white shadow-md ring-2 ring-amber-400/40',
-      features: [
-        '♾️ UNLIMITED life points — never fail or wait to practice',
-        '1 Free Streak Freeze recharged every week',
-        'Bug Slaying & Syntax Sprint Practice Gauntlets',
-        'Novice Timed Challenge Mode (+50% XP Boost)',
-        'Personalized Mistake Review Drills',
-      ],
-      cta: stats.subscriptionTier === 'novice' ? 'Active Plan' : 'Upgrade to Novice',
-    },
-    {
-      id: 'pro',
-      name: 'Pro "LET ME COOK"',
-      price: '$11.99/mo',
-      badge: 'Ultimate Dev Power',
-      description: 'The hardcore developer tier for mastery, clean code grading, and speed.',
-      color: 'border-emerald-500 bg-gradient-to-b from-emerald-50/60 to-white shadow-lg ring-2 ring-emerald-500/40',
-      features: [
-        '♾️ Unlimited life points & Double XP Multiplier',
-        '👨‍🍳 Exclusive "LET ME COOK" Terminal Matrix Arena',
-        'Automated Cleanliness & Algorithmic Efficiency Scorecard',
-        'PEP8 & Cyclomatic Complexity Code Analysis',
-        'Weekly Boss & Monthly Grand Tournament Access',
-        'Verified Shareable Mastery Certificates',
-      ],
-      cta: stats.subscriptionTier === 'pro' ? 'Active Plan' : 'Unlock Pro Cook',
-    },
-  ];
-
   return (
-    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Membership and pricing" onClose={onClose}>
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-        
-        {/* Header */}
-        <div className="p-6 pb-2 sm:p-8 sm:pb-4 flex items-start justify-between">
+    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" label="Plans" onClose={onClose}>
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-3xl w-full max-h-dvh sm:max-h-[90vh] overflow-y-auto overscroll-contain shadow-2xl">
+        <div className="p-6 sm:p-8 pb-2 flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-wider">
-              <Crown className="w-4 h-4 text-amber-500" />
-              <span>Membership & Pricing</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Fuel Your Coding Journey
-            </h2>
-            <p className="text-sm text-slate-500 max-w-xl">
-              Learn for free forever, or upgrade for unlimited life points, personalized review drills, and the hardcore <strong>LET ME COOK</strong> efficiency arena.
-            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Plans</h2>
+            <p className="text-slate-600">Learn free forever, or go Pro to remove the limits.</p>
           </div>
-
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="p-2 text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
-          >
+          <button onClick={onClose} aria-label="Close" className="p-2 text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-100 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Plan Cards Grid */}
-        <div className="p-6 sm:p-8 pt-4 grid grid-cols-1 md:grid-cols-3 gap-5">
-          {tiers.map((tier) => {
-            const isCurrent = stats.subscriptionTier === tier.id;
-
-            return (
-              <div
-                key={tier.id}
-                className={`rounded-2xl p-6 border flex flex-col justify-between transition relative ${tier.color}`}
+        {/* Billing period */}
+        <div className="px-6 sm:px-8 pt-2">
+          <div role="group" aria-label="Billing period" className="inline-flex p-1 bg-slate-100 rounded-2xl">
+            {(['monthly', 'yearly'] as const).map((b) => (
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                aria-pressed={billing === b}
+                className={`px-4 py-2 rounded-xl text-sm font-bold cursor-pointer ${billing === b ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}
               >
-                {tier.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-extrabold text-xs uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
-                    {tier.badge}
-                  </span>
-                )}
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-lg text-slate-900">{tier.name}</h3>
-                    {tier.id === 'pro' && <Terminal className="w-5 h-5 text-emerald-600" />}
-                    {tier.id === 'novice' && <Zap className="w-5 h-5 text-amber-500" />}
-                    {tier.id === 'free' && <ShieldCheck className="w-5 h-5 text-slate-500" />}
-                  </div>
-
-                  <div className="flex items-baseline gap-1 my-3">
-                    <span className="text-3xl font-extrabold text-slate-900">{tier.price}</span>
-                    {tier.price !== '$0' && <span className="text-xs text-slate-500 font-medium">/ month</span>}
-                  </div>
-
-                  <p className="text-xs text-slate-600 mb-5 leading-relaxed">
-                    {tier.description}
-                  </p>
-
-                  <div className="space-y-2.5 border-t border-slate-200/80 pt-4 mb-6">
-                    {tier.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleSelectTier(tier.id)}
-                  disabled={isCurrent}
-                  className={`w-full py-3 rounded-xl font-bold text-xs tracking-wide transition cursor-pointer min-h-[44px] ${
-                    isCurrent
-                      ? 'bg-slate-100 text-slate-500 cursor-default border border-slate-200'
-                      : tier.id === 'pro'
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-95'
-                      : tier.id === 'novice'
-                      ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 active:scale-95'
-                      : 'bg-slate-900 hover:bg-slate-800 text-white active:scale-95'
-                  }`}
-                >
-                  {isCurrent ? 'Current Plan' : tier.cta}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer Guarantee */}
-        <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-3xl flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
-          <div className="flex items-center gap-2">
-            <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-            <span>Interactive prototype mode: Click any tier to switch plans instantly and test features!</span>
+                {b === 'monthly' ? 'Monthly' : 'Yearly · save 40%'}
+              </button>
+            ))}
           </div>
-          <span className="font-semibold text-slate-700">Cancel or switch anytime</span>
         </div>
 
+        <div className="p-6 sm:p-8 pt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Free */}
+          <div className="rounded-2xl p-6 border border-slate-200 flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-lg text-slate-900">Free</h3>
+              <ShieldCheck className="w-5 h-5 text-slate-500" aria-hidden="true" />
+            </div>
+            <p className="my-3"><span className="text-3xl font-extrabold text-slate-900 tabular-nums">$0</span></p>
+            <ul className="space-y-2.5 border-t border-slate-200 pt-4 mb-6 flex-1">
+              {FREE_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /> {f}
+                </li>
+              ))}
+            </ul>
+            {isPro ? (
+              <button onClick={() => choose('free')} className="w-full py-3 rounded-xl font-bold text-sm border-2 border-slate-300 text-slate-800 hover:bg-slate-50 cursor-pointer">
+                Switch to Free
+              </button>
+            ) : (
+              <p className="w-full py-3 rounded-xl font-bold text-sm text-center bg-slate-100 text-slate-600">Your current plan</p>
+            )}
+          </div>
+
+          {/* Pro */}
+          <div className="rounded-2xl p-6 border-2 border-emerald-500 bg-emerald-50/40 flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-lg text-slate-900">Pro</h3>
+              <Crown className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+            </div>
+            <p className="mt-3">
+              <span className="text-3xl font-extrabold text-slate-900 tabular-nums">{price.amount}</span>
+              <span className="text-sm text-slate-600"> {price.per}</span>
+            </p>
+            <p className="text-sm text-slate-600 mb-3">{price.note}. 7-day free trial.</p>
+            <ul className="space-y-2.5 border-t border-emerald-200 pt-4 mb-6 flex-1">
+              <li className="text-sm font-bold text-slate-900">Everything in Free, plus:</li>
+              {PRO_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" /> {f}
+                </li>
+              ))}
+            </ul>
+            {isPro ? (
+              <p className="w-full py-3 rounded-xl font-bold text-sm text-center bg-emerald-100 text-emerald-800">Your current plan</p>
+            ) : (
+              <button onClick={() => choose('pro')} className="w-full py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">
+                Start 7-day free trial
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Founder offer */}
+        <div className="mx-6 sm:mx-8 mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-900">
+          <p className="font-extrabold">Founding member offer</p>
+          <p>
+            The first 100 subscribers get Pro for <strong>$39.99 a year</strong> <span className="line-through">$49.99</span>, locked in for as long as they stay, plus a permanent Founder badge.
+          </p>
+        </div>
+
+        <div className="p-5 bg-slate-50 border-t border-slate-200 sm:rounded-b-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm text-slate-600">
+          <p className="flex items-start gap-2">
+            <Info className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+            <span>Test mode: payments aren't connected yet, so these buttons switch plans instantly with no charge.</span>
+          </p>
+          <span className="font-bold text-slate-700 shrink-0">Cancel anytime</span>
+        </div>
       </div>
     </Modal>
   );
