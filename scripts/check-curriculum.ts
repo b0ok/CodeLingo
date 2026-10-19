@@ -13,7 +13,6 @@ import { PLAYGROUND_TEMPLATES } from '../src/utils/pythonRunner';
 import type { Challenge, LanguageId, Unit } from '../src/types';
 
 // Reference solutions: `right` must pass, starter code and every `wrong` must fail.
-// Web challenges are graded in a real DOM, so they are checked in the browser instead.
 const SOLUTIONS: Record<string, { right: string; wrong: string[] }> = {
   'u1-l1-c4': { right: 'print("Python is fun")', wrong: ['print("python is fun")', 'print("Python is fun!")'] },
   'u1-l3-c3': { right: '# print("Novice")\nprint("Python Champion")', wrong: ['print("Novice")'] },
@@ -90,7 +89,11 @@ function checkChallenge(c: Challenge, lang: LanguageId) {
         fail(`${c.id}: bug line out of range`);
       break;
     case 'code_runner': {
-      if (lang === 'web') break;
+      // Web challenges are graded against a rendered DOM, which only exists in a browser.
+      if (lang === 'web') {
+        if (!c.webChecks?.length) fail(`${c.id}: web code_runner needs webChecks`);
+        break;
+      }
       const s = SOLUTIONS[c.id];
       if (!s) {
         warnings.push(`${c.id}: no reference solution`);
