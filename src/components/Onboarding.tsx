@@ -12,6 +12,7 @@ import { runUnifiedCode, passesTestCases, gradeWebCode } from '../utils/codeRunn
 import { preloadPython } from '../utils/pythonRunner';
 import { sendSignInLink, savePendingProfile } from '../utils/supabase';
 import { ArrowLeft, Check, Mail, ShieldCheck, X } from 'lucide-react';
+import { UsernameField, useUsernameCheck } from './UsernameField';
 
 // ---------- Where the learner is in onboarding (kept in this browser) ----------
 
@@ -422,12 +423,15 @@ function ageFrom(isoDate: string): number {
 }
 
 export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () => void; intro?: string }> = ({ mode, onClose, intro }) => {
-  const { activeLanguage, targetCareerTrack, stats } = useGame();
+  const { activeLanguage, targetCareerTrack, stats, updateProfile } = useGame();
   const [step, setStep] = useState<'birthday' | 'details' | 'sent' | 'blocked'>(
     mode === 'signin' ? 'details' : isAgeBlocked() ? 'blocked' : 'birthday',
   );
   const [birthday, setBirthday] = useState('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [triedSubmit, setTriedSubmit] = useState(false);
+  const { status: usernameStatus, suggestions } = useUsernameCheck(mode === 'create' ? username : '');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<{ field: 'birthday' | 'email' | 'form'; text: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -451,6 +455,11 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
 
   const submitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTriedSubmit(true);
+    if (mode === 'create' && usernameStatus !== 'ok') {
+      document.getElementById('username')?.focus();
+      return;
+    }
     const trimmed = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError({ field: 'email', text: 'Enter your email address, like name@example.com.' });
@@ -459,7 +468,9 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
     setError(null);
     setSending(true);
     if (mode === 'create') {
+      updateProfile({ displayName: name.trim().slice(0, 40) });
       savePendingProfile({
+        username,
         display_name: name.trim().slice(0, 40) || 'Learner',
         active_language: activeLanguage,
         career_goal: targetCareerTrack,
@@ -520,6 +531,9 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
                 <input id="display-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoComplete="nickname" className={inputClass} aria-describedby="name-hint" />
                 <p id="name-hint" className="text-sm text-slate-600">Shown on leaderboards. Use a nickname, not your full name.</p>
               </div>
+            )}
+            {mode === 'create' && (
+              <UsernameField value={username} onChange={setUsername} status={usernameStatus} suggestions={suggestions} showError={triedSubmit} />
             )}
             <div className="space-y-1.5">
               <label htmlFor="email" className="block font-bold text-slate-800">Email</label>

@@ -1,7 +1,9 @@
 // Cloud progress: maps the app's local stats to the Supabase tables and back.
 // The pure functions here are checked by scripts/check-sync.ts.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { UserStats } from '../types';
+import { ProfileCustomization, UserStats } from '../types';
+
+const DEFAULT_PROFILE: ProfileCustomization = { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] };
 
 // The synced slice of UserStats. Everything else (quests, sounds of the day, feed) stays on the device.
 export type CloudState = Pick<
@@ -9,7 +11,7 @@ export type CloudState = Pick<
   | 'xp' | 'gems' | 'hearts' | 'streak' | 'highestStreak' | 'streakFreeze' | 'currentLeague' | 'leagueWeeklyXp'
   | 'lastActiveDate' | 'completedLessons' | 'nodeStars' | 'history' | 'unlockedBadgeIds' | 'checkedInNodes'
   | 'completedChallenges' | 'activeLanguage' | 'targetCareerTrack' | 'soundEnabled' | 'dailyGoalTarget' | 'dailyRoutineTime'
->;
+> & { profile: ProfileCustomization };
 
 export function pick(s: UserStats): CloudState {
   return {
@@ -20,6 +22,7 @@ export function pick(s: UserStats): CloudState {
     completedChallenges: s.completedChallenges || [], activeLanguage: s.activeLanguage,
     targetCareerTrack: s.targetCareerTrack, soundEnabled: s.soundEnabled,
     dailyGoalTarget: s.dailyGoalTarget, dailyRoutineTime: s.dailyRoutineTime,
+    profile: { ...DEFAULT_PROFILE, ...s.profile },
   };
 }
 
@@ -75,6 +78,8 @@ export function toRows(s: CloudState): Rows {
     profile: {
       active_language: s.activeLanguage, career_goal: s.targetCareerTrack ?? null, sound_enabled: s.soundEnabled,
       daily_goal_xp: Math.min(500, Math.max(10, s.dailyGoalTarget)), reminder_time: s.dailyRoutineTime || null,
+      display_name: s.profile.displayName.slice(0, 40) || null, avatar: s.profile.avatar, bio: s.profile.bio.slice(0, 160),
+      banner: s.profile.banner, featured_badges: s.profile.featuredBadges.slice(0, 6),
     },
     lessons: s.completedLessons.map((id) => ({ lesson_id: id, stars: Math.min(3, Math.max(1, s.nodeStars[id] || 1)) })),
     achievements: [
@@ -101,6 +106,11 @@ export function fromRows(r: { progress: Row; profile: Row; lessons: Row[]; achie
     activeLanguage: r.profile.active_language, targetCareerTrack: r.profile.career_goal ?? undefined,
     soundEnabled: r.profile.sound_enabled, dailyGoalTarget: r.profile.daily_goal_xp,
     dailyRoutineTime: (r.profile.reminder_time || '20:00').slice(0, 5),
+    profile: {
+      displayName: r.profile.display_name || '', avatar: r.profile.avatar ?? DEFAULT_PROFILE.avatar, bio: r.profile.bio ?? '',
+      banner: r.profile.banner ?? DEFAULT_PROFILE.banner, featuredBadges: r.profile.featured_badges ?? [],
+      username: r.profile.username || '',
+    },
   };
 }
 

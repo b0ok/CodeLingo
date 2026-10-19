@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { UserStats, DailyQuest, LeaderboardEntry, Badge, LeagueTier, LanguageId, SubscriptionTier } from '../types';
+import { ProfileCustomization, UserStats, DailyQuest, LeaderboardEntry, Badge, LeagueTier, LanguageId, SubscriptionTier } from '../types';
 import { INITIAL_BADGES } from '../data/badges';
 import { INITIAL_LEADERBOARD_USERS } from '../data/leaderboard';
 import { sound } from '../utils/soundEffects';
@@ -40,6 +40,7 @@ interface GameContextType {
   setDailyGoalTarget: (target: number) => void;
   placeOutOfLessons: (lessonIds: string[]) => void;
   setLearningLanguages: (langs: LanguageId[]) => void;
+  updateProfile: (patch: Partial<ProfileCustomization>) => void;
   newlyUnlockedBadge: Badge | null;
   dismissBadgeNotification: () => void;
   // Subscription & Monetization
@@ -118,6 +119,7 @@ const DEFAULT_STATS: UserStats = {
   targetCareerTrack: 'ai-ml',
   checkedInNodes: [],
   agentCheckinsCount: 0,
+  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] },
 };
 
 const DEFAULT_QUESTS: DailyQuest[] = [
@@ -473,6 +475,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (item.isUser) {
           return {
             ...item,
+            name: stats.profile?.displayName || 'You',
+            username: stats.profile?.username ? `@${stats.profile.username}` : '@you',
             xp: stats.leagueWeeklyXp,
             streak: stats.streak,
           };
@@ -481,7 +485,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       return [...updated].sort((a, b) => b.xp - a.xp);
     });
-  }, [stats.leagueWeeklyXp, stats.streak]);
+  }, [stats.leagueWeeklyXp, stats.streak, stats.profile?.displayName, stats.profile?.username]);
 
   // Badge evaluation helper
   const evaluateBadges = (currentStats: UserStats) => {
@@ -683,6 +687,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       completedLessons: [...new Set([...prev.completedLessons, ...lessonIds])],
       nodeStars: { ...Object.fromEntries(lessonIds.map((id) => [id, 1])), ...prev.nodeStars },
     }));
+  };
+
+  const updateProfile = (patch: Partial<ProfileCustomization>) => {
+    setStats((prev) => ({ ...prev, profile: { ...DEFAULT_STATS.profile!, ...prev.profile, ...patch } }));
   };
 
   const setLearningLanguages = (langs: LanguageId[]) => {
@@ -893,6 +901,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDailyGoalTarget,
         placeOutOfLessons,
         setLearningLanguages,
+        updateProfile,
         newlyUnlockedBadge,
         dismissBadgeNotification,
         setSubscriptionTier,

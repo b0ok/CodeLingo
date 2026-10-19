@@ -193,6 +193,15 @@ export interface ReminderNotification {
   type: 'streak' | 'quest' | 'high_five' | 'cook';
 }
 
+export interface ProfileCustomization {
+  displayName: string;
+  avatar: string; // id from data/profileOptions AVATARS
+  bio: string;
+  banner: string; // id from data/profileOptions BANNERS
+  featuredBadges: string[]; // badge ids shown on the profile
+  username?: string; // claimed on the server; never pushed by sync
+}
+
 export interface UserStats {
   xp: number;
   gems: number;
@@ -239,6 +248,7 @@ export interface UserStats {
     | 'sql-data-engineer'
     | 'sql-dba';
   checkedInNodes?: string[]; // Node IDs verified through Agent check-in
+  profile?: ProfileCustomization;
   learningLanguages?: LanguageId[]; // every course picked in onboarding; the first is where they start
   agentCheckinsCount?: number;
 }

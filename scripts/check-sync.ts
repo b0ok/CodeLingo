@@ -7,6 +7,7 @@ const base: CloudState = {
   leagueWeeklyXp: 0, lastActiveDate: '', completedLessons: [], nodeStars: {}, history: {},
   unlockedBadgeIds: [], checkedInNodes: [], completedChallenges: [], activeLanguage: 'python',
   targetCareerTrack: 'ai-ml', soundEnabled: true, dailyGoalTarget: 50, dailyRoutineTime: '20:00',
+  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] },
 };
 
 const phone: CloudState = {
@@ -18,6 +19,7 @@ const laptop: CloudState = {
   ...base, xp: 90, gems: 70, hearts: 2, streak: 4, highestStreak: 4, lastActiveDate: '2026-10-19',
   completedLessons: ['lesson-1-1', 'lesson-2-1'], nodeStars: { 'lesson-1-1': 3, 'lesson-2-1': 1 },
   history: { '2026-10-18': 30, '2026-10-19': 50 }, completedChallenges: ['cook-1'], dailyGoalTarget: 100,
+  profile: { displayName: 'T3', avatar: 'fox', bio: 'Learning SQL', banner: 'sky', featuredBadges: ['first_strike'] },
 };
 
 // Combining keeps the best of both, in either order.
@@ -36,6 +38,7 @@ assert.deepEqual(m.completedChallenges, ['cook-1']);
 assert.equal(m.dailyGoalTarget, 100);
 assert.equal(m.hearts, 2);
 assert.equal(m.lastActiveDate, '2026-10-19');
+assert.equal(m.profile.avatar, 'fox'); // profile comes from the most recently used side too
 
 // Rows round-trip through the table shapes.
 const r = toRows(m);
@@ -46,7 +49,12 @@ const back = fromRows({
   achievements: r.achievements,
   xpLog: r.xpLog,
 });
-assert.deepEqual({ ...back, completedLessons: back.completedLessons.sort() }, { ...m, completedLessons: m.completedLessons.sort() });
+// The username is claimed on the server, so sync reads it but never sends it.
+assert.equal('username' in r.profile, false);
+assert.deepEqual(
+  { ...back, completedLessons: back.completedLessons.sort() },
+  { ...m, completedLessons: m.completedLessons.sort(), profile: { ...m.profile, username: '' } },
+);
 
 // Only changes are re-sent.
 assert.deepEqual(changedRows(r, r), {});
