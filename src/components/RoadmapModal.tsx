@@ -24,6 +24,12 @@ import {
   getJsRoadmapNodeById,
 } from '../data/jsRoadmap';
 import {
+  SQL_ROADMAP_PHASES,
+  SQL_CAREER_TRACKS,
+  getAllSqlRoadmapNodes,
+  getSqlRoadmapNodeById,
+} from '../data/sqlRoadmap';
+import {
   evaluateLearnerExplanation,
   getPhaseDiagnosticQuestions,
 } from '../utils/agentCheckinService';
@@ -72,6 +78,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
 
   const isWeb = stats.activeLanguage === 'web';
   const isJs = stats.activeLanguage === 'javascript';
+  const isSql = stats.activeLanguage === 'sql';
 
   let phases: RoadmapPhase[] = PYTHON_ROADMAP_PHASES;
   let careerTracks: CareerTrack[] = PYTHON_CAREER_TRACKS;
@@ -94,11 +101,19 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
     defaultNodeId = 'js-rm-variables-tdz';
     modalTitle = 'JavaScript Roadmap & Agent Check-in';
     badgeTitle = 'Modern ES6+ & TypeScript Ready';
+  } else if (isSql) {
+    phases = SQL_ROADMAP_PHASES;
+    careerTracks = SQL_CAREER_TRACKS as any;
+    allNodes = getAllSqlRoadmapNodes();
+    defaultNodeId = 'sql-rm-select-from';
+    modalTitle = 'SQL Roadmap & Agent Check-in';
+    badgeTitle = 'Relational Data Pathway';
   }
 
   const getNodeById = (id: string): RoadmapNode | undefined => {
     if (isWeb) return getWebRoadmapNodeById(id);
     if (isJs) return getJsRoadmapNodeById(id);
+    if (isSql) return getSqlRoadmapNodeById(id);
     return getPythonRoadmapNodeById(id);
   };
 
@@ -209,6 +224,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                   ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-400'
                   : isJs
                   ? 'bg-amber-500/20 border-amber-400/40 text-amber-400'
+                  : isSql
+                  ? 'bg-cyan-500/20 border-cyan-400/40 text-cyan-400'
                   : 'bg-emerald-500/20 border-emerald-400/40 text-emerald-400'
               } border flex items-center justify-center shadow-inner`}>
                 <Compass className="w-7 h-7 animate-spin-slow" />
@@ -220,6 +237,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                       ? 'text-indigo-300 bg-indigo-950/60 border-indigo-500/30'
                       : isJs
                       ? 'text-amber-400 bg-amber-950/60 border-amber-500/30'
+                      : isSql
+                      ? 'text-cyan-400 bg-cyan-950/60 border-cyan-500/30'
                       : 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30'
                   } px-2.5 py-0.5 rounded-full border`}>
                     {badgeTitle}
@@ -372,6 +391,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                       ? 'HTML5 & CSS3 Core Developer Pathway'
                       : isJs
                       ? 'JavaScript & TypeScript Core Developer Pathway'
+                      : isSql
+                      ? 'SQL & Relational Data Core Developer Pathway'
                       : 'Python Core Developer Pathway'}
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -650,6 +671,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     placeholder={
                       isWeb
                         ? 'e.g. When box-sizing is border-box, the declared width includes content, padding, and border. This prevents horizontal scrolling bugs because...'
+                        : isSql
+                        ? 'e.g. WHERE filters rows before grouping, so COUNT(*) does not exist yet. HAVING runs after GROUP BY, which is why...'
                         : 'e.g. When Python assigns a variable to an object in memory... The difference between mutable and immutable is...'
                     }
                     className="w-full text-sm p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-colors"
@@ -844,7 +867,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">
-                    Select Your Target Career Track ({isWeb ? 'Web Frontend' : isJs ? 'JavaScript & Full-Stack' : 'Python'})
+                    Select Your Target Career Track ({isWeb ? 'Web Frontend' : isJs ? 'JavaScript & Full-Stack' : isSql ? 'SQL & Data' : 'Python'})
                   </h3>
                   <p className="text-xs text-slate-500">
                     The agent aligns your daily XP goals and prioritizes essential roadmap phases for your chosen role.

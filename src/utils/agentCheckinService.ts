@@ -28,19 +28,26 @@ export async function evaluateLearnerExplanation(
   targetCareerTrack?: string
 ): Promise<AgentCheckinEvaluation> {
   const ai = getGeminiClient();
+  const [trackName, roadmapSlug] = node.id.startsWith('sql-')
+    ? ['SQL', 'sql']
+    : node.id.startsWith('js-')
+    ? ['JavaScript', 'javascript']
+    : node.id.startsWith('web-')
+    ? ['HTML & CSS', 'frontend']
+    : ['Python', 'python'];
 
   if (ai && userExplanation.trim().length > 10) {
     try {
       const prompt = `
-You are Pyto, an expert Python engineering mentor and learning coach on CodeLingo.
-A learner is working through the official roadmap.sh/python curriculum.
+You are Pyto, an expert ${trackName} engineering mentor and learning coach on CodeLingo.
+A learner is working through the official roadmap.sh/${roadmapSlug} curriculum.
 Our core mission is to PREVENT BLIND LEARNING: students must not just copy syntax or guess multiple-choice options; they must understand the first principles, memory models, trade-offs, and edge cases.
 
 Roadmap Node: "${node.title}" (${node.roadmapCategory})
 Key Concepts: ${node.keyConcepts.join(', ')}
 Anti-Blind Socratic Prompt: "${node.antiBlindQuestion}"
 Sample Expert Model Answer Hint: "${node.sampleAnswerHint}"
-Learner's Target Career Track: "${targetCareerTrack || 'General Python Mastery'}"
+Learner's Target Career Track: "${targetCareerTrack || `General ${trackName} Mastery`}"
 
 Learner's Explanation:
 """
@@ -58,7 +65,7 @@ Respond with a valid JSON object ONLY (no markdown formatting, no code fence):
   "rating": "Mastered" | "Solid Understanding" | "Blind Spots Detected" | "Needs Practice",
   "whatNailed": "1-2 sentences highlighting what specific intuition or concept they got right",
   "blindSpots": ["specific misconception or omitted crucial detail 1", "subtle gotcha 2"],
-  "actionableTip": "One direct, practical Pythonic tip or mental model trick",
+  "actionableTip": "One direct, practical ${trackName} tip or mental model trick",
   "socraticFollowup": "One thought-provoking question to deepen their intuition even further",
   "recommendedNextStep": "Brief guidance on whether to proceed to next roadmap phase or review",
   "pytoMood": "proud" | "celebrating" | "thinking" | "encouraging"
@@ -301,6 +308,91 @@ function runHeuristicEvaluation(
     'js-rm-debounce-throttle': [
       'Debounce resets its timer on every trigger; throttle enforces a maximum frequency of execution.',
       'Always clear timeouts in cleanup handlers to prevent memory leaks after components unmount.',
+    ],
+    // SQL blind spots
+    'sql-rm-relational-model': [
+      'Relational strength is enforced structure: types, constraints and multi-table ACID transactions.',
+      'NoSQL is not "faster SQL"; it trades guarantees and joins for flexible shapes and horizontal scale.',
+    ],
+    'sql-rm-select-from': [
+      'SELECT * breaks silently when columns change and blocks covering indexes.',
+      'SQL keywords are case-insensitive, but string comparisons may not be, depending on collation.',
+    ],
+    'sql-rm-where-operators': [
+      'Any comparison with NULL is UNKNOWN, so both = NULL and <> value drop NULL rows.',
+      'AND binds tighter than OR; add parentheses whenever you mix them.',
+    ],
+    'sql-rm-order-limit': [
+      'Without ORDER BY, row order is not guaranteed, even if it looks stable in testing.',
+      'Paginate on a unique, deterministic sort key or pages can repeat or skip rows.',
+    ],
+    'sql-rm-ddl-tables': [
+      'TRUNCATE usually cannot be filtered and may not fire row-level triggers.',
+      'ALTER TABLE on a huge table can lock it; plan migrations for production traffic.',
+    ],
+    'sql-rm-constraints': [
+      'Constraints are enforced on every write, by every client, unlike application-side checks.',
+      'UNIQUE allows multiple NULLs in most databases because NULL is not equal to NULL.',
+    ],
+    'sql-rm-insert': [
+      'Positional INSERT without a column list breaks when the schema changes.',
+      'Batch rows into one statement or transaction to avoid a commit per row.',
+    ],
+    'sql-rm-update-delete': [
+      'Preview the WHERE clause with a SELECT before running UPDATE or DELETE.',
+      'Run risky changes inside a transaction and check the rows-affected count before COMMIT.',
+    ],
+    'sql-rm-aggregate-functions': [
+      'COUNT(column), SUM and AVG skip NULLs; COUNT(*) does not.',
+      'AVG of an integer column may use integer division in some databases; cast if needed.',
+    ],
+    'sql-rm-group-by-having': [
+      'WHERE runs before grouping and HAVING after, which is why aggregates only work in HAVING.',
+      'Every selected column must be grouped or aggregated.',
+    ],
+    'sql-rm-inner-left-join': [
+      'A WHERE condition on the right table of a LEFT JOIN turns it back into an INNER JOIN.',
+      'Joining on a non-unique key fans out rows and inflates SUMs and COUNTs.',
+    ],
+    'sql-rm-other-joins': [
+      'A missing or wrong join condition creates a Cartesian product.',
+      'A self join needs two aliases for the same table so each side has its own role.',
+    ],
+    'sql-rm-subqueries': [
+      '= (subquery) fails if the subquery returns more than one row; use IN or EXISTS.',
+      'NOT IN with a subquery that returns a NULL matches nothing; prefer NOT EXISTS.',
+    ],
+    'sql-rm-conditional-functions': [
+      'CASE without ELSE returns NULL for unmatched rows.',
+      'x / NULLIF(y, 0) avoids division-by-zero errors by returning NULL.',
+    ],
+    'sql-rm-views': [
+      'A regular view stores the query, not the data, so it is not faster by itself.',
+      'Materialized views are fast to read but stale until refreshed.',
+    ],
+    'sql-rm-indexes': [
+      'Functions on an indexed column and leading % wildcards usually prevent index use.',
+      'In a composite index, column order matters: (a, b) helps WHERE a = ?, not WHERE b = ? alone.',
+    ],
+    'sql-rm-transactions-acid': [
+      'Long-running transactions hold locks and block other writers.',
+      'Higher isolation levels prevent more anomalies but increase contention and retries.',
+    ],
+    'sql-rm-security': [
+      'Never concatenate user input into SQL; use parameterized queries.',
+      'Give each application role only the privileges it needs (least privilege).',
+    ],
+    'sql-rm-window-functions': [
+      'Window functions keep every row; GROUP BY collapses them.',
+      'RANK leaves gaps after ties, DENSE_RANK does not, ROW_NUMBER never ties.',
+    ],
+    'sql-rm-ctes-recursive': [
+      'A recursive CTE needs a stop condition, and cyclic data needs a depth limit or cycle check.',
+      'Some databases materialize CTEs, which can block optimizations; check the plan.',
+    ],
+    'sql-rm-query-optimization': [
+      'Measure with EXPLAIN ANALYZE before changing anything.',
+      'Row estimates far from actual rows usually mean stale statistics; run ANALYZE.',
     ],
   };
 
@@ -767,6 +859,222 @@ export function getPhaseDiagnosticQuestions(phaseId: string): {
               text: 'When you want to execute the handler as many times per second as possible.',
               isOptimal: false,
               feedback: 'Both debounce and throttle limit execution rate, not maximize it.',
+            },
+          ],
+        },
+      ];
+    case 'sql-basics':
+      return [
+        {
+          id: 'diag-sql-b1',
+          question: 'Why does "WHERE phone = NULL" return no rows even when some phones are NULL?',
+          options: [
+            {
+              id: 'o1',
+              text: 'Comparisons with NULL evaluate to UNKNOWN, and WHERE only keeps TRUE rows. Use IS NULL.',
+              isOptimal: true,
+              feedback: 'Spot on! Three-valued logic is behind most NULL surprises in SQL.',
+            },
+            {
+              id: 'o2',
+              text: 'Because NULL values are stored in a separate table.',
+              isOptimal: false,
+              feedback: 'NULLs live in the same row; the issue is how comparisons with NULL evaluate.',
+            },
+            {
+              id: 'o3',
+              text: 'Because = only works on numbers.',
+              isOptimal: false,
+              feedback: '= works on strings and dates too. The problem is specifically NULL.',
+            },
+          ],
+        },
+      ];
+    case 'sql-ddl-constraints':
+      return [
+        {
+          id: 'diag-sql-ddl1',
+          question: "Your app already checks that an order's user exists. Why add a FOREIGN KEY too?",
+          options: [
+            {
+              id: 'o1',
+              text: 'The database enforces it on every write from every client, atomically, so orphaned rows become impossible.',
+              isOptimal: true,
+              feedback: 'Exactly. Scripts, other services and race conditions can all bypass application checks.',
+            },
+            {
+              id: 'o2',
+              text: 'Foreign keys make SELECT queries faster.',
+              isOptimal: false,
+              feedback: 'They can help the planner, but their purpose is integrity, not speed.',
+            },
+            {
+              id: 'o3',
+              text: 'It is required for JOINs to work.',
+              isOptimal: false,
+              feedback: 'You can JOIN on any columns; foreign keys are about guaranteeing valid references.',
+            },
+          ],
+        },
+      ];
+    case 'sql-dml':
+      return [
+        {
+          id: 'diag-sql-dml1',
+          question: 'What is the safest first step before running a one-off DELETE on production?',
+          options: [
+            {
+              id: 'o1',
+              text: 'Run the same WHERE as a SELECT to see exactly which rows match, then delete inside a transaction.',
+              isOptimal: true,
+              feedback: 'Right! Preview, run in a transaction, check rows affected, then COMMIT.',
+            },
+            {
+              id: 'o2',
+              text: 'Run it quickly during low traffic and check afterwards.',
+              isOptimal: false,
+              feedback: 'Without previewing the WHERE, a mistake deletes data before you notice.',
+            },
+            {
+              id: 'o3',
+              text: 'Use TRUNCATE instead because it is faster.',
+              isOptimal: false,
+              feedback: 'TRUNCATE removes every row; it cannot target specific ones.',
+            },
+          ],
+        },
+      ];
+    case 'sql-aggregates':
+      return [
+        {
+          id: 'diag-sql-agg1',
+          question: 'Why can you write HAVING COUNT(*) > 1 but not WHERE COUNT(*) > 1?',
+          options: [
+            {
+              id: 'o1',
+              text: 'WHERE filters rows before GROUP BY creates groups; HAVING filters groups after aggregates are computed.',
+              isOptimal: true,
+              feedback: 'Correct. Logical order: FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY.',
+            },
+            {
+              id: 'o2',
+              text: 'WHERE only supports text comparisons.',
+              isOptimal: false,
+              feedback: 'WHERE supports any row-level condition; it just runs before aggregation.',
+            },
+            {
+              id: 'o3',
+              text: 'They are interchangeable; it is a style choice.',
+              isOptimal: false,
+              feedback: 'They run at different stages, so aggregates are only available in HAVING.',
+            },
+          ],
+        },
+      ];
+    case 'sql-joins':
+      return [
+        {
+          id: 'diag-sql-j1',
+          question: "A LEFT JOIN from users to orders loses users with no orders after you add WHERE orders.status = 'paid'. Why?",
+          options: [
+            {
+              id: 'o1',
+              text: "Unmatched users have NULL order columns, and NULL = 'paid' is not TRUE, so WHERE drops them. Move the condition into ON.",
+              isOptimal: true,
+              feedback: 'Exactly. Filters on the right table belong in the ON clause of a LEFT JOIN.',
+            },
+            {
+              id: 'o2',
+              text: 'LEFT JOIN never keeps unmatched rows.',
+              isOptimal: false,
+              feedback: 'Keeping unmatched left rows is exactly what LEFT JOIN does.',
+            },
+            {
+              id: 'o3',
+              text: 'The status column needs an index.',
+              isOptimal: false,
+              feedback: 'Indexes change speed, not which rows are returned.',
+            },
+          ],
+        },
+      ];
+    case 'sql-subqueries-functions':
+      return [
+        {
+          id: 'diag-sql-sq1',
+          question: 'A NOT IN (SELECT manager_id FROM employees) query suddenly returns zero rows. What is the likely cause?',
+          options: [
+            {
+              id: 'o1',
+              text: 'The subquery returns a NULL, and x NOT IN (..., NULL) is never TRUE. Use NOT EXISTS or filter out NULLs.',
+              isOptimal: true,
+              feedback: 'Great catch! This is one of the most common real-world NULL bugs.',
+            },
+            {
+              id: 'o2',
+              text: 'Subqueries cannot be used with NOT IN.',
+              isOptimal: false,
+              feedback: 'They can; the problem is a NULL in the returned list.',
+            },
+            {
+              id: 'o3',
+              text: 'The subquery is correlated.',
+              isOptimal: false,
+              feedback: 'It is not correlated, and correlation would not cause zero rows by itself.',
+            },
+          ],
+        },
+      ];
+    case 'sql-views-indexes-transactions':
+      return [
+        {
+          id: 'diag-sql-tx1',
+          question: 'A transfer runs two UPDATEs without a transaction and the server crashes between them. What happens?',
+          options: [
+            {
+              id: 'o1',
+              text: 'One account is debited but the other is never credited. A transaction makes the pair atomic.',
+              isOptimal: true,
+              feedback: 'Right. BEGIN ... COMMIT gives all-or-nothing behavior, and ROLLBACK undoes partial work.',
+            },
+            {
+              id: 'o2',
+              text: 'Nothing, the database undoes the first UPDATE automatically.',
+              isOptimal: false,
+              feedback: 'Without a transaction, each statement commits on its own.',
+            },
+            {
+              id: 'o3',
+              text: 'Both updates are lost.',
+              isOptimal: false,
+              feedback: 'The first statement already committed, so it stays.',
+            },
+          ],
+        },
+      ];
+    case 'sql-advanced-performance':
+      return [
+        {
+          id: 'diag-sql-adv1',
+          question: 'What is the difference between GROUP BY department and AVG(salary) OVER (PARTITION BY department)?',
+          options: [
+            {
+              id: 'o1',
+              text: 'GROUP BY returns one row per department; the window function keeps every employee row and adds the department average.',
+              isOptimal: true,
+              feedback: 'Spot on! Window functions compute across rows without collapsing them.',
+            },
+            {
+              id: 'o2',
+              text: 'There is no difference in the output.',
+              isOptimal: false,
+              feedback: 'GROUP BY collapses rows; the window version keeps them.',
+            },
+            {
+              id: 'o3',
+              text: 'PARTITION BY is just an older syntax for GROUP BY.',
+              isOptimal: false,
+              feedback: 'They are different features with different output shapes.',
             },
           ],
         },
