@@ -5,6 +5,7 @@ import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
 import { runUnifiedCode, passesTestCases, gradeWebCode, WebGradeResult } from '../utils/codeRunner';
 import { sound } from '../utils/soundEffects';
+import { pickChallenges, shuffle } from '../utils/lessonSession';
 import confetti from 'canvas-confetti';
 import { X, Heart, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Play, Sparkles, RotateCcw, HelpCircle, XCircle } from 'lucide-react';
 
@@ -21,15 +22,6 @@ const CODE_PLACEHOLDERS: Record<LanguageId, string> = {
   sql: '-- Write your SQL query here',
   web: '<!-- Write your HTML and CSS here -->',
 };
-
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 // The correct answer, written out for the learner after their second miss.
 function describeAnswer(c: Challenge): string | null {
@@ -102,7 +94,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
   const [attempt, setAttempt] = useState(0);
   const [showHint, setShowHint] = useState(false);
 
-  const currentChallenge: Challenge = lesson.challenges[currentChallengeIndex];
+  // Each time the lesson opens it draws a fresh set from the lesson's pool
+  const [challenges] = useState(() => pickChallenges(lesson.challenges));
+  const currentChallenge: Challenge = challenges[currentChallengeIndex];
   const challengeLang: LanguageId = lesson.id.startsWith('js-')
     ? 'javascript'
     : lesson.id.startsWith('sql-')
@@ -111,7 +105,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     ? 'web'
     : 'python';
   const isWebRunner = currentChallenge.type === 'code_runner' && !!currentChallenge.webChecks?.length;
-  const progressPercent = ((currentChallengeIndex) / lesson.challenges.length) * 100;
+  const progressPercent = ((currentChallengeIndex) / challenges.length) * 100;
 
   // Initialize per-challenge state
   useEffect(() => {
@@ -302,7 +296,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
 
   // Move to next challenge or complete lesson
   const handleContinue = () => {
-    if (currentChallengeIndex + 1 < lesson.challenges.length) {
+    if (currentChallengeIndex + 1 < challenges.length) {
       setCurrentChallengeIndex((prev) => prev + 1);
     } else {
       // Completed full lesson!
@@ -389,7 +383,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
-                  {lesson.title} · Challenge {currentChallengeIndex + 1} of {lesson.challenges.length}
+                  {lesson.title} · Challenge {currentChallengeIndex + 1} of {challenges.length}
                 </span>
 
                 <button
@@ -767,7 +761,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
               </div>
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
                 <div className="text-xl font-extrabold text-rose-600 tabular-nums">
-                  {heartsLostInSession === 0 ? '100%' : `${Math.round(((lesson.challenges.length - heartsLostInSession) / lesson.challenges.length) * 100)}%`}
+                  {heartsLostInSession === 0 ? '100%' : `${Math.round(((challenges.length - heartsLostInSession) / challenges.length) * 100)}%`}
                 </div>
                 <div className="text-xs font-bold text-rose-800 uppercase mt-0.5">Accuracy</div>
               </div>
