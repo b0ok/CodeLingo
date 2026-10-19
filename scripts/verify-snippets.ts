@@ -35,7 +35,7 @@ type Run = { ok: boolean; out: string; error?: string };
 const SQL_HARNESS = `
 import json, sqlite3, sys
 data = json.loads(sys.stdin.read())
-con = sqlite3.connect(':memory:')
+con = sqlite3.connect(':memory:', isolation_level=None)  # autocommit, so snippets can BEGIN/ROLLBACK
 for table, rows in data['db'].items():
     cols = list(rows[0].keys())
     con.execute(f"CREATE TABLE {table} ({', '.join(cols)})")
@@ -76,8 +76,9 @@ const errorName = (msg = '') => msg.match(/\b(\w+(?:Error|Exception))\b/)?.[1] |
 
 // An option "matches" when it equals the output written one way or another: on separate
 // lines, comma-separated, "a then b", "a and b", space-separated, or as a row count.
-function matches(option: string, r: Run): boolean {
-  if (!r.ok) return !!errorName(r.error) && option.includes(errorName(r.error));
+function matches(option: string, r: Run, lang: LanguageId): boolean {
+  // SQLite reports constraint failures as sqlite3.IntegrityError; SQL options describe them as an error
+  if (!r.ok) return lang === 'sql' ? /\berror\b/i.test(option) : !!errorName(r.error) && option.includes(errorName(r.error));
   const text = option
     .replace(/\s+\([^()]*\)$/, '') // trailing explanation in parentheses
     .trim();
@@ -121,9 +122,9 @@ for (const [lang, units] of TRACKS) {
       }
       const correct = c.options?.find((o) => o.id === c.correctOptionId);
       const actual = r.ok ? JSON.stringify(r.out) : `error: ${r.error}`;
-      if (!correct || !matches(correct.text, r)) problems.push(`${c.id}: marked "${correct?.text}" but real run gives ${actual}`);
+      if (!correct || !matches(correct.text, r, lang)) problems.push(`${c.id}: marked "${correct?.text}" but real run gives ${actual}`);
       for (const o of c.options || [])
-        if (o.id !== c.correctOptionId && matches(o.text, r)) problems.push(`${c.id}: wrong option "${o.text}" also matches ${actual}`);
+        if (o.id !== c.correctOptionId && matches(o.text, r, lang)) problems.push(`${c.id}: wrong option "${o.text}" also matches ${actual}`);
     }
     if (c.type === 'code_runner' && (lang === 'python' || lang === 'javascript') && SOLUTIONS[c.id]) {
       checked++;
