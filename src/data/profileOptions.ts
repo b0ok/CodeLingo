@@ -42,10 +42,21 @@ export const LIMITS = {
   pro: { bio: 160, featuredBadges: 6 },
 };
 
-// Pro extras shown as locked previews until Pro is read from the server (build plan PR 11).
+export const FRAMES: { id: string; label: string; className: string; pro?: boolean }[] = [
+  { id: 'none', label: 'No frame', className: '' },
+  { id: 'gold', label: 'Gold', className: 'ring-4 ring-amber-400', pro: true },
+  { id: 'neon', label: 'Neon', className: 'ring-4 ring-fuchsia-500', pro: true },
+  { id: 'flame', label: 'Flame', className: 'ring-4 ring-orange-500', pro: true },
+];
+
+// ponytail: Pro status is read from the browser for now, like unlimited life points; it moves to the
+// subscriptions table with Stripe (build plan PR 11), and the database then enforces Pro-only choices.
+export const isProTier = (tier?: string) => tier === 'pro';
+
+// Shown to free learners as what Pro adds.
 export const PRO_EXTRAS = [
   'Gradient banners',
-  'Avatar frames (Legend, Founder, streak flame)',
+  'Avatar frames (Gold, Neon, Flame)',
   'A status line',
   'Bio up to 160 characters',
   'Feature 6 badges',
@@ -53,4 +64,9 @@ export const PRO_EXTRAS = [
 ];
 
 export const avatarEmoji = (id?: string) => AVATARS.find((a) => a.id === id)?.emoji ?? AVATARS[0].emoji;
-export const bannerClass = (id?: string) => BANNERS.find((b) => b.id === id)?.className ?? BANNERS[0].className;
+// Pro looks only show while Pro is active; the choice is kept so it comes back on renewal.
+export const bannerClass = (id: string | undefined, pro: boolean) => {
+  const b = BANNERS.find((x) => x.id === id && (pro || !x.pro));
+  return (b ?? BANNERS[0]).className;
+};
+export const frameClass = (id: string | undefined, pro: boolean) => (pro ? FRAMES.find((x) => x.id === id)?.className ?? '' : '');

@@ -200,6 +200,10 @@ export interface ProfileCustomization {
   banner: string; // id from data/profileOptions BANNERS
   featuredBadges: string[]; // badge ids shown on the profile
   username?: string; // claimed on the server; never pushed by sync
+  frame?: string; // Pro: id from data/profileOptions FRAMES
+  status?: string; // Pro: short status line
+  snippetLanguage?: LanguageId; // Pro: pinned code snippet
+  snippetCode?: string;
 }
 
 export interface UserStats {

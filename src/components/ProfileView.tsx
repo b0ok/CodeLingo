@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { LEAGUE_CONFIG } from '../data/leaderboard';
-import { AVATARS, BANNERS, LIMITS, PRO_EXTRAS, avatarEmoji, bannerClass } from '../data/profileOptions';
+import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, avatarEmoji, bannerClass, frameClass, isProTier } from '../data/profileOptions';
+import { PATHWAYS_DATA } from '../data/curriculum';
+import { LanguageId } from '../types';
 import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
 import { Modal } from './Modal';
-import { Check, Lock, Pencil } from 'lucide-react';
+import { Check, Crown, Lock, Pencil } from 'lucide-react';
 import { supabase, useSession } from '../utils/supabase';
 import { UsernameField, useUsernameCheck } from './UsernameField';
 
-const DEFAULT_PROFILE: ProfileCustomization = { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] };
+const DEFAULT_PROFILE: ProfileCustomization = {
+  displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [],
+  frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '',
+};
 
 export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans }) => {
   const { stats, badges, currentLeague } = useGame();
   const session = useSession();
   const [editing, setEditing] = useState(false);
   const profile = { ...DEFAULT_PROFILE, ...stats.profile };
+  const pro = isProTier(stats.subscriptionTier);
   const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
   const featured = profile.featuredBadges
     .map((id) => badges.find((b) => b.id === id && b.isUnlocked))
@@ -33,10 +39,10 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
   return (
     <div className="space-y-6">
       <section aria-labelledby="profile-heading" className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-        <div className={`h-24 ${bannerClass(profile.banner)}`} aria-hidden="true" />
+        <div className={`h-24 ${bannerClass(profile.banner, pro)}`} aria-hidden="true" />
         <div className="px-6 pb-6">
           <div className="flex items-end justify-between gap-3 -mt-10">
-            <div className="w-20 h-20 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-4xl" role="img" aria-label={`Avatar: ${AVATARS.find((a) => a.id === profile.avatar)?.label ?? 'Snake'}`}>
+            <div className={`w-20 h-20 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-4xl ${frameClass(profile.frame, pro)}`} role="img" aria-label={`Avatar: ${AVATARS.find((a) => a.id === profile.avatar)?.label ?? 'Snake'}`}>
               {avatarEmoji(profile.avatar)}
             </div>
             <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-4 py-2 border-2 border-slate-300 bg-white rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">
@@ -44,8 +50,13 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
               Edit profile
             </button>
           </div>
-          <h2 id="profile-heading" className="mt-3 text-2xl font-extrabold text-slate-900 tracking-tight [overflow-wrap:anywhere]">
+          <h2 id="profile-heading" className="mt-3 text-2xl font-extrabold text-slate-900 tracking-tight [overflow-wrap:anywhere] flex flex-wrap items-center gap-2">
             {profile.displayName || 'Learner'}
+            {pro && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full tracking-normal">
+                <Crown className="w-3.5 h-3.5" aria-hidden="true" /> Pro
+              </span>
+            )}
           </h2>
           {profile.username ? (
             <p className="text-slate-600">@{profile.username}</p>
@@ -56,6 +67,7 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
               </button>
             )
           )}
+          {pro && profile.status && <p className="mt-1 font-bold text-slate-800 [overflow-wrap:anywhere]">{profile.status}</p>}
           {profile.bio ? (
             <p className="mt-1 text-slate-700 [overflow-wrap:anywhere]">{profile.bio}</p>
           ) : (
@@ -67,6 +79,13 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
                 <li key={b.id} className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-sm font-bold rounded-full">🏅 {b.name}</li>
               ))}
             </ul>
+          )}
+
+          {pro && profile.snippetCode && (
+            <figure className="mt-4">
+              <figcaption className="text-xs font-bold text-slate-600 uppercase mb-1">Pinned {PATHWAYS_DATA[profile.snippetLanguage || 'python'].name} snippet</figcaption>
+              <pre className="p-4 bg-slate-900 text-emerald-300 rounded-2xl text-sm overflow-x-auto"><code>{profile.snippetCode}</code></pre>
+            </figure>
           )}
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
@@ -88,8 +107,9 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
 };
 
 const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => void; onOpenPlans: () => void }> = ({ profile, onClose, onOpenPlans }) => {
-  const { badges, updateProfile } = useGame();
+  const { badges, updateProfile, stats } = useGame();
   const session = useSession();
+  const pro = isProTier(stats.subscriptionTier);
   const [draft, setDraft] = useState(profile);
   const [username, setUsername] = useState(profile.username || '');
   const { status: usernameStatus, suggestions } = useUsernameCheck(session ? username : '', profile.username || undefined);
@@ -97,7 +117,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [proNote, setProNote] = useState<string | null>(null);
-  const limits = LIMITS.free; // ponytail: Pro limits apply once Pro status is read from the server (build plan PR 11)
+  const limits = pro ? LIMITS.pro : LIMITS.free;
   const unlocked = badges.filter((b) => b.isUnlocked);
   const set = (patch: Partial<ProfileCustomization>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -132,6 +152,9 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
       avatar: draft.avatar,
       banner: draft.banner,
       featuredBadges: draft.featuredBadges.filter((id) => unlocked.some((b) => b.id === id)).slice(0, limits.featuredBadges),
+      ...(pro
+        ? { frame: draft.frame, status: (draft.status || '').trim().slice(0, 40), snippetLanguage: draft.snippetLanguage, snippetCode: (draft.snippetCode || '').slice(0, 600) }
+        : {}),
     });
     onClose();
   };
@@ -146,9 +169,9 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
 
           {/* Live preview */}
           <div className="rounded-2xl border border-slate-200 overflow-hidden" aria-hidden="true">
-            <div className={`h-14 ${bannerClass(draft.banner)}`} />
+            <div className={`h-14 ${bannerClass(draft.banner, pro)}`} />
             <div className="px-4 pb-3 -mt-6 flex items-end gap-3">
-              <div className="w-12 h-12 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-2xl">{avatarEmoji(draft.avatar)}</div>
+              <div className={`w-12 h-12 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-2xl ${frameClass(draft.frame, pro)}`}>{avatarEmoji(draft.avatar)}</div>
               <p className="font-extrabold text-slate-900 truncate">{draft.displayName || 'Learner'}</p>
             </div>
           </div>
@@ -187,7 +210,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
             <legend className="font-bold text-slate-800 mb-2">Banner</legend>
             <div className="grid grid-cols-5 gap-2">
               {BANNERS.map((b) =>
-                b.pro ? (
+                b.pro && !pro ? (
                   <button
                     key={b.id}
                     type="button"
@@ -205,6 +228,54 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
               )}
             </div>
           </fieldset>
+
+          <fieldset>
+            <legend className="font-bold text-slate-800 mb-2">Avatar frame{!pro && ' (Pro)'}</legend>
+            <div className="grid grid-cols-4 gap-2">
+              {FRAMES.map((fr) =>
+                fr.pro && !pro ? (
+                  <button key={fr.id} type="button" onClick={() => setProNote(`The ${fr.label} frame is part of Pro.`)} className="h-14 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-1 cursor-pointer" aria-label={`${fr.label} frame, Pro only`}>
+                    <span className={`w-7 h-7 rounded-full bg-white ${fr.className}`} aria-hidden="true" />
+                    <Lock className="w-3 h-3 text-slate-500" aria-hidden="true" />
+                  </button>
+                ) : (
+                  <label key={fr.id} className={`${swatch} h-14 bg-slate-100 flex flex-col items-center justify-center gap-1`}>
+                    <input type="radio" name="frame" className="sr-only" checked={(draft.frame || 'none') === fr.id} onChange={() => set({ frame: fr.id })} aria-label={`${fr.label}${fr.id === 'none' ? '' : ' frame'}`} />
+                    <span className={`w-7 h-7 rounded-full bg-white ${fr.className}`} aria-hidden="true" />
+                    <span className="text-xs font-bold text-slate-700">{fr.label}</span>
+                  </label>
+                ),
+              )}
+            </div>
+          </fieldset>
+
+          {pro && (
+            <>
+              <div className="space-y-1.5">
+                <label htmlFor="edit-status" className="block font-bold text-slate-800">Status line</label>
+                <input id="edit-status" value={draft.status || ''} onChange={(e) => set({ status: e.target.value })} maxLength={40} placeholder="Grinding SQL 🔥" className="w-full p-3 border border-slate-300 rounded-xl text-base" aria-describedby="edit-status-count" />
+                <p id="edit-status-count" className="text-sm text-slate-600 tabular-nums">{(draft.status || '').length} / 40 characters</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="edit-snippet" className="block font-bold text-slate-800">Pinned code snippet</label>
+                <select
+                  aria-label="Snippet language"
+                  value={draft.snippetLanguage || 'python'}
+                  onChange={(e) => set({ snippetLanguage: e.target.value as LanguageId })}
+                  className="w-full sm:w-56 p-2.5 border border-slate-300 rounded-xl text-base bg-white"
+                >
+                  {(Object.keys(PATHWAYS_DATA) as LanguageId[]).map((id) => <option key={id} value={id}>{PATHWAYS_DATA[id].name}</option>)}
+                </select>
+                <textarea
+                  id="edit-snippet" value={draft.snippetCode || ''} onChange={(e) => set({ snippetCode: e.target.value })} maxLength={600} rows={5} spellCheck={false}
+                  placeholder="Show off a bit of code you're proud of"
+                  className="w-full p-3 bg-slate-900 text-emerald-300 font-mono text-sm rounded-xl" aria-describedby="edit-snippet-count"
+                />
+                <p id="edit-snippet-count" className="text-sm text-slate-600 tabular-nums">{(draft.snippetCode || '').length} / 600 characters</p>
+              </div>
+            </>
+          )}
 
           <fieldset>
             <legend className="font-bold text-slate-800">Featured badges</legend>
@@ -234,6 +305,11 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
             )}
           </fieldset>
 
+          {pro ? (
+            <p className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-sm font-bold text-emerald-800">
+              <Crown className="w-4 h-4" aria-hidden="true" /> Pro is on: gradients, frames, status line, 160-character bio, 6 badges and a pinned snippet.
+            </p>
+          ) : (
           <section aria-labelledby="pro-extras" className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
             <h3 id="pro-extras" className="font-extrabold text-amber-900 flex items-center gap-2"><Lock className="w-4 h-4" aria-hidden="true" /> More with Pro</h3>
             {proNote && <p role="status" className="text-sm font-bold text-amber-900">{proNote}</p>}
@@ -242,6 +318,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
             </ul>
             <button type="button" onClick={onOpenPlans} className="px-4 py-2 bg-white border-2 border-amber-300 rounded-xl font-bold text-amber-900 hover:bg-amber-100 cursor-pointer">See Pro plans</button>
           </section>
+          )}
         </div>
 
         {saveError && <p role="alert" className="px-6 pb-3 text-sm text-rose-700">{saveError}</p>}
