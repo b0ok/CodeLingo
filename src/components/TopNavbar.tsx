@@ -10,6 +10,7 @@ interface TopNavbarProps {
   setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings') => void;
   onOpenHeartModal: () => void;
   onOpenMonetizationModal: () => void;
+  onOpenShop: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -17,6 +18,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   setActiveTab,
   onOpenHeartModal,
   onOpenMonetizationModal,
+  onOpenShop,
 }) => {
   const {
     stats,
@@ -211,14 +213,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </div>
 
           {/* Gold rings */}
-          <div
-            title={`${stats.gems} gold rings collected! Spend them on streak freezes and life point refills.`}
-            className="flex items-center gap-1.5 text-amber-700 font-bold text-sm select-none"
+          <button
+            onClick={onOpenShop}
+            title="Ring shop"
+            className="flex items-center gap-1.5 text-amber-700 font-bold text-sm px-2 py-1 rounded-lg hover:bg-amber-50 cursor-pointer"
           >
             <Circle strokeWidth={3} className="w-4 h-4 text-yellow-500" aria-hidden="true" />
             <span className="tabular-nums">{stats.gems}</span>
-            <span className="sr-only">gold rings</span>
-          </div>
+            <span className="sr-only">gold rings, open the ring shop</span>
+          </button>
 
           {/* Life points */}
           <button

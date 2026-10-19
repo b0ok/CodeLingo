@@ -8,7 +8,7 @@ export const ECONOMY = {
   streakMilestoneRings: { 3: 15, 7: 30, 14: 50, 30: 100 } as Record<number, number>,
   badgeRings: 25,
   checkin: { xp: 30, rings: 10 },
-  prices: { refill: 20, streakFreeze: 50 },
+  prices: { refill: 20, streakFreeze: 50, shopAvatar: 100, shopFrame: 150, shopBanner: 200 },
   levels: { first: 50, step: 25 }, // level 1 -> 2 takes 50 XP, each next level 25 XP more
 };
 
