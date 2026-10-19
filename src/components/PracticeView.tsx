@@ -163,7 +163,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-24 md:pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-24 xl:pb-12">
       
       {/* Header Banner */}
       <div className="p-6 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl shadow-lg border border-indigo-800/60 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -172,7 +172,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
             <Dumbbell className="w-4 h-4" />
             <span>Targeted Training Gym</span>
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Daily Practice Hub
           </h2>
           <p className="text-sm text-slate-300 max-w-md">
@@ -219,14 +219,14 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
               <div
                 key={mod.id}
                 onClick={() => handleLaunchPractice(mod.lessonId)}
-                className="p-5 bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="p-5 bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${mod.color} text-white flex items-center justify-center shadow-sm`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                       +{mod.xp} XP
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400">
+                  <span className="text-xs font-semibold text-slate-500">
                     {mod.tag}
                   </span>
                   <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">

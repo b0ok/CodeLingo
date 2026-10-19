@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { SubscriptionTier } from '../types';
 import { sound } from '../utils/soundEffects';
@@ -90,7 +91,7 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Membership and pricing" onClose={onClose}>
       <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
@@ -100,7 +101,7 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
               <Crown className="w-4 h-4 text-amber-500" />
               <span>Membership & Pricing</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Fuel Your Coding Journey
             </h2>
             <p className="text-sm text-slate-500 max-w-xl">
@@ -110,7 +111,8 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
 
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Close"
+            className="p-2 text-slate-500 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -124,10 +126,10 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
             return (
               <div
                 key={tier.id}
-                className={`rounded-2xl p-6 border flex flex-col justify-between transition-all relative ${tier.color}`}
+                className={`rounded-2xl p-6 border flex flex-col justify-between transition relative ${tier.color}`}
               >
                 {tier.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-extrabold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white font-extrabold text-xs uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
                     {tier.badge}
                   </span>
                 )}
@@ -137,11 +139,11 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
                     <h3 className="font-bold text-lg text-slate-900">{tier.name}</h3>
                     {tier.id === 'pro' && <Terminal className="w-5 h-5 text-emerald-600" />}
                     {tier.id === 'novice' && <Zap className="w-5 h-5 text-amber-500" />}
-                    {tier.id === 'free' && <ShieldCheck className="w-5 h-5 text-slate-400" />}
+                    {tier.id === 'free' && <ShieldCheck className="w-5 h-5 text-slate-500" />}
                   </div>
 
                   <div className="flex items-baseline gap-1 my-3">
-                    <span className="text-3xl font-black text-slate-900">{tier.price}</span>
+                    <span className="text-3xl font-extrabold text-slate-900">{tier.price}</span>
                     {tier.price !== '$0' && <span className="text-xs text-slate-500 font-medium">/ month</span>}
                   </div>
 
@@ -162,7 +164,7 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
                 <button
                   onClick={() => handleSelectTier(tier.id)}
                   disabled={isCurrent}
-                  className={`w-full py-3 rounded-xl font-bold text-xs tracking-wide transition-all cursor-pointer min-h-[44px] ${
+                  className={`w-full py-3 rounded-xl font-bold text-xs tracking-wide transition cursor-pointer min-h-[44px] ${
                     isCurrent
                       ? 'bg-slate-100 text-slate-500 cursor-default border border-slate-200'
                       : tier.id === 'pro'
@@ -189,6 +191,6 @@ export const MonetizationModal: React.FC<MonetizationModalProps> = ({ isOpen, on
         </div>
 
       </div>
-    </div>
+    </Modal>
   );
 };

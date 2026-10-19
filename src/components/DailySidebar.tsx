@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { getRoadmapProgress } from '../data/roadmapProgress';
 import { Flame, Gem, Trophy, ChevronRight, ShieldCheck, Sparkles, Target, Settings2, Check, Plus, Minus, CheckSquare, Shuffle, Play, Compass, Brain } from 'lucide-react';
 import { sound } from '../utils/soundEffects';
 import { HabitRoutinePrompt } from './HabitRoutinePrompt';
@@ -176,7 +177,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
                 Daily Goal
               </h3>
-              <div className="text-[11px] text-slate-500 font-medium">
+              <div className="text-xs text-slate-500 font-medium">
                 {isGoalAchieved ? 'Daily target reached!' : `${xpRemaining} XP to target`}
               </div>
             </div>
@@ -187,7 +188,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               sound.playTap();
               setIsConfiguringGoal(!isConfiguringGoal);
             }}
-            className={`p-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+            className={`p-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition cursor-pointer ${
               isConfiguringGoal
                 ? 'bg-slate-900 text-white border-slate-900'
                 : 'bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
@@ -196,7 +197,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
             aria-label="Configure daily goal target"
           >
             <Settings2 className="w-3.5 h-3.5" />
-            <span className="text-[11px] tabular-nums font-bold">{targetXp} XP</span>
+            <span className="text-xs tabular-nums font-bold">{targetXp} XP</span>
           </button>
         </div>
 
@@ -205,7 +206,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
           <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-fadeIn">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-slate-700">Choose Daily Target</span>
-              <span className="text-[11px] text-slate-500 tabular-nums">Current: {targetXp} XP</span>
+              <span className="text-xs text-slate-500 tabular-nums">Current: {targetXp} XP</span>
             </div>
 
             {/* Presets Grid */}
@@ -216,7 +217,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   <button
                     key={preset.label}
                     onClick={() => handleSelectPreset(preset.xp)}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                       isSelected
                         ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
                         : 'bg-white border-slate-200 hover:border-emerald-300 text-slate-800'
@@ -226,10 +227,10 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                       <span className="font-extrabold text-xs">{preset.label}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                     </div>
-                    <div className={`text-[11px] font-bold tabular-nums mt-0.5 ${isSelected ? 'text-emerald-100' : 'text-emerald-600'}`}>
+                    <div className={`text-xs font-bold tabular-nums mt-0.5 ${isSelected ? 'text-emerald-100' : 'text-emerald-600'}`}>
                       {preset.xp} XP
                     </div>
-                    <div className={`text-[10px] truncate ${isSelected ? 'text-emerald-200' : 'text-slate-400'}`}>
+                    <div className={`text-xs truncate ${isSelected ? 'text-emerald-200' : 'text-slate-500'}`}>
                       {preset.desc}
                     </div>
                   </button>
@@ -239,7 +240,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
 
             {/* Custom Adjust Stepper */}
             <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-600">Custom adjustment:</span>
+              <span className="text-xs font-semibold text-slate-600">Custom adjustment:</span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleAdjustStep(-10)}
@@ -284,7 +285,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   cx="50"
                   cy="50"
                   r={radius}
-                  className={`transition-all duration-700 ease-out ${
+                  className={`transition duration-700 ease-out ${
                     isGoalAchieved ? 'stroke-emerald-500' : 'stroke-emerald-500'
                   }`}
                   strokeWidth="8"
@@ -300,16 +301,16 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                 {isGoalAchieved ? (
                   <div className="flex flex-col items-center">
                     <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400 animate-bounce-subtle" />
-                    <span className="text-xs font-black text-emerald-700 tracking-tight mt-0.5">
+                    <span className="text-xs font-extrabold text-emerald-700 tracking-tight mt-0.5">
                       100%
                     </span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <span className="text-base font-black text-slate-900 tabular-nums leading-none">
+                    <span className="text-base font-extrabold text-slate-900 tabular-nums leading-none">
                       {percent}%
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 mt-0.5">
+                    <span className="text-xs font-bold text-slate-500 mt-0.5">
                       GOAL
                     </span>
                   </div>
@@ -320,7 +321,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
             {/* Right Side Stats & Engagement Message */}
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-black text-slate-900 tabular-nums tracking-tight">
+                <span className="text-2xl font-extrabold text-slate-900 tabular-nums tracking-tight">
                   {todayXp}
                 </span>
                 <span className="text-xs font-bold text-slate-500 tabular-nums">
@@ -341,7 +342,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               {/* Micro bar showing progress */}
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
                 <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  className="h-full bg-emerald-500 rounded-full transition duration-500"
                   style={{ width: `${percent}%` }}
                 />
               </div>
@@ -352,13 +353,13 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
         {/* Section Under Progress Ring: Three Small Randomized Daily Tasks */}
         <div className="pt-4 border-t border-slate-100 space-y-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-800 uppercase tracking-wider">
               <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
               <span>Daily Tasks</span>
             </div>
             <button
               onClick={handleRerollTasks}
-              className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
+              className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
               title="Shuffle 3 new random tasks"
             >
               <Shuffle className="w-3 h-3" />
@@ -374,7 +375,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               return (
                 <div
                   key={task.id}
-                  className={`p-2.5 rounded-2xl border transition-all ${
+                  className={`p-2.5 rounded-2xl border transition ${
                     task.isClaimed
                       ? 'bg-emerald-50/50 border-emerald-200/60'
                       : isTaskDone
@@ -388,7 +389,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                         {task.title}
                       </div>
                       {/* Reward text */}
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] font-semibold text-slate-500">
+                      <div className="flex items-center gap-2 mt-0.5 text-xs font-semibold text-slate-500">
                         <span className="flex items-center gap-0.5 text-cyan-600 font-bold">
                           <Gem className="w-2.5 h-2.5 fill-cyan-400" />
                           <span>+{task.rewardGems}</span>
@@ -402,20 +403,20 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
 
                     {/* Action / Claim Button */}
                     {task.isClaimed ? (
-                      <span className="text-[10px] font-black text-emerald-700 uppercase px-2 py-0.5 bg-emerald-100 rounded-md shrink-0">
+                      <span className="text-xs font-extrabold text-emerald-700 uppercase px-2 py-0.5 bg-emerald-100 rounded-md shrink-0">
                         Claimed ✓
                       </span>
                     ) : isTaskDone ? (
                       <button
                         onClick={() => handleClaimRandomTask(task.id)}
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg shadow-sm cursor-pointer animate-pulse shrink-0"
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-lg shadow-sm cursor-pointer animate-pulse shrink-0"
                       >
                         Claim
                       </button>
                     ) : (
                       <button
                         onClick={() => handleAdvanceTask(task.id)}
-                        className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition-colors cursor-pointer shrink-0"
+                        className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shrink-0"
                         title="Step progress"
                       >
                         +1
@@ -427,13 +428,13 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${
+                        className={`h-full rounded-full transition duration-300 ${
                           task.isClaimed || isTaskDone ? 'bg-emerald-500' : 'bg-slate-400'
                         }`}
                         style={{ width: `${taskPercent}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 tabular-nums">
+                    <span className="text-xs font-bold text-slate-500 tabular-nums">
                       {task.current}/{task.target}
                     </span>
                   </div>
@@ -445,7 +446,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
       </div>
 
       {/* 2. Daily Streak Tracker Card with Subtle Milestone Animation */}
-      <div className={`p-5 bg-white rounded-3xl shadow-sm space-y-4 transition-all duration-300 border ${
+      <div className={`p-5 bg-white rounded-3xl shadow-sm space-y-4 transition duration-300 border ${
         isStreakSurging
           ? 'border-orange-200/90 shadow-orange-500/5'
           : 'border-slate-200'
@@ -458,7 +459,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
             className="flex items-center gap-2 cursor-pointer group"
             title="Click to celebrate your streak flame!"
           >
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-orange-600 transition-all ${
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-orange-600 transition ${
               isStreakSurging
                 ? 'bg-orange-100 animate-streak-badge ring-2 ring-orange-300/60 shadow-sm shadow-orange-500/20'
                 : 'bg-orange-50'
@@ -475,12 +476,12 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   {stats.streak} Day Streak
                 </span>
                 {isSpecialMilestone && (
-                  <span className="px-1.5 py-0.2 bg-orange-100 text-orange-800 text-[10px] font-black rounded-md uppercase tracking-tight">
+                  <span className="px-1.5 py-0.2 bg-orange-100 text-orange-800 text-xs font-extrabold rounded-md uppercase tracking-tight">
                     Milestone
                   </span>
                 )}
               </div>
-              <div className="text-[11px] font-medium leading-tight">
+              <div className="text-xs font-medium leading-tight">
                 {isSpecialMilestone ? (
                   <span className="text-orange-600 font-semibold">
                     🔥 {stats.streak}-day streak titan!
@@ -501,7 +502,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
           {stats.streakFreeze > 0 && (
             <div
               title={`${stats.streakFreeze} Streak Freeze(s) equipped`}
-              className="flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200"
+              className="flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
               <span>{stats.streakFreeze} Safe</span>
@@ -517,7 +518,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
 
             return (
               <div key={idx} className="flex flex-col items-center gap-1.5">
-                <span className={`text-[10px] font-bold ${isToday ? 'text-emerald-700' : 'text-slate-400'}`}>
+                <span className={`text-xs font-bold ${isToday ? 'text-emerald-700' : 'text-slate-500'}`}>
                   {day}
                 </span>
                 <div
@@ -542,7 +543,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
       {/* 4. League Status Quick Card */}
       <div
         onClick={onOpenLeagues}
-        className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl shadow-sm cursor-pointer hover:shadow-md transition-all group"
+        className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl shadow-sm cursor-pointer hover:shadow-md transition group"
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
@@ -552,7 +553,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
           <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
         </div>
 
-        <div className="text-xl font-black">
+        <div className="text-xl font-extrabold">
           Rank #{stats.leagueWeeklyXp > 300 ? '2' : '6'} this week
         </div>
         <p className="text-xs text-slate-300 mt-1">
@@ -581,7 +582,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                 <Compass className="w-4 h-4" />
               </div>
               <div>
-                <span className={`text-[10px] font-black uppercase tracking-wider ${
+                <span className={`text-xs font-extrabold uppercase tracking-wider ${
                   stats.activeLanguage === 'web'
                     ? 'text-indigo-400'
                     : stats.activeLanguage === 'javascript'
@@ -594,7 +595,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                     ? 'JavaScript Mastery Track'
                     : 'Python Mastery Track'}
                 </span>
-                <h4 className="text-xs font-black text-white leading-tight">
+                <h4 className="text-xs font-extrabold text-white leading-tight">
                   Goal: {
                     stats.activeLanguage === 'web'
                       ? WEB_CAREER_TRACKS.find((t) => t.id === targetCareerTrack)?.name || 'Frontend Engineer'
@@ -612,11 +613,10 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                 ? 'text-amber-300 bg-amber-950/80 border-amber-500/30'
                 : 'text-emerald-300 bg-emerald-950/80 border-emerald-500/30'
             } px-2 py-0.5 rounded-full border`}>
-              {stats.activeLanguage === 'web'
-                ? `${(checkedInNodes || []).filter((id) => id.startsWith('web-')).length || 1}/16`
-                : stats.activeLanguage === 'javascript'
-                ? `${(checkedInNodes || []).filter((id) => id.startsWith('js-')).length || 1}/16`
-                : `${(checkedInNodes || []).filter((id) => !id.startsWith('web-') && !id.startsWith('js-')).length || 1}/16`}
+              {(() => {
+                const roadmap = getRoadmapProgress(stats.activeLanguage, checkedInNodes);
+                return `${roadmap.verified}/${roadmap.total}`;
+              })()}
             </span>
           </div>
 
@@ -637,7 +637,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                   : stats.activeLanguage === 'javascript'
                   ? 'bg-amber-500 hover:bg-amber-400'
                   : 'bg-emerald-500 hover:bg-emerald-400'
-              } text-slate-950 font-black text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
+              } text-slate-950 font-extrabold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
             >
               <Brain className="w-3.5 h-3.5" />
               <span>Agent Check-in</span>
