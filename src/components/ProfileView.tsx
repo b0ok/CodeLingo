@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { LEAGUE_CONFIG } from '../data/leaderboard';
-import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, avatarEmoji, bannerClass, frameClass, isProTier } from '../data/profileOptions';
+import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, SHOP_PRICES, avatarEmoji, bannerClass, canUse, frameClass, isProTier } from '../data/profileOptions';
 import { PATHWAYS_DATA } from '../data/curriculum';
 import { levelFromXp } from '../data/economy';
 import { LanguageId } from '../types';
@@ -17,13 +17,14 @@ const DEFAULT_PROFILE: ProfileCustomization = {
   frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '',
 };
 
-export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans }) => {
+export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => void }> = ({ onOpenPlans, onOpenShop }) => {
   const { stats, badges, currentLeague } = useGame();
   const session = useSession();
   const [editing, setEditing] = useState(false);
   const profile = { ...DEFAULT_PROFILE, ...stats.profile };
   const pro = isProTier(stats.subscriptionTier);
   const lv = levelFromXp(stats.xp);
+  const owned = stats.ownedItems || [];
   const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
   const featured = profile.featuredBadges
     .map((id) => badges.find((b) => b.id === id && b.isUnlocked))
@@ -41,11 +42,11 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
   return (
     <div className="space-y-6">
       <section aria-labelledby="profile-heading" className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-        <div className={`h-24 ${bannerClass(profile.banner, pro)}`} aria-hidden="true" />
+        <div className={`h-24 ${bannerClass(profile.banner, pro, owned)}`} aria-hidden="true" />
         <div className="px-6 pb-6">
           <div className="flex items-end justify-between gap-3 -mt-10">
-            <div className={`w-20 h-20 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-4xl ${frameClass(profile.frame, pro)}`} role="img" aria-label={`Avatar: ${AVATARS.find((a) => a.id === profile.avatar)?.label ?? 'Snake'}`}>
-              {avatarEmoji(profile.avatar)}
+            <div className={`w-20 h-20 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-4xl ${frameClass(profile.frame, pro, owned)}`} role="img" aria-label={`Avatar: ${AVATARS.find((a) => a.id === profile.avatar)?.label ?? 'Snake'}`}>
+              {avatarEmoji(profile.avatar, pro, owned)}
             </div>
             <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-4 py-2 border-2 border-slate-300 bg-white rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">
               <Pencil className="w-4 h-4" aria-hidden="true" />
@@ -120,15 +121,16 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
 
       <BadgesView />
 
-      {editing && <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} />}
+      {editing && <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} onOpenShop={() => { setEditing(false); onOpenShop(); }} />}
     </div>
   );
 };
 
-const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => void; onOpenPlans: () => void }> = ({ profile, onClose, onOpenPlans }) => {
+const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => void; onOpenPlans: () => void; onOpenShop: () => void }> = ({ profile, onClose, onOpenPlans, onOpenShop }) => {
   const { badges, updateProfile, stats } = useGame();
   const session = useSession();
   const pro = isProTier(stats.subscriptionTier);
+  const owned = stats.ownedItems || [];
   const [draft, setDraft] = useState(profile);
   const [username, setUsername] = useState(profile.username || '');
   const { status: usernameStatus, suggestions } = useUsernameCheck(session ? username : '', profile.username || undefined);
@@ -178,6 +180,12 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
     onClose();
   };
 
+  const shopLock = (price: number) => (
+    <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-0.5 bg-black/45 text-white text-[11px] font-bold rounded-b-xl py-0.5 tabular-nums">
+      <Lock className="w-2.5 h-2.5" aria-hidden="true" /> {price}
+    </span>
+  );
+
   const swatch = 'relative cursor-pointer rounded-xl has-[:checked]:ring-4 has-[:checked]:ring-slate-900/80 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-emerald-600';
 
   return (
@@ -188,9 +196,9 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
 
           {/* Live preview */}
           <div className="rounded-2xl border border-slate-200 overflow-hidden" aria-hidden="true">
-            <div className={`h-14 ${bannerClass(draft.banner, pro)}`} />
+            <div className={`h-14 ${bannerClass(draft.banner, pro, owned)}`} />
             <div className="px-4 pb-3 -mt-6 flex items-end gap-3">
-              <div className={`w-12 h-12 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-2xl ${frameClass(draft.frame, pro)}`}>{avatarEmoji(draft.avatar)}</div>
+              <div className={`w-12 h-12 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-2xl ${frameClass(draft.frame, pro, owned)}`}>{avatarEmoji(draft.avatar, pro, owned)}</div>
               <p className="font-extrabold text-slate-900 truncate">{draft.displayName || 'Learner'}</p>
             </div>
           </div>
@@ -210,12 +218,19 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
           <fieldset>
             <legend className="font-bold text-slate-800 mb-2">Avatar</legend>
             <div className="grid grid-cols-5 gap-2">
-              {AVATARS.map((a) => (
-                <label key={a.id} className={`${swatch} aspect-square bg-slate-100 flex items-center justify-center text-2xl`}>
-                  <input type="radio" name="avatar" className="sr-only" checked={draft.avatar === a.id} onChange={() => set({ avatar: a.id })} aria-label={a.label} />
-                  <span aria-hidden="true">{a.emoji}</span>
-                </label>
-              ))}
+              {AVATARS.map((a) =>
+                canUse(a, pro, owned) ? (
+                  <label key={a.id} className={`${swatch} aspect-square bg-slate-100 flex items-center justify-center text-2xl`}>
+                    <input type="radio" name="avatar" className="sr-only" checked={draft.avatar === a.id} onChange={() => set({ avatar: a.id })} aria-label={a.label} />
+                    <span aria-hidden="true">{a.emoji}</span>
+                  </label>
+                ) : (
+                  <button key={a.id} type="button" onClick={onOpenShop} className="relative aspect-square bg-slate-100 rounded-xl flex items-center justify-center text-2xl cursor-pointer" aria-label={`${a.label} avatar, ${SHOP_PRICES.avatar} gold rings in the ring shop`}>
+                    <span aria-hidden="true" className="opacity-60">{a.emoji}</span>
+                    {shopLock(SHOP_PRICES.avatar)}
+                  </button>
+                ),
+              )}
             </div>
           </fieldset>
 
@@ -229,7 +244,11 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
             <legend className="font-bold text-slate-800 mb-2">Banner</legend>
             <div className="grid grid-cols-5 gap-2">
               {BANNERS.map((b) =>
-                b.pro && !pro ? (
+                b.shop && !owned.includes(b.id) ? (
+                  <button key={b.id} type="button" onClick={onOpenShop} className={`relative h-10 rounded-xl ${b.className} cursor-pointer`} aria-label={`${b.label} banner, ${SHOP_PRICES.banner} gold rings in the ring shop`}>
+                    {shopLock(SHOP_PRICES.banner)}
+                  </button>
+                ) : b.pro && !pro ? (
                   <button
                     key={b.id}
                     type="button"
@@ -249,10 +268,15 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
           </fieldset>
 
           <fieldset>
-            <legend className="font-bold text-slate-800 mb-2">Avatar frame{!pro && ' (Pro)'}</legend>
+            <legend className="font-bold text-slate-800 mb-2">Avatar frame</legend>
             <div className="grid grid-cols-4 gap-2">
               {FRAMES.map((fr) =>
-                fr.pro && !pro ? (
+                fr.shop && !owned.includes(fr.id) ? (
+                  <button key={fr.id} type="button" onClick={onOpenShop} className="relative h-14 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-1 cursor-pointer" aria-label={`${fr.label} frame, ${SHOP_PRICES.frame} gold rings in the ring shop`}>
+                    <span className={`w-7 h-7 rounded-full bg-white ${fr.className}`} aria-hidden="true" />
+                    {shopLock(SHOP_PRICES.frame)}
+                  </button>
+                ) : fr.pro && !pro ? (
                   <button key={fr.id} type="button" onClick={() => setProNote(`The ${fr.label} frame is part of Pro.`)} className="h-14 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-1 cursor-pointer" aria-label={`${fr.label} frame, Pro only`}>
                     <span className={`w-7 h-7 rounded-full bg-white ${fr.className}`} aria-hidden="true" />
                     <Lock className="w-3 h-3 text-slate-500" aria-hidden="true" />

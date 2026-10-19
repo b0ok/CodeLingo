@@ -4,6 +4,7 @@ import { INITIAL_BADGES } from '../data/badges';
 import { INITIAL_LEADERBOARD_USERS } from '../data/leaderboard';
 import { sound } from '../utils/soundEffects';
 import { ECONOMY, bonusRings } from '../data/economy';
+import { ActivityKind, DailyTasksState, TASK_POOL, freshDay, progressOf, reroll, todayKey } from '../data/dailyTasks';
 import { supabase, useSession } from '../utils/supabase';
 import { CloudState, Rows, pick, merge, hasProgress, toRows, changedRows, pull, push } from '../utils/cloudSync';
 import { SyncChoiceDialog } from '../components/SyncChoiceDialog';
@@ -42,8 +43,13 @@ interface GameContextType {
   placeOutOfLessons: (lessonIds: string[]) => void;
   setLearningLanguages: (langs: LanguageId[]) => void;
   updateProfile: (patch: Partial<ProfileCustomization>) => void;
+  buyItem: (id: string, price: number) => boolean;
   newlyUnlockedBadge: Badge | null;
   rewardEvents: { title: string; rings: number }[];
+  dailyTasks: DailyTasksState;
+  trackActivity: (kind: ActivityKind, amount?: number) => void;
+  claimDailyTask: (id: string) => void;
+  rerollDailyTasks: () => boolean;
   dismissRewardEvents: () => void;
   dismissBadgeNotification: () => void;
   // Subscription & Monetization
@@ -122,6 +128,7 @@ const DEFAULT_STATS: UserStats = {
   targetCareerTrack: 'ai-ml',
   checkedInNodes: [],
   agentCheckinsCount: 0,
+  ownedItems: [],
   profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
 };
 
@@ -218,6 +225,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState<Badge | null>(null);
   const [rewardEvents, setRewardEvents] = useState<{ title: string; rings: number }[]>([]);
+
+  // ---------- Daily tasks: filled by real activity, reset each day ----------
+  const TASKS_KEY = 'codelingo_daily_tasks_v2';
+  const [dailyTasks, setDailyTasks] = useState<DailyTasksState>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(TASKS_KEY) || 'null') as DailyTasksState | null;
+      if (saved && saved.date === todayKey()) return saved;
+    } catch { /* first visit or blocked storage */ }
+    return freshDay();
+  });
+  useEffect(() => {
+    try { localStorage.setItem(TASKS_KEY, JSON.stringify(dailyTasks)); } catch { /* storage full or blocked */ }
+  }, [dailyTasks]);
+  // A new day draws new tasks, even if the app stayed open past midnight.
+  useEffect(() => {
+    const timer = setInterval(() => setDailyTasks((s) => (s.date === todayKey() ? s : freshDay())), 60000);
+    return () => clearInterval(timer);
+  }, []);
+  const trackActivity = useCallback((kind: ActivityKind, amount = 1) => {
+    setDailyTasks((s) => {
+      const day = s.date === todayKey() ? s : freshDay();
+      return { ...day, counts: { ...day.counts, [kind]: (day.counts[kind] || 0) + amount } };
+    });
+  }, []);
   const dismissRewardEvents = useCallback(() => setRewardEvents([]), []);
   const [highFiveNotification, setHighFiveNotification] = useState<HighFiveNotification | null>(null);
   const [activeHabitReminder, setActiveHabitReminder] = useState<string | null>(null);
@@ -641,6 +672,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return updatedStats;
     });
 
+    if (lessonId) {
+      trackActivity('lessons');
+      if (stars === 3) trackActivity('perfect');
+    }
+
     // Update Daily Quests
     setQuests((prevQuests) => {
       return prevQuests.map((q) => {
@@ -679,6 +715,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const cheerLeaderboardUser = (userId: string) => {
     sound.playTap();
+    trackActivity('cheers');
     setLeaderboard((prev) =>
       prev.map((user) =>
         user.id === userId ? { ...user, cheerCount: user.cheerCount + 1 } : user
@@ -700,6 +737,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       completedLessons: [...new Set([...prev.completedLessons, ...lessonIds])],
       nodeStars: { ...Object.fromEntries(lessonIds.map((id) => [id, 1])), ...prev.nodeStars },
     }));
+  };
+
+  const buyItem = (id: string, price: number): boolean => {
+    if (stats.gems < price || (stats.ownedItems || []).includes(id)) return false;
+    sound.playGem();
+    setStats((prev) => ({ ...prev, gems: prev.gems - price, ownedItems: [...(prev.ownedItems || []), id] }));
+    return true;
+  };
+
+  const claimDailyTask = (id: string) => {
+    const task = TASK_POOL.find((t) => t.id === id);
+    const xpToday = stats.history[todayKey()] || 0;
+    if (!task || dailyTasks.claimed.includes(id) || progressOf(task, dailyTasks, xpToday) < task.target) return;
+    sound.playGem();
+    setDailyTasks((s) => ({ ...s, claimed: [...s.claimed, id] }));
+    gainXpAndGems(task.rewardXp, task.rewardGems);
+  };
+
+  // Costs gold rings; keeps claimed tasks and swaps the rest for different ones.
+  const rerollDailyTasks = (): boolean => {
+    const next = reroll(dailyTasks);
+    if (!next || stats.gems < ECONOMY.prices.taskReroll) return false;
+    sound.playTap();
+    setStats((prev) => ({ ...prev, gems: prev.gems - ECONOMY.prices.taskReroll }));
+    setDailyTasks(next);
+    return true;
   };
 
   const updateProfile = (patch: Partial<ProfileCustomization>) => {
@@ -915,8 +978,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         placeOutOfLessons,
         setLearningLanguages,
         updateProfile,
+        buyItem,
         newlyUnlockedBadge,
         rewardEvents,
+        dailyTasks,
+        trackActivity,
+        claimDailyTask,
+        rerollDailyTasks,
         dismissRewardEvents,
         dismissBadgeNotification,
         setSubscriptionTier,

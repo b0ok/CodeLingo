@@ -5,7 +5,7 @@ import { CloudState, merge, toRows, fromRows, changedRows, hasProgress } from '.
 const base: CloudState = {
   xp: 0, gems: 0, hearts: 5, streak: 0, highestStreak: 0, streakFreeze: 0, currentLeague: 'Bronze',
   leagueWeeklyXp: 0, lastActiveDate: '', completedLessons: [], nodeStars: {}, history: {},
-  unlockedBadgeIds: [], checkedInNodes: [], completedChallenges: [], activeLanguage: 'python',
+  unlockedBadgeIds: [], checkedInNodes: [], completedChallenges: [], ownedItems: [], activeLanguage: 'python',
   targetCareerTrack: 'ai-ml', soundEnabled: true, dailyGoalTarget: 50, dailyRoutineTime: '20:00',
   profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
 };
@@ -18,7 +18,7 @@ const phone: CloudState = {
 const laptop: CloudState = {
   ...base, xp: 90, gems: 70, hearts: 2, streak: 4, highestStreak: 4, lastActiveDate: '2026-10-19',
   completedLessons: ['lesson-1-1', 'lesson-2-1'], nodeStars: { 'lesson-1-1': 3, 'lesson-2-1': 1 },
-  history: { '2026-10-18': 30, '2026-10-19': 50 }, completedChallenges: ['cook-1'], dailyGoalTarget: 100,
+  history: { '2026-10-18': 30, '2026-10-19': 50 }, completedChallenges: ['cook-1'], ownedItems: ['dino'], dailyGoalTarget: 100,
   profile: {
     displayName: 'T3', avatar: 'fox', bio: 'Learning SQL', banner: 'sunset', featuredBadges: ['first_strike'],
     frame: 'gold', status: 'Cooking SQL', snippetLanguage: 'sql', snippetCode: 'SELECT 1;',
@@ -37,6 +37,7 @@ assert.equal(m.nodeStars['lesson-1-1'], 3);
 assert.deepEqual(m.history, { '2026-10-18': 60, '2026-10-19': 50 });
 assert.deepEqual(m.unlockedBadgeIds, ['first_strike']);
 assert.deepEqual(m.completedChallenges, ['cook-1']);
+assert.deepEqual(m.ownedItems, ['dino']); // ring shop purchases are never lost when combining
 // Settings and life points come from the most recently used side (the laptop).
 assert.equal(m.dailyGoalTarget, 100);
 assert.equal(m.hearts, 2);

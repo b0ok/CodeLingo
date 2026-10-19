@@ -42,5 +42,8 @@ jobs:
       - name: Cloud sync check
         run: npm run check:sync
 
+      - name: Economy check
+        run: npm run check:economy
+
       - name: Verify answers in real runtimes
         run: npm run verify:snippets

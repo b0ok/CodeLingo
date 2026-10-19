@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { ECONOMY } from '../data/economy';
+import { TASK_POOL, progressOf, reroll } from '../data/dailyTasks';
 import { getRoadmapProgress } from '../data/roadmapProgress';
 import { Flame, Circle, Trophy, ChevronRight, ShieldCheck, Sparkles, Target, Settings2, Check, Plus, Minus, CheckSquare, Shuffle, Play, Compass, Brain } from 'lucide-react';
 import { sound } from '../utils/soundEffects';
@@ -13,17 +15,6 @@ interface DailySidebarProps {
   onOpenLeagues: () => void;
   onOpenShop: () => void;
   onStartQuickLesson?: () => void;
-}
-
-interface RandomTask {
-  id: string;
-  title: string;
-  target: number;
-  current: number;
-  rewardGems: number;
-  rewardXp: number;
-  unit: string;
-  isClaimed: boolean;
 }
 
 export const DailySidebar: React.FC<DailySidebarProps> = ({
@@ -40,72 +31,24 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
     leaderboard,
     setDailyGoalTarget,
     gainXpAndGems,
+    dailyTasks,
+    claimDailyTask,
+    rerollDailyTasks,
     openRoadmapModal,
     checkedInNodes,
     targetCareerTrack,
   } = useGame();
   const [isConfiguringGoal, setIsConfiguringGoal] = useState(false);
 
-  // Randomized Daily Tasks Pool & State
-  const RANDOM_TASK_POOL = [
-    { id: 'lessons-2', title: 'Finish 2 lessons', target: 2, rewardGems: 15, rewardXp: 20, unit: 'lessons' },
-    { id: 'practice-5', title: 'Practice for 5 minutes', target: 5, rewardGems: 15, rewardXp: 15, unit: 'mins' },
-    { id: 'perfect-1', title: 'Score 100% on a drill', target: 1, rewardGems: 20, rewardXp: 20, unit: 'drill' },
-    { id: 'bug-1', title: 'Spot 1 syntax bug', target: 1, rewardGems: 10, rewardXp: 15, unit: 'bug' },
-    { id: 'sandbox-1', title: 'Run a script in Sandbox', target: 1, rewardGems: 15, rewardXp: 15, unit: 'run' },
-    { id: 'xp-30', title: 'Earn 30 points today', target: 30, rewardGems: 15, rewardXp: 20, unit: 'XP' },
-    { id: 'cheer-1', title: 'Cheer a student on the board', target: 1, rewardGems: 10, rewardXp: 10, unit: 'cheer' },
-  ];
-
-  const pickRandomTasks = (): RandomTask[] => {
-    const shuffled = [...RANDOM_TASK_POOL].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3).map((t, idx) => ({
-      ...t,
-      current: 0,
-      isClaimed: false,
-    }));
-  };
-
-  const [randomTasks, setRandomTasks] = useState<RandomTask[]>(() => {
-    try {
-      const saved = localStorage.getItem('pylingo_random_tasks_v2');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // Ignore
-    }
-    return [
-      { id: 'lessons-2', title: 'Finish 2 lessons', target: 2, current: 0, rewardGems: 15, rewardXp: 20, unit: 'lessons', isClaimed: false },
-      { id: 'practice-5', title: 'Practice for 5 minutes', target: 5, current: 0, rewardGems: 15, rewardXp: 15, unit: 'mins', isClaimed: false },
-      { id: 'perfect-1', title: 'Score 100% on a drill', target: 1, current: 0, rewardGems: 20, rewardXp: 20, unit: 'drill', isClaimed: false },
-    ];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('pylingo_random_tasks_v2', JSON.stringify(randomTasks));
-  }, [randomTasks]);
-
-  const handleRerollTasks = () => {
-    sound.playTap();
-    setRandomTasks(pickRandomTasks());
-  };
-
-  const handleClaimRandomTask = (taskId: string) => {
-    const task = randomTasks.find((t) => t.id === taskId);
-    if (!task || task.current < task.target || task.isClaimed) return;
-
-    sound.playGem();
-    gainXpAndGems(task.rewardXp, task.rewardGems);
-    setRandomTasks((prev: RandomTask[]) =>
-      prev.map((t: RandomTask) => (t.id === taskId ? { ...t, isClaimed: true } : t))
-    );
-  };
-
-  const handleAdvanceTask = (taskId: string) => {
-    sound.playTap();
-    setRandomTasks((prev: RandomTask[]) =>
-      prev.map((t: RandomTask) => (t.id === taskId ? { ...t, current: Math.min(t.target, t.current + 1) } : t))
-    );
-  };
+  // Daily tasks fill from real activity (tracked in GameContext); rerolling costs gold rings.
+  const xpTodayForTasks = stats.history[new Date().toISOString().split('T')[0]] || 0;
+  const tasks = dailyTasks.ids
+    .map((id) => TASK_POOL.find((t) => t.id === id))
+    .filter((t): t is NonNullable<typeof t> => !!t)
+    .map((t) => ({ ...t, current: progressOf(t, dailyTasks, xpTodayForTasks), isClaimed: dailyTasks.claimed.includes(t.id) }));
+  const rerollPrice = ECONOMY.prices.taskReroll;
+  const canReroll = !!reroll(dailyTasks);
+  const [rerollArmed, setRerollArmed] = useState(false);
 
   // Today's points calculation
   const today = new Date().toISOString().split('T')[0];
@@ -360,18 +303,31 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
               <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
               <span>Daily Tasks</span>
             </div>
-            <button
-              onClick={handleRerollTasks}
-              className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
-              title="Shuffle 3 new random tasks"
-            >
-              <Shuffle className="w-3 h-3" />
-              <span>Reroll</span>
-            </button>
+            {canReroll && (
+              stats.gems < rerollPrice ? (
+                <span className="text-xs font-bold text-slate-500 tabular-nums">Reroll needs {rerollPrice} rings</span>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (!rerollArmed) { setRerollArmed(true); return; }
+                    setRerollArmed(false);
+                    rerollDailyTasks();
+                  }}
+                  onBlur={() => setRerollArmed(false)}
+                  aria-label={rerollArmed ? `Confirm: spend ${rerollPrice} gold rings to reroll unclaimed tasks` : `Reroll unclaimed tasks for ${rerollPrice} gold rings`}
+                  className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer tabular-nums ${rerollArmed ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-emerald-700'}`}
+                >
+                  <Shuffle className="w-3 h-3" aria-hidden="true" />
+                  <span>{rerollArmed ? 'Confirm' : 'Reroll'}</span>
+                  <Circle strokeWidth={3} className={`w-2.5 h-2.5 ${rerollArmed ? 'text-yellow-200' : 'text-yellow-500'}`} aria-hidden="true" />
+                  <span>{rerollPrice}</span>
+                </button>
+              )
+            )}
           </div>
 
           <div className="space-y-2">
-            {randomTasks.map((task) => {
+            {tasks.map((task) => {
               const taskPercent = Math.min(100, Math.round((task.current / task.target) * 100));
               const isTaskDone = task.current >= task.target;
 
@@ -411,20 +367,12 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
                       </span>
                     ) : isTaskDone ? (
                       <button
-                        onClick={() => handleClaimRandomTask(task.id)}
+                        onClick={() => claimDailyTask(task.id)}
                         className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-lg shadow-sm cursor-pointer animate-pulse shrink-0"
                       >
                         Claim
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => handleAdvanceTask(task.id)}
-                        className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shrink-0"
-                        title="Step progress"
-                      >
-                        +1
-                      </button>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Progress bar and ratio */}
