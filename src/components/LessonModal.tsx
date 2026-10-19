@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { LessonNode, Challenge } from '../types';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
-import { runUnifiedCode } from '../utils/codeRunner';
+import { runUnifiedCode, passesTestCases } from '../utils/codeRunner';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { X, Heart, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Play, Sparkles, RefreshCw, HelpCircle } from 'lucide-react';
@@ -56,9 +56,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       setFilledTokens([]);
       setAvailableTokens([...(currentChallenge.tokens || [])]);
     } else if (currentChallenge.type === 'parsons') {
-      const initialIds = (currentChallenge.parsonsLines || []).map((l) => l.id);
-      // Shuffle initial order slightly if needed, or use as provided
-      setOrderedLineIds(initialIds);
+      const ids = (currentChallenge.parsonsLines || []).map((l) => l.id);
+      const solved = (currentChallenge.correctParsonsOrder || []).join();
+      let shuffled = ids;
+      for (let tries = 0; ids.length > 1 && tries < 10 && shuffled.join() === solved; tries++) {
+        shuffled = [...ids].sort(() => Math.random() - 0.5);
+      }
+      if (shuffled.join() === solved) shuffled = [...ids].reverse();
+      setOrderedLineIds(shuffled);
     } else if (currentChallenge.type === 'predict_output' || currentChallenge.type === 'concept_quiz') {
       setSelectedOptionId(null);
     } else if (currentChallenge.type === 'spot_bug') {
@@ -140,10 +145,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     } else if (currentChallenge.type === 'code_runner') {
       const challengeLang = lesson.id.startsWith('js-') ? 'javascript' : lesson.id.startsWith('sql-') ? 'sql' : lesson.id.startsWith('web-') ? 'web' : 'python';
       const result = runUnifiedCode(userCode, challengeLang);
-      const actual = result.output.trim();
-      isCorrect =
-        result.success &&
-        (currentChallenge.testCases || []).every((tc) => actual.includes(tc.expectedOutput.trim()));
+      isCorrect = passesTestCases(result, currentChallenge.testCases);
       setRunnerOutput(result.output);
       setRunnerError(result.error || null);
     }
