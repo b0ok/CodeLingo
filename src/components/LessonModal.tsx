@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { LessonNode, Challenge, LanguageId } from '../types';
 import { useGame } from '../context/GameContext';
+import { lessonReward } from '../data/economy';
 import { PytoMascot } from './PytoMascot';
 import { runUnifiedCode, passesTestCases, gradeWebCode, WebGradeResult } from '../utils/codeRunner';
 import { sound } from '../utils/soundEffects';
@@ -32,6 +33,8 @@ interface LessonModalProps {
 
 export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => {
   const { stats, loseHeart, gainXpAndGems } = useGame();
+  const [firstTime] = useState(() => !stats.completedLessons.includes(lesson.id));
+  const [earned, setEarned] = useState({ xp: 0, rings: 0 });
 
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -283,7 +286,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     } else {
       // Completed full lesson!
       const stars = heartsLostInSession === 0 ? 3 : heartsLostInSession === 1 ? 2 : 1;
-      gainXpAndGems(lesson.xpReward, lesson.gemReward, lesson.id, stars);
+      const reward = lessonReward(stars, firstTime);
+      setEarned(reward);
+      gainXpAndGems(reward.xp, reward.rings, lesson.id, stars);
       sound.playVictory();
       setIsCompleted(true);
 
@@ -734,11 +739,11 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             {/* Rewards Grid */}
             <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl">
-                <div className="text-xl font-extrabold text-amber-600 tabular-nums">+{lesson.xpReward}</div>
+                <div className="text-xl font-extrabold text-amber-600 tabular-nums">+{earned.xp}</div>
                 <div className="text-xs font-bold text-amber-800 uppercase mt-0.5">Total XP</div>
               </div>
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-2xl">
-                <div className="text-xl font-extrabold text-amber-700 tabular-nums">+{lesson.gemReward}</div>
+                <div className="text-xl font-extrabold text-amber-700 tabular-nums">+{earned.rings}</div>
                 <div className="text-xs font-bold text-amber-900 uppercase mt-0.5">Gold rings</div>
               </div>
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">

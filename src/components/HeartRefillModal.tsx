@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
+import { ECONOMY } from '../data/economy';
 import { PytoMascot } from './PytoMascot';
 import { sound } from '../utils/soundEffects';
 import { X, Heart, Circle, Dumbbell, ShieldCheck, CheckCircle2 } from 'lucide-react';
@@ -121,7 +122,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
                     alert('You need 20 gold rings for a refill. Finish lessons to earn more.');
                   }
                 }}
-                disabled={stats.gems < 20}
+                disabled={stats.gems < ECONOMY.prices.refill}
                 className="w-full p-4 border-2 border-slate-200 hover:border-yellow-400 rounded-2xl flex items-center justify-between cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3">
@@ -148,7 +149,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({ isOpen, onCl
                     alert('You need 50 gold rings for a streak freeze. Finish lessons to earn more.');
                   }
                 }}
-                disabled={stats.gems < 50}
+                disabled={stats.gems < ECONOMY.prices.streakFreeze}
                 className="w-full p-4 border-2 border-slate-200 hover:border-amber-400 rounded-2xl flex items-center justify-between cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3">
