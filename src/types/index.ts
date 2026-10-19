@@ -239,6 +239,7 @@ export interface UserStats {
     | 'sql-data-engineer'
     | 'sql-dba';
   checkedInNodes?: string[]; // Node IDs verified through Agent check-in
+  learningLanguages?: LanguageId[]; // every course picked in onboarding; the first is where they start
   agentCheckinsCount?: number;
 }
 

@@ -36,6 +36,7 @@ interface GameContextType {
   cheerLeaderboardUser: (userId: string) => void;
   setDailyGoalTarget: (target: number) => void;
   placeOutOfLessons: (lessonIds: string[]) => void;
+  setLearningLanguages: (langs: LanguageId[]) => void;
   newlyUnlockedBadge: Badge | null;
   dismissBadgeNotification: () => void;
   // Subscription & Monetization
@@ -589,6 +590,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const setLearningLanguages = (langs: LanguageId[]) => {
+    setStats((prev) => ({ ...prev, learningLanguages: langs }));
+  };
+
   const setDailyGoalTarget = (target: number) => {
     sound.playTap();
     setStats((prev) => ({
@@ -792,6 +797,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cheerLeaderboardUser,
         setDailyGoalTarget,
         placeOutOfLessons,
+        setLearningLanguages,
         newlyUnlockedBadge,
         dismissBadgeNotification,
         setSubscriptionTier,
