@@ -23,6 +23,12 @@ const SOLUTIONS: Record<string, { right: string; wrong: string[] }> = {
   'u6-l2-c2': { right: 'def double_it(n):\n    return n * 2\n\nprint(double_it(7))', wrong: ['def double_it(n):\n    return n + 2\n\nprint(double_it(7))'] },
   'u7-l1-c2': { right: 'points = [45, 92, 78, 99, 61]\nprint(max(points))', wrong: ['points = [45, 92, 78, 99, 61]\nprint(min(points))'] },
   'u8-l1-c3': { right: 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x + p.y)', wrong: ['class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x)'] },
+  'u4-l2-c4': { right: 'prices = [3, 5, 2]\ntotal = 0\nfor p in prices:\n    total = total + p\nprint(total)', wrong: ['prices = [3, 5, 2]\ntotal = 0\nfor p in prices:\n    total = p\nprint(total)'] },
+  'u4-l3-c4': { right: 'n = 1\nwhile n < 20:\n    print(n)\n    n = n * 2', wrong: ['n = 1\nwhile n < 20:\n    n = n * 2\n    print(n)'] },
+  'u5-l3-c4': { right: 'stock = {"apples": 5, "pears": 2}\nstock["apples"] = stock["apples"] + 3\nprint(stock["apples"])', wrong: ['stock = {"apples": 5, "pears": 2}\nstock["apples"] = 3\nprint(stock["apples"])'] },
+  'u6-l1-c4': { right: 'def greet(name):\n    print("Hello, " + name)\n\ngreet("Ada")', wrong: ['def greet(name):\n    print("Hello, name")\n\ngreet("Ada")'] },
+  'u6-l3-c4': { right: 'def power(base, exp=2):\n    return base ** exp\n\nprint(power(5))', wrong: ['def power(base, exp=3):\n    return base ** exp\n\nprint(power(5))'] },
+  'u8-l2-c4': { right: 'class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    def speak(self):\n        return "Woof!"\n\nprint(Dog("Rex").speak())', wrong: ['class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    pass\n\nprint(Dog("Rex").speak())'] },
   'js-u1-l1-c5': { right: 'console.log("CodeLingo");', wrong: ['console.log("codelingo");', 'console.log("Code", "Lingo");'] },
   'js-u3-l2-c2': { right: 'const square = (x) => x * x;\nconsole.log(square(6));', wrong: ['const square = (x) => x * x;\nconsole.log(square(5));'] },
   'js-u1-l2-c4': { right: 'const lang = "JavaScript";\nconst year = 1995;\nconsole.log(`${lang} was created in ${year}`);', wrong: ['const lang = "JavaScript";\nconst year = 1995;\nconsole.log("lang was created in year");'] },
@@ -84,6 +90,13 @@ function checkChallenge(c: Challenge, lang: LanguageId) {
     case 'concept_quiz':
       if (!c.options?.some((o) => o.id === c.correctOptionId)) fail(`${c.id}: correct option missing`);
       break;
+    case 'matching': {
+      const pairs = c.matchPairs || [];
+      if (pairs.length < 3) fail(`${c.id}: matching needs at least 3 pairs`);
+      if (new Set(pairs.map((p) => p.left)).size !== pairs.length || new Set(pairs.map((p) => p.right)).size !== pairs.length)
+        fail(`${c.id}: matching items must be unique`);
+      break;
+    }
     case 'spot_bug':
       if (c.buggyLineIndex == null || c.buggyLineIndex < 0 || c.buggyLineIndex >= (c.buggyCodeLines?.length || 0))
         fail(`${c.id}: bug line out of range`);
@@ -121,7 +134,7 @@ for (const [lang, units, phases] of TRACKS) {
       if (lesson.unitId !== unit.id || lesson.unitNumber !== unit.unitNumber || lesson.indexInUnit !== i)
         fail(`${lesson.id}: unit/index fields out of sync`);
       if (lesson.challenges.length < MIN_CHALLENGES)
-        warnings.push(`${lesson.id}: only ${lesson.challenges.length} challenges`);
+        fail(`${lesson.id}: only ${lesson.challenges.length} challenges`);
       for (const c of lesson.challenges) {
         challenges++;
         if (challengeIds.has(c.id)) fail(`duplicate challenge ${c.id}`);
