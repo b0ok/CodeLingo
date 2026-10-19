@@ -4,7 +4,8 @@ export type ChallengeType =
   | 'predict_output'   // Multiple choice predicting Python stdout
   | 'spot_bug'         // Tap the buggy code line or pick the fix
   | 'code_runner'      // Live interactive coding with automated test cases
-  | 'concept_quiz';    // Quick concept comprehension check
+  | 'concept_quiz'     // Quick concept comprehension check
+  | 'matching';        // Pair each term on the left with its match on the right
 
 export interface ParsonsLine {
   id: string;
@@ -55,6 +56,9 @@ export interface Challenge {
     explanation?: string;
   }[];
   correctOptionId?: string;
+
+  // For matching (shown left column in order, right column shuffled)
+  matchPairs?: { left: string; right: string }[];
 
   // For spot_bug
   buggyCodeLines?: string[];
