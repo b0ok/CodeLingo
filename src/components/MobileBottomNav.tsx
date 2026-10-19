@@ -1,9 +1,9 @@
 import React from 'react';
-import { BookOpen, Dumbbell, Trophy, UserRound, Terminal, ChefHat } from 'lucide-react';
+import { BookOpen, Dumbbell, Trophy, UserRound, ChefHat } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground';
-  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground') => void;
+  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile';
+  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile') => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
@@ -16,7 +16,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     { id: 'challenges' as const, label: 'Challenges', icon: ChefHat },
     { id: 'leagues' as const, label: 'Leagues', icon: Trophy },
     { id: 'profile' as const, label: 'Profile', icon: UserRound },
-    { id: 'playground' as const, label: 'Sandbox', icon: Terminal },
   ];
 
   return (
