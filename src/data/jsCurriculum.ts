@@ -296,7 +296,7 @@ export const JAVASCRIPT_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Run an Arrow Function',
             instruction: 'Write an arrow function that returns the square of 6 and log it.',
-            starterCode: 'const square = (x) => x * x;\nconsole.log(square(6));',
+            starterCode: '// Write an arrow function named square, then log square(6)\n',
             testCases: [
               {
                 name: 'Logs 36',

@@ -1,6 +1,6 @@
 // Universal client-side code runner supporting Python, JavaScript, and SQL execution
 import { runPythonCode, ExecutionResult } from './pythonRunner';
-import { LanguageId } from '../types';
+import { LanguageId, TestCase } from '../types';
 
 export type { ExecutionResult };
 
@@ -34,6 +34,19 @@ export const SAMPLE_SQL_DB: SqlDatabase = {
     { id: 105, user_id: 1, product_id: 3, quantity: 1, order_date: '2026-10-12' },
   ],
 };
+
+// A run passes when every test case matches: the whole trimmed output by default,
+// or a substring when the test case sets `contains` (used for SQL tables).
+export function passesTestCases(result: ExecutionResult, testCases: TestCase[] = []): boolean {
+  const actual = result.output.trim();
+  return (
+    result.success &&
+    testCases.length > 0 &&
+    testCases.every((tc) =>
+      tc.contains ? actual.includes(tc.expectedOutput.trim()) : actual === tc.expectedOutput.trim()
+    )
+  );
+}
 
 // Safe In-Browser JavaScript Runner
 export function runJavaScriptCode(code: string): ExecutionResult {
