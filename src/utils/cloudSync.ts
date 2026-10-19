@@ -6,6 +6,7 @@ import { ProfileCustomization, UserStats } from '../types';
 const DEFAULT_PROFILE: ProfileCustomization = {
   displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [],
   frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '',
+  showcaseStats: [], spaceHtml: '', spaceCss: '', layout: 'standard',
 };
 
 // The synced slice of UserStats. Everything else (quests, sounds of the day, feed) stays on the device.
@@ -86,6 +87,9 @@ export function toRows(s: CloudState): Rows {
       banner: s.profile.banner, featured_badges: s.profile.featuredBadges.slice(0, 6),
       frame: s.profile.frame || 'none', status: (s.profile.status || '').slice(0, 40),
       snippet_language: s.profile.snippetLanguage || 'python', snippet_code: (s.profile.snippetCode || '').slice(0, 600),
+      showcase_stats: (s.profile.showcaseStats || []).slice(0, 8),
+      space_html: (s.profile.spaceHtml || '').slice(0, 5000), space_css: (s.profile.spaceCss || '').slice(0, 5000),
+      profile_layout: s.profile.layout === 'custom' ? 'custom' : 'standard',
     },
     lessons: s.completedLessons.map((id) => ({ lesson_id: id, stars: Math.min(3, Math.max(1, s.nodeStars[id] || 1)) })),
     achievements: [
@@ -119,6 +123,8 @@ export function fromRows(r: { progress: Row; profile: Row; lessons: Row[]; achie
       username: r.profile.username || '',
       frame: r.profile.frame ?? 'none', status: r.profile.status ?? '',
       snippetLanguage: r.profile.snippet_language ?? 'python', snippetCode: r.profile.snippet_code ?? '',
+      showcaseStats: r.profile.showcase_stats ?? [], spaceHtml: r.profile.space_html ?? '', spaceCss: r.profile.space_css ?? '',
+      layout: r.profile.profile_layout === 'custom' ? 'custom' : 'standard',
     },
   };
 }

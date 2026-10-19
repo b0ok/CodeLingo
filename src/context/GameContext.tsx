@@ -129,7 +129,7 @@ const DEFAULT_STATS: UserStats = {
   checkedInNodes: [],
   agentCheckinsCount: 0,
   ownedItems: [],
-  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
+  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '', showcaseStats: [], spaceHtml: '', spaceCss: '', layout: 'standard' },
 };
 
 const DEFAULT_QUESTS: DailyQuest[] = [

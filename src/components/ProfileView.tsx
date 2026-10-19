@@ -4,6 +4,9 @@ import { LEAGUE_CONFIG } from '../data/leaderboard';
 import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, SHOP_PRICES, avatarEmoji, bannerClass, canUse, frameClass, isProTier } from '../data/profileOptions';
 import { PATHWAYS_DATA } from '../data/curriculum';
 import { levelFromXp } from '../data/economy';
+import { DEFAULT_SHOWCASE, showcaseStats } from '../data/profileStats';
+import { SPACE_LIMITS, SPACE_TAGS, SPACE_TEMPLATES, SpaceData, spaceDocument } from '../utils/profileSpace';
+import { Badge, UserStats } from '../types';
 import { LanguageId } from '../types';
 import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
@@ -11,6 +14,28 @@ import { Modal } from './Modal';
 import { Check, Crown, Lock, Pencil } from 'lucide-react';
 import { supabase, useSession } from '../utils/supabase';
 import { UsernameField, useUsernameCheck } from './UsernameField';
+
+// The live values {{tags}} in myProfile fill in with.
+function spaceData(profile: ProfileCustomization, stats: UserStats, badges: Badge[], pro: boolean): SpaceData {
+  const owned = stats.ownedItems || [];
+  const all = showcaseStats(stats, badges);
+  const chosen = profile.showcaseStats && profile.showcaseStats.length ? profile.showcaseStats : DEFAULT_SHOWCASE;
+  return {
+    displayName: profile.displayName || 'Learner',
+    username: profile.username || '',
+    avatar: avatarEmoji(profile.avatar, pro, owned),
+    bio: profile.bio,
+    status: profile.status || '',
+    level: levelFromXp(stats.xp).level,
+    xp: stats.xp,
+    streak: stats.streak,
+    bestStreak: stats.highestStreak,
+    league: stats.currentLeague,
+    lessons: stats.completedLessons.length,
+    stats: chosen.map((id) => all.find((s) => s.id === id)).filter((s): s is NonNullable<typeof s> => !!s).slice(0, (pro ? LIMITS.pro : LIMITS.free).showcase),
+    featuredBadges: profile.featuredBadges.map((id) => badges.find((b) => b.id === id && b.isUnlocked)?.name).filter((n): n is string => !!n),
+  };
+}
 
 const DEFAULT_PROFILE: ProfileCustomization = {
   displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [],
@@ -25,19 +50,43 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
   const pro = isProTier(stats.subscriptionTier);
   const lv = levelFromXp(stats.xp);
   const owned = stats.ownedItems || [];
-  const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
   const featured = profile.featuredBadges
     .map((id) => badges.find((b) => b.id === id && b.isUnlocked))
     .filter((b): b is NonNullable<typeof b> => !!b);
 
-  const tiles = [
-    { label: 'Total XP', value: stats.xp.toLocaleString() },
-    { label: 'Day streak', value: `${stats.streak} (best ${stats.highestStreak})` },
-    { label: 'League', value: `${LEAGUE_CONFIG[currentLeague].icon} ${currentLeague}` },
-    { label: 'Gold rings', value: stats.gems.toLocaleString() },
-    { label: 'Life points', value: unlimited ? '∞' : `${stats.hearts} / ${stats.maxHearts}` },
-    { label: 'Lessons done', value: stats.completedLessons.length.toLocaleString() },
-  ];
+  // The stats this learner chose to show (Pro shows up to 8, free up to 4).
+  const allStats = showcaseStats(stats, badges);
+  const chosen = profile.showcaseStats && profile.showcaseStats.length ? profile.showcaseStats : DEFAULT_SHOWCASE;
+  const tiles = chosen
+    .map((id) => allStats.find((s) => s.id === id))
+    .filter((s): s is NonNullable<typeof s> => !!s)
+    .slice(0, (pro ? LIMITS.pro : LIMITS.free).showcase);
+
+  const editor = editing && (
+    <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} onOpenShop={() => { setEditing(false); onOpenShop(); }} />
+  );
+
+  // Pro custom page: the learner's own HTML and CSS is the whole profile.
+  if (pro && profile.layout === 'custom' && profile.spaceHtml) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-3 pb-24 xl:pb-12">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="profile-heading" className="text-lg font-extrabold text-slate-900 [overflow-wrap:anywhere]">{profile.displayName || 'Learner'}'s page</h2>
+          <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-4 py-2 border-2 border-slate-300 bg-white rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer shrink-0">
+            <Pencil className="w-4 h-4" aria-hidden="true" />
+            Edit profile
+          </button>
+        </div>
+        <iframe
+          title={`${profile.displayName || 'Learner'}'s profile page`}
+          sandbox=""
+          srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '', spaceData(profile, stats, badges, pro))}
+          className="w-full h-[75dvh] min-h-[480px] bg-white border border-slate-200 rounded-3xl"
+        />
+        {editor}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -110,18 +159,31 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
             {tiles.map((t) => (
-              <div key={t.label} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div key={t.id} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
                 <dt className="text-xs font-bold text-slate-600 uppercase">{t.label}</dt>
-                <dd className="text-lg font-extrabold text-slate-900 tabular-nums mt-0.5">{t.value}</dd>
+                <dd className="text-lg font-extrabold text-slate-900 tabular-nums mt-0.5 [overflow-wrap:anywhere]">{t.value}</dd>
+                {t.detail && <dd className="text-xs text-slate-600">{t.detail}</dd>}
               </div>
             ))}
           </dl>
         </div>
       </section>
 
+      {pro && profile.spaceHtml && (
+        <section aria-labelledby="my-space-heading" className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <h3 id="my-space-heading" className="px-6 pt-5 pb-3 font-extrabold text-slate-900">myProfile</h3>
+          <iframe
+            title={`${profile.displayName || 'Learner'}'s myProfile`}
+            sandbox=""
+            srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '', spaceData(profile, stats, badges, pro))}
+            className="w-full h-[360px] border-t border-slate-200 bg-white"
+          />
+        </section>
+      )}
+
       <BadgesView />
 
-      {editing && <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} onOpenShop={() => { setEditing(false); onOpenShop(); }} />}
+      {editor}
     </div>
   );
 };
@@ -131,7 +193,11 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
   const session = useSession();
   const pro = isProTier(stats.subscriptionTier);
   const owned = stats.ownedItems || [];
-  const [draft, setDraft] = useState(profile);
+  const [draft, setDraft] = useState({
+    ...profile,
+    showcaseStats: profile.showcaseStats && profile.showcaseStats.length ? profile.showcaseStats : DEFAULT_SHOWCASE,
+  });
+  const allStats = showcaseStats(stats, badges);
   const [username, setUsername] = useState(profile.username || '');
   const { status: usernameStatus, suggestions } = useUsernameCheck(session ? username : '', profile.username || undefined);
   const [triedSubmit, setTriedSubmit] = useState(false);
@@ -173,8 +239,13 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
       avatar: draft.avatar,
       banner: draft.banner,
       featuredBadges: draft.featuredBadges.filter((id) => unlocked.some((b) => b.id === id)).slice(0, limits.featuredBadges),
+      showcaseStats: (draft.showcaseStats || []).slice(0, limits.showcase),
       ...(pro
-        ? { frame: draft.frame, status: (draft.status || '').trim().slice(0, 40), snippetLanguage: draft.snippetLanguage, snippetCode: (draft.snippetCode || '').slice(0, 600) }
+        ? {
+            layout: draft.layout === 'custom' ? 'custom' : 'standard',
+            frame: draft.frame, status: (draft.status || '').trim().slice(0, 40), snippetLanguage: draft.snippetLanguage, snippetCode: (draft.snippetCode || '').slice(0, 600),
+            spaceHtml: (draft.spaceHtml || '').slice(0, SPACE_LIMITS.html), spaceCss: (draft.spaceCss || '').slice(0, SPACE_LIMITS.css),
+          }
         : {}),
     });
     onClose();
@@ -348,9 +419,83 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
             )}
           </fieldset>
 
+          <fieldset>
+            <legend className="font-bold text-slate-800">Showcase stats</legend>
+            <p className="text-sm text-slate-600 mb-2">Pick up to {limits.showcase} to show on your profile, in the order you pick them.</p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {allStats.map((s) => {
+                const picked = draft.showcaseStats || [];
+                const on = picked.includes(s.id);
+                const full = !on && picked.length >= limits.showcase;
+                return (
+                  <label key={s.id} className={`flex items-center gap-3 p-2.5 border rounded-xl ${full ? 'opacity-60' : 'cursor-pointer'} ${on ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={full}
+                      onChange={() => set({ showcaseStats: on ? picked.filter((x) => x !== s.id) : [...picked, s.id] })}
+                      className="w-5 h-5 accent-emerald-600 shrink-0"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-slate-900">{s.label}</span>
+                      <span className="block text-xs text-slate-600 truncate">{s.value}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          {pro && (
+            <section aria-labelledby="space-editor" className="space-y-3">
+              <h3 id="space-editor" className="font-bold text-slate-800">myProfile</h3>
+              <p className="text-sm text-slate-600">
+                Design your own section with HTML and CSS. Scripts, links and outside images are removed, so keep it to your own words and styles.
+              </p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Start from a template">
+                {SPACE_TEMPLATES.map((t) => (
+                  <button key={t.id} type="button" onClick={() => set({ spaceHtml: t.html, spaceCss: t.css })} className="px-3 py-1.5 border-2 border-slate-300 rounded-xl text-sm font-bold text-slate-800 hover:bg-slate-50 cursor-pointer">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <fieldset>
+                <legend className="text-sm font-bold text-slate-800 mb-1">Show myProfile as</legend>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {([['standard', 'A section on my profile'], ['custom', 'My whole profile page']] as const).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+                      <input type="radio" name="layout" checked={(draft.layout || 'standard') === value} onChange={() => set({ layout: value })} className="w-4 h-4 accent-emerald-600" />
+                      <span className="text-sm font-bold text-slate-900">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <details className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                <summary className="font-bold text-slate-800 cursor-pointer">Live data tags</summary>
+                <p className="mt-2 text-slate-600">Type these in your HTML and they fill in with your real info.</p>
+                <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                  {SPACE_TAGS.map(([tag, meaning]) => (
+                    <React.Fragment key={tag}>
+                      <dt><code className="font-mono text-emerald-700">{tag}</code></dt>
+                      <dd className="text-slate-600">{meaning}</dd>
+                    </React.Fragment>
+                  ))}
+                </dl>
+              </details>
+              <label htmlFor="space-html" className="block text-sm font-bold text-slate-800">HTML</label>
+              <textarea id="space-html" value={draft.spaceHtml || ''} onChange={(e) => set({ spaceHtml: e.target.value })} maxLength={SPACE_LIMITS.html} rows={6} spellCheck={false} className="w-full p-3 bg-slate-900 text-emerald-300 font-mono text-sm rounded-xl" aria-describedby="space-html-count" />
+              <p id="space-html-count" className="text-xs text-slate-600 tabular-nums">{(draft.spaceHtml || '').length} / {SPACE_LIMITS.html}</p>
+              <label htmlFor="space-css" className="block text-sm font-bold text-slate-800">CSS</label>
+              <textarea id="space-css" value={draft.spaceCss || ''} onChange={(e) => set({ spaceCss: e.target.value })} maxLength={SPACE_LIMITS.css} rows={6} spellCheck={false} className="w-full p-3 bg-slate-900 text-sky-300 font-mono text-sm rounded-xl" aria-describedby="space-css-count" />
+              <p id="space-css-count" className="text-xs text-slate-600 tabular-nums">{(draft.spaceCss || '').length} / {SPACE_LIMITS.css}</p>
+              <p className="text-sm font-bold text-slate-800">Preview</p>
+              <iframe title="myProfile preview" sandbox="" srcDoc={spaceDocument(draft.spaceHtml || '', draft.spaceCss || '', spaceData(draft, stats, badges, pro))} className={`w-full ${draft.layout === 'custom' ? 'h-96' : 'h-64'} border border-slate-200 rounded-xl bg-white`} />
+            </section>
+          )}
+
           {pro ? (
             <p className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-sm font-bold text-emerald-800">
-              <Crown className="w-4 h-4" aria-hidden="true" /> Pro is on: gradients, frames, status line, 160-character bio, 6 badges and a pinned snippet.
+              <Crown className="w-4 h-4" aria-hidden="true" /> Pro is on: gradients, frames, status line, 160-character bio, 6 badges, 8 stats, a pinned snippet and myProfile.
             </p>
           ) : (
           <section aria-labelledby="pro-extras" className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
