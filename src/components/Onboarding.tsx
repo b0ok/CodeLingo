@@ -422,7 +422,7 @@ function ageFrom(isoDate: string): number {
 }
 
 export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () => void; intro?: string }> = ({ mode, onClose, intro }) => {
-  const { activeLanguage, targetCareerTrack, stats } = useGame();
+  const { activeLanguage, targetCareerTrack, stats, updateProfile } = useGame();
   const [step, setStep] = useState<'birthday' | 'details' | 'sent' | 'blocked'>(
     mode === 'signin' ? 'details' : isAgeBlocked() ? 'blocked' : 'birthday',
   );
@@ -459,6 +459,7 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
     setError(null);
     setSending(true);
     if (mode === 'create') {
+      updateProfile({ displayName: name.trim().slice(0, 40) });
       savePendingProfile({
         display_name: name.trim().slice(0, 40) || 'Learner',
         active_language: activeLanguage,

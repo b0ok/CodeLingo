@@ -90,7 +90,7 @@ function AppContent() {
           {activeTab === 'leagues' && <LeaderboardView />}
 
           {activeTab === 'feed' && <FeedView />}
-          {activeTab === 'profile' && <ProfileView />}
+          {activeTab === 'profile' && <ProfileView onOpenPlans={() => setIsMonetizationModalOpen(true)} />}
           {activeTab === 'settings' && (
             <SettingsView
               onOpenPlans={() => setIsMonetizationModalOpen(true)}
