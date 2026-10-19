@@ -394,6 +394,83 @@ function runHeuristicEvaluation(
       'Measure with EXPLAIN ANALYZE before changing anything.',
       'Row estimates far from actual rows usually mean stale statistics; run ANALYZE.',
     ],
+    // Blind spots for remaining milestones
+    'rm-comprehensions': [
+      'A comprehension builds the whole list in memory; use a generator expression for large or streamed data.',
+      'Nested comprehensions read left to right like nested for loops; past two levels a plain loop is clearer.',
+    ],
+    'rm-scope-legb': [
+      'Assigning to a name anywhere in a function makes it local for the whole function, causing UnboundLocalError.',
+      'Use nonlocal to rebind an enclosing variable and global only as a last resort.',
+    ],
+    'rm-stdlib-imports': [
+      '"from module import *" pollutes the namespace and hides where names come from.',
+      'A module runs top to bottom once on first import; guard script code with if __name__ == "__main__".',
+    ],
+    'rm-pip-venv': [
+      'Installing into the global interpreter mixes project dependencies; create a venv per project.',
+      'Pin versions in requirements.txt (or a lock file) so installs are reproducible.',
+    ],
+    'rm-inheritance-dunder': [
+      'Call super().__init__() or the parent never initializes its attributes.',
+      '__repr__ is for developers and debugging; __str__ is for end users.',
+    ],
+    'rm-file-io': [
+      'Without "with", an exception can leave the file handle open.',
+      'Mode "w" truncates the file immediately; use "a" to append.',
+    ],
+    'rm-decorators': [
+      'Use functools.wraps or the decorated function loses its __name__ and docstring.',
+      'The decorator body runs once at definition time; only the wrapper runs on each call.',
+    ],
+    'rm-type-hints': [
+      'Type hints are not enforced at runtime; run a checker like mypy to catch mismatches.',
+      'Use Optional[X] (or X | None) whenever a value can be None.',
+    ],
+    'web-rm-text-tags': [
+      'Choose heading levels by document structure, never by visual size.',
+      'Use <ul>/<ol> for real lists so screen readers announce the item count.',
+    ],
+    'web-rm-links-images': [
+      'target="_blank" should pair with rel="noopener" to block window.opener access.',
+      'Decorative images take alt=""; informative ones describe meaning, not "image of".',
+    ],
+    'web-rm-css-units': [
+      'rem scales with the root font size; em compounds through nested elements.',
+      'Fixed px font sizes ignore the user\'s browser font-size preference.',
+    ],
+    'web-rm-margin-collapse': [
+      'Vertical margins between block siblings collapse to the larger value, not the sum.',
+      'Padding, borders, flex and grid containers all prevent margin collapse.',
+    ],
+    'web-rm-display-modes': [
+      'width, height and vertical margins are ignored on display: inline elements.',
+      'inline-block respects box sizing but still sits on the text baseline, leaving a small gap.',
+    ],
+    'web-rm-button-vs-link': [
+      '<a href> navigates, <button> performs an action; mixing them breaks keyboard and screen-reader expectations.',
+      'A <div onclick> is not focusable and does not respond to Enter or Space.',
+    ],
+    'web-rm-flex-sizing': [
+      'flex: 1 sets flex-basis to 0, so items share space equally regardless of content.',
+      'Flex items default to min-width: auto; add min-width: 0 so long text can shrink.',
+    ],
+    'web-rm-grid-autofit': [
+      'auto-fit collapses empty tracks so items stretch; auto-fill keeps the empty tracks.',
+      'minmax(250px, 1fr) can overflow on narrow screens; use min(250px, 100%) as the minimum.',
+    ],
+    'web-rm-focus-states': [
+      'Never remove outline without a visible :focus-visible replacement.',
+      ':focus-visible shows the ring for keyboard users without flashing it on mouse clicks.',
+    ],
+    'web-rm-css-variables': [
+      'Custom properties inherit and cascade, so they can be overridden per component.',
+      'var(--x, fallback) only applies when --x is undefined, not when its value is invalid.',
+    ],
+    'js-rm-fetch-storage': [
+      'fetch() only rejects on network failure; check response.ok for 404 and 500.',
+      'localStorage stores strings only; JSON.stringify objects and handle JSON.parse errors.',
+    ],
   };
 
   const blindSpots = defaultBlindSpots[node.id] || [
@@ -505,6 +582,141 @@ export function getPhaseDiagnosticQuestions(phaseId: string): {
               text: 'A brand new empty list is created every single time the function is invoked.',
               isOptimal: false,
               feedback: 'Common misconception! In Python, default parameter expressions are evaluated at definition time.',
+            },
+          ],
+        },
+      ];
+    case 'control-flow':
+      return [
+        {
+          id: 'diag-cf1',
+          question: 'A for loop has an else block. When does the else block run?',
+          options: [
+            {
+              id: 'o1',
+              text: 'Only when the loop finishes without hitting break.',
+              isOptimal: true,
+              feedback: 'Correct! for/else is handy for search loops: else means "not found".',
+            },
+            {
+              id: 'o2',
+              text: 'Whenever the loop body raises an error.',
+              isOptimal: false,
+              feedback: 'Exceptions skip else entirely; it is tied to break, not errors.',
+            },
+            {
+              id: 'o3',
+              text: 'Only when the iterable is empty.',
+              isOptimal: false,
+              feedback: 'It also runs after a full pass over a non-empty iterable, as long as there was no break.',
+            },
+          ],
+        },
+      ];
+    case 'modules':
+      return [
+        {
+          id: 'diag-mod1',
+          question: 'Why wrap script code in if __name__ == "__main__":?',
+          options: [
+            {
+              id: 'o1',
+              text: 'So the code runs when the file is executed directly but not when another module imports it.',
+              isOptimal: true,
+              feedback: 'Exactly. Importing a module runs its top-level code, so the guard keeps imports side-effect free.',
+            },
+            {
+              id: 'o2',
+              text: 'It makes the script run faster.',
+              isOptimal: false,
+              feedback: 'It has no effect on speed; it controls when code runs.',
+            },
+            {
+              id: 'o3',
+              text: 'Python requires it to define a main function.',
+              isOptimal: false,
+              feedback: 'Python has no required main function; the guard is a convention.',
+            },
+          ],
+        },
+      ];
+    case 'oop':
+      return [
+        {
+          id: 'diag-oop1',
+          question: 'A subclass defines __init__ but never calls super().__init__(). What breaks?',
+          options: [
+            {
+              id: 'o1',
+              text: 'Attributes set in the parent __init__ never exist on the instance, so methods using them raise AttributeError.',
+              isOptimal: true,
+              feedback: 'Right! Overriding __init__ replaces the parent one entirely unless you call super().',
+            },
+            {
+              id: 'o2',
+              text: 'Nothing, Python calls the parent __init__ automatically.',
+              isOptimal: false,
+              feedback: 'Python only calls the most specific __init__; the parent one is skipped.',
+            },
+            {
+              id: 'o3',
+              text: 'The subclass can no longer call parent methods.',
+              isOptimal: false,
+              feedback: 'Methods are still inherited; only the parent initialization is skipped.',
+            },
+          ],
+        },
+      ];
+    case 'files-exceptions':
+      return [
+        {
+          id: 'diag-fe1',
+          question: 'What is the main advantage of "with open(path) as f:" over calling open() and close() yourself?',
+          options: [
+            {
+              id: 'o1',
+              text: 'The file is closed even if an exception is raised inside the block.',
+              isOptimal: true,
+              feedback: 'Spot on. Context managers guarantee cleanup on every exit path.',
+            },
+            {
+              id: 'o2',
+              text: 'It reads the file faster.',
+              isOptimal: false,
+              feedback: 'Speed is the same; the benefit is guaranteed cleanup.',
+            },
+            {
+              id: 'o3',
+              text: 'It prevents FileNotFoundError.',
+              isOptimal: false,
+              feedback: 'A missing file still raises; with only manages closing.',
+            },
+          ],
+        },
+      ];
+    case 'advanced':
+      return [
+        {
+          id: 'diag-adv1',
+          question: 'Why might sum(x * x for x in range(10_000_000)) use far less memory than sum([x * x for x in range(10_000_000)])?',
+          options: [
+            {
+              id: 'o1',
+              text: 'The generator expression yields one value at a time instead of building a 10-million-item list first.',
+              isOptimal: true,
+              feedback: 'Exactly. Generators are lazy, so memory stays constant no matter how long the sequence is.',
+            },
+            {
+              id: 'o2',
+              text: 'Generators run on multiple CPU cores.',
+              isOptimal: false,
+              feedback: 'Generators are single-threaded; the saving is memory, not parallelism.',
+            },
+            {
+              id: 'o3',
+              text: 'There is no difference; Python optimizes both the same way.',
+              isOptimal: false,
+              feedback: 'The list version allocates the whole list before sum starts.',
             },
           ],
         },

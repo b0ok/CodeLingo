@@ -16,6 +16,7 @@ export interface TestCase {
   name: string;
   input?: string;
   expectedOutput: string;
+  contains?: boolean; // pass if output includes expectedOutput (default: whole output must match)
 }
 
 export interface Challenge {

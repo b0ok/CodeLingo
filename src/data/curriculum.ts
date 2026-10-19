@@ -381,7 +381,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'F-String Superpower',
             instruction: 'Use an f-string to print: User score is 99\n(Use the variable score)',
-            starterCode: 'score = 99\n# Print using f-string below:\nprint(f"User score is {score}")',
+            starterCode: 'score = 99\n# Print using an f-string below:\n',
             testCases: [
               { name: 'Formatted String', expectedOutput: 'User score is 99' },
             ],
@@ -505,7 +505,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Ticket Pricing Logic',
             instruction: 'Write an if-else check:\nIf age < 18, print "Youth Ticket". Otherwise print "Standard Ticket".',
-            starterCode: 'age = 15\nif age < 18:\n    print("Youth Ticket")\nelse:\n    print("Standard Ticket")',
+            starterCode: 'age = 15\n# Write your if / else below:\n',
             testCases: [
               { name: 'Under 18 Check', expectedOutput: 'Youth Ticket' },
             ],
@@ -630,7 +630,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Sum the First 5 Numbers',
             instruction: 'Calculate the sum of numbers 1 through 4 using a loop.',
-            starterCode: 'total = 0\nfor n in range(1, 5):\n    total = total + n\nprint(total)',
+            starterCode: 'total = 0\n# Loop over 1 to 4 and add each number to total\n\nprint(total)',
             testCases: [
               { name: '1+2+3+4 = 10', expectedOutput: '10' },
             ],
@@ -829,7 +829,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Practice with append',
             instruction: 'Add "Diamond" to the treasures list and print the length of treasures.',
-            starterCode: 'treasures = ["Gold", "Ruby"]\ntreasures.append("Diamond")\nprint(len(treasures))',
+            starterCode: 'treasures = ["Gold", "Ruby"]\n# Add "Diamond", then print the length\n',
             testCases: [
               { name: 'Length is 3', expectedOutput: '3' },
             ],
@@ -968,7 +968,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Write a Doubler Function',
             instruction: 'Complete the double_it function to return n * 2.',
-            starterCode: 'def double_it(n):\n    return n * 2\n\nprint(double_it(7))',
+            starterCode: 'def double_it(n):\n    return 0  # fix me\n\nprint(double_it(7))',
             testCases: [
               { name: 'Double 7 is 14', expectedOutput: '14' },
             ],
@@ -1053,7 +1053,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Find the Champion',
             instruction: 'Print the maximum score from the list using max().',
-            starterCode: 'points = [45, 92, 78, 99, 61]\nprint(max(points))',
+            starterCode: 'points = [45, 92, 78, 99, 61]\n# Print the highest score below:\n',
             testCases: [
               { name: 'Max is 99', expectedOutput: '99' },
             ],
@@ -1180,7 +1180,7 @@ export const PYTHON_UNITS: Unit[] = [
             type: 'code_runner',
             title: 'Build a Point Class',
             instruction: 'Instantiate a Point at x=3, y=7 and print p.x + p.y.',
-            starterCode: 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\np = Point(3, 7)\nprint(p.x + p.y)',
+            starterCode: 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\n# Create p at (3, 7) and print p.x + p.y\n',
             testCases: [
               { name: 'Sum of coordinates is 10', expectedOutput: '10' },
             ],
