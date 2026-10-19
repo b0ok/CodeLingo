@@ -3,6 +3,7 @@ import { ProfileCustomization, UserStats, DailyQuest, LeaderboardEntry, Badge, L
 import { INITIAL_BADGES } from '../data/badges';
 import { INITIAL_LEADERBOARD_USERS } from '../data/leaderboard';
 import { sound } from '../utils/soundEffects';
+import { ECONOMY, bonusRings } from '../data/economy';
 import { supabase, useSession } from '../utils/supabase';
 import { CloudState, Rows, pick, merge, hasProgress, toRows, changedRows, pull, push } from '../utils/cloudSync';
 import { SyncChoiceDialog } from '../components/SyncChoiceDialog';
@@ -42,6 +43,8 @@ interface GameContextType {
   setLearningLanguages: (langs: LanguageId[]) => void;
   updateProfile: (patch: Partial<ProfileCustomization>) => void;
   newlyUnlockedBadge: Badge | null;
+  rewardEvents: { title: string; rings: number }[];
+  dismissRewardEvents: () => void;
   dismissBadgeNotification: () => void;
   // Subscription & Monetization
   setSubscriptionTier: (tier: SubscriptionTier) => void;
@@ -214,6 +217,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [newlyUnlockedBadge, setNewlyUnlockedBadge] = useState<Badge | null>(null);
+  const [rewardEvents, setRewardEvents] = useState<{ title: string; rings: number }[]>([]);
+  const dismissRewardEvents = useCallback(() => setRewardEvents([]), []);
   const [highFiveNotification, setHighFiveNotification] = useState<HighFiveNotification | null>(null);
   const [activeHabitReminder, setActiveHabitReminder] = useState<string | null>(null);
 
@@ -532,7 +537,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setNewlyUnlockedBadge({ ...badge, isUnlocked: true });
           setStats((p) => ({
             ...p,
-            gems: p.gems + 25,
+            gems: p.gems + ECONOMY.badgeRings,
             unlockedBadgeIds: [...p.unlockedBadgeIds, badge.id],
           }));
           return { ...badge, isUnlocked: true, currentProgress: badge.maxProgress };
@@ -565,22 +570,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refillHeartsWithGems = (): boolean => {
-    if (stats.gems < 20) return false;
+    if (stats.gems < ECONOMY.prices.refill) return false;
     sound.playGem();
     setStats((prev) => ({
       ...prev,
-      gems: prev.gems - 20,
+      gems: prev.gems - ECONOMY.prices.refill,
       hearts: prev.maxHearts,
     }));
     return true;
   };
 
   const buyStreakFreeze = (): boolean => {
-    if (stats.gems < 50) return false;
+    if (stats.gems < ECONOMY.prices.streakFreeze) return false;
     sound.playGem();
     setStats((prev) => ({
       ...prev,
-      gems: prev.gems - 50,
+      gems: prev.gems - ECONOMY.prices.streakFreeze,
       streakFreeze: prev.streakFreeze + 1,
     }));
     return true;
@@ -611,10 +616,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         [today]: (prev.history[today] || 0) + xpGained,
       };
 
+      // Level-ups, the daily goal and streak milestones pay bonus rings.
+      const bonus = bonusRings({
+        xpBefore: prev.xp, xpAfter: newXp,
+        todayBefore: prev.history[today] || 0, todayAfter: updatedHistory[today], dailyGoal: prev.dailyGoalTarget,
+        streakBefore: prev.streak, streakAfter: newStreak,
+      });
+      if (bonus.events.length) setTimeout(() => setRewardEvents(bonus.events), 0);
+
       const updatedStats: UserStats = {
         ...prev,
         xp: newXp,
-        gems: newGems,
+        gems: newGems + bonus.rings,
         streak: newStreak,
         highestStreak: Math.max(prev.highestStreak, newStreak),
         lastActiveDate: today,
@@ -871,8 +884,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         checkedInNodes: updated,
         agentCheckinsCount: (prev.agentCheckinsCount || 0) + 1,
-        xp: prev.xp + 40,
-        gems: prev.gems + 15,
+        xp: prev.xp + ECONOMY.checkin.xp,
+        gems: prev.gems + ECONOMY.checkin.rings,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
@@ -903,6 +916,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLearningLanguages,
         updateProfile,
         newlyUnlockedBadge,
+        rewardEvents,
+        dismissRewardEvents,
         dismissBadgeNotification,
         setSubscriptionTier,
         toggleNotifications,

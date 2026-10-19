@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { LEAGUE_CONFIG } from '../data/leaderboard';
 import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, avatarEmoji, bannerClass, frameClass, isProTier } from '../data/profileOptions';
 import { PATHWAYS_DATA } from '../data/curriculum';
+import { levelFromXp } from '../data/economy';
 import { LanguageId } from '../types';
 import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
@@ -22,6 +23,7 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
   const [editing, setEditing] = useState(false);
   const profile = { ...DEFAULT_PROFILE, ...stats.profile };
   const pro = isProTier(stats.subscriptionTier);
+  const lv = levelFromXp(stats.xp);
   const unlimited = stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro';
   const featured = profile.featuredBadges
     .map((id) => badges.find((b) => b.id === id && b.isUnlocked))
@@ -88,7 +90,24 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void }> = ({ onOpenPlans
             </figure>
           )}
 
-          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+          <div className="mt-5 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-lg font-extrabold text-slate-900">Level {lv.level}</p>
+              <p className="text-sm text-slate-600 tabular-nums">{lv.intoLevel} / {lv.needed} XP to level {lv.level + 1}</p>
+            </div>
+            <div
+              role="progressbar"
+              aria-label={`Progress to level ${lv.level + 1}`}
+              aria-valuemin={0}
+              aria-valuemax={lv.needed}
+              aria-valuenow={lv.intoLevel}
+              className="mt-2 h-2.5 bg-slate-200 rounded-full overflow-hidden"
+            >
+              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(lv.intoLevel / lv.needed) * 100}%` }} />
+            </div>
+          </div>
+
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
             {tiles.map((t) => (
               <div key={t.label} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
                 <dt className="text-xs font-bold text-slate-600 uppercase">{t.label}</dt>

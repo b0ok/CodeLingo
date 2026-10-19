@@ -1,6 +1,7 @@
 import React from 'react';
 import { Unit, LessonNode } from '../types';
 import { useGame } from '../context/GameContext';
+import { ECONOMY } from '../data/economy';
 import { getRoadmapProgress } from '../data/roadmapProgress';
 import { getPathway } from '../data/curriculum';
 import { PytoMascot } from './PytoMascot';
@@ -299,7 +300,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                           {node.title}
                         </span>
                         <span className="text-xs text-slate-500 font-medium">
-                          +{node.xpReward} XP
+                          {isCompleted ? `+${ECONOMY.lesson.replayXp} XP` : `${ECONOMY.lesson.baseXp + ECONOMY.lesson.xpPerStar}–${ECONOMY.lesson.baseXp + 3 * ECONOMY.lesson.xpPerStar} XP`}
                         </span>
                       </div>
                     </div>
