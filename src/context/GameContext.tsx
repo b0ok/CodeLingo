@@ -119,7 +119,7 @@ const DEFAULT_STATS: UserStats = {
   targetCareerTrack: 'ai-ml',
   checkedInNodes: [],
   agentCheckinsCount: 0,
-  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] },
+  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
 };
 
 const DEFAULT_QUESTS: DailyQuest[] = [
