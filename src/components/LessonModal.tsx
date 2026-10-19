@@ -7,6 +7,7 @@ import { runUnifiedCode, passesTestCases, gradeWebCode, WebGradeResult } from '.
 import { sound } from '../utils/soundEffects';
 import { pickChallenges, shuffle } from '../utils/lessonSession';
 import { describeAnswer } from '../utils/answers';
+import { preloadPython, pythonStatus } from '../utils/pythonRunner';
 import confetti from 'canvas-confetti';
 import { X, Heart, CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Play, Sparkles, RotateCcw, HelpCircle, XCircle } from 'lucide-react';
 
@@ -176,31 +177,40 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
     setActiveLeft(nextOpen ?? null);
   };
 
-  // Run Code in browser
-  const handleExecuteCode = () => {
-    sound.playTap();
-    setIsRunningCode(true);
-    setTimeout(() => {
-      if (isWebRunner) {
-        setIsRunningCode(false);
-        setWebResults(gradeWebCode(userCode, currentChallenge.webChecks));
-        return;
-      }
-      const result = runUnifiedCode(userCode, challengeLang);
-      setIsRunningCode(false);
-      setRunnerOutput(result.output);
-      setRunnerError(result.error || null);
+  // Python downloads on first use; start it as soon as a lesson with Python code opens
+  useEffect(() => {
+    if (challengeLang === 'python' && challenges.some((c) => c.type === 'code_runner')) preloadPython();
+  }, []);
 
-      if (result.success) {
-        sound.playTap();
-      } else {
-        sound.playError();
-      }
-    }, 150);
+  // Runs the learner's code and shows the output; returns the result for grading
+  const runCode = async () => {
+    setIsRunningCode(true);
+    setRunnerError(null);
+    if (challengeLang === 'python' && pythonStatus() !== 'ready') setRunnerOutput('Starting Python (the first run downloads about 12 MB)…');
+    const result = await runUnifiedCode(userCode, challengeLang);
+    setIsRunningCode(false);
+    setRunnerOutput(result.output);
+    setRunnerError(result.error || null);
+    return result;
+  };
+
+  // Run Code in browser
+  const handleExecuteCode = async () => {
+    sound.playTap();
+    if (isWebRunner) {
+      setWebResults(gradeWebCode(userCode, currentChallenge.webChecks));
+      return;
+    }
+    const result = await runCode();
+    if (result.success) {
+      sound.playTap();
+    } else {
+      sound.playError();
+    }
   };
 
   // Check Answer Handler
-  const handleCheckAnswer = () => {
+  const handleCheckAnswer = async () => {
     let isCorrect = false;
 
     if (currentChallenge.type === 'token_fill') {
@@ -225,10 +235,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
       setWebResults(graded);
       isCorrect = graded.passed;
     } else if (currentChallenge.type === 'code_runner') {
-      const result = runUnifiedCode(userCode, challengeLang);
-      isCorrect = passesTestCases(result, currentChallenge.testCases);
-      setRunnerOutput(result.output);
-      setRunnerError(result.error || null);
+      isCorrect = passesTestCases(await runCode(), currentChallenge.testCases);
     }
 
     if (isCorrect) {
@@ -292,7 +299,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
 
   // Is check button enabled?
   const canCheck = () => {
-    if (status !== 'unsubmitted') return false;
+    if (status !== 'unsubmitted' || isRunningCode) return false;
     if (currentChallenge.type === 'token_fill') {
       return filledTokens.length === (currentChallenge.blankCount || 1);
     }

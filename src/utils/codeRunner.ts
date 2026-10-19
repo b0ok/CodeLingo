@@ -162,7 +162,14 @@ export function runJavaScriptCode(code: string): ExecutionResult {
 // In-browser Relational SQL Query Engine
 export function runSqlCode(query: string, db: SqlDatabase = SAMPLE_SQL_DB): ExecutionResult {
   const startTime = performance.now();
-  const cleanQuery = query.trim().replace(/;$/, '');
+  // Drop -- line comments (outside quotes) before parsing
+  const cleanQuery = query
+    .split('\n')
+    .map((line) => line.replace(/^((?:[^'-]|'[^']*'|-(?!-))*)--.*$/, '$1'))
+    .join('\n')
+    .replace(/\s+/g, ' ') // the parser below works on one line; multi-line queries are normal SQL
+    .trim()
+    .replace(/;$/, '');
 
   try {
     if (!cleanQuery) {
@@ -324,8 +331,8 @@ function formatAsciiTable(rows: Record<string, unknown>[]): string {
   ].join('\n');
 }
 
-// Unified runner dispatcher
-export function runUnifiedCode(code: string, language: LanguageId): ExecutionResult {
+// Unified runner dispatcher. Async because Python runs in a worker.
+export async function runUnifiedCode(code: string, language: LanguageId): Promise<ExecutionResult> {
   switch (language) {
     case 'python':
       return runPythonCode(code);
