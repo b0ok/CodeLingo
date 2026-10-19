@@ -216,7 +216,11 @@ export interface UserStats {
     | 'js-fullstack-ts'
     | 'js-react-frontend'
     | 'js-node-backend'
-    | 'js-cloud-serverless';
+    | 'js-cloud-serverless'
+    | 'sql-data-analyst'
+    | 'sql-backend-dev'
+    | 'sql-data-engineer'
+    | 'sql-dba';
   checkedInNodes?: string[]; // Node IDs verified through Agent check-in
   agentCheckinsCount?: number;
 }
@@ -248,7 +252,16 @@ export type RoadmapPhaseId =
   | 'js-async-event-loop'
   | 'js-dom-apis'
   | 'js-modern-modules'
-  | 'js-advanced-patterns';
+  | 'js-advanced-patterns'
+  // SQL phases
+  | 'sql-basics'
+  | 'sql-ddl-constraints'
+  | 'sql-dml'
+  | 'sql-aggregates'
+  | 'sql-joins'
+  | 'sql-subqueries-functions'
+  | 'sql-views-indexes-transactions'
+  | 'sql-advanced-performance';
 
 export interface RoadmapNode {
   id: string;
