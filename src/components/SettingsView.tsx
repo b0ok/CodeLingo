@@ -17,7 +17,7 @@ const DAILY_GOALS = [
   { xp: 150, label: 'Intense', minutes: 30 },
 ];
 
-const PLAN_NAMES: Record<string, string> = { free: 'Free', novice: 'Novice', pro: 'Pro' };
+const PLAN_NAMES: Record<string, string> = { free: 'Free', novice: 'Pro', pro: 'Pro' }; // novice: retired plan name
 
 // Everything this app keeps in the browser (current and older key names).
 function clearThisDevice() {

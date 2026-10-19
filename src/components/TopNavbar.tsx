@@ -250,16 +250,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <button
             onClick={onOpenMonetizationModal}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-              stats.subscriptionTier === 'pro'
+              stats.subscriptionTier !== 'free'
                 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs'
-                : stats.subscriptionTier === 'novice'
-                ? 'bg-amber-100 text-amber-800 border border-amber-300'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
             }`}
-            aria-label={stats.subscriptionTier === 'pro' ? 'Membership: Pro Cook' : stats.subscriptionTier === 'novice' ? 'Membership: Novice' : 'Upgrade membership'}
+            aria-label={stats.subscriptionTier !== 'free' ? 'Membership: Pro' : 'Upgrade membership'}
           >
-            <Crown className={`w-3.5 h-3.5 ${stats.subscriptionTier === 'pro' ? 'text-amber-300 fill-amber-300' : stats.subscriptionTier === 'novice' ? 'text-amber-600 fill-amber-600' : 'text-slate-500'}`} />
-            <span className="hidden sm:inline">{stats.subscriptionTier === 'pro' ? 'Pro Cook' : stats.subscriptionTier === 'novice' ? 'Novice' : 'Upgrade'}</span>
+            <Crown className={`w-3.5 h-3.5 ${stats.subscriptionTier !== 'free' ? 'text-amber-300 fill-amber-300' : 'text-slate-500'}`} />
+            <span className="hidden sm:inline">{stats.subscriptionTier !== 'free' ? 'Pro' : 'Upgrade'}</span>
           </button>
 
           {/* Notification & Inactivity Alerts Menu */}
