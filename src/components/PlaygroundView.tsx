@@ -24,6 +24,7 @@ export const PlaygroundView: React.FC = () => {
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [selectedTemplateTitle, setSelectedTemplateTitle] = useState<string>(initialTemplate.title);
+  const selectedTemplate = availableTemplates.find((t) => t.title === selectedTemplateTitle);
 
   const handleLanguageChange = (lang: LanguageId) => {
     sound.playTap();
@@ -86,7 +87,7 @@ export const PlaygroundView: React.FC = () => {
 
   const getLanguageLabel = () => {
     switch (selectedLang) {
-      case 'python': return 'Python 3.12';
+      case 'python': return 'Python 3';
       case 'javascript': return 'JavaScript (ES6+)';
       case 'sql': return 'SQL In-Memory Engine';
       case 'web': return 'HTML5 / CSS3';
@@ -107,7 +108,7 @@ export const PlaygroundView: React.FC = () => {
             Code, Experiment & Play
           </h2>
           <p className="text-sm text-slate-300 max-w-lg">
-            Write any Python, JavaScript, or SQL code freely, inspect live outputs, or choose from our starter algorithm templates!
+            Pick a practice below, run it, then try the change it suggests. Or write anything you like.
           </p>
         </div>
         <PytoMascot mood="talking" size="md" showHat={true} />
@@ -145,7 +146,7 @@ export const PlaygroundView: React.FC = () => {
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Curated {getLanguageLabel()} Starters:</span>
+          <span>{getLanguageLabel()} practices ({availableTemplates.length})</span>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {availableTemplates.map((tmpl) => (
@@ -163,6 +164,13 @@ export const PlaygroundView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {selectedTemplate && (
+        <div className="p-4 bg-white border border-slate-200 rounded-2xl text-sm">
+          <p className="text-slate-600">{selectedTemplate.description}</p>
+          <p className="mt-1.5 text-slate-900"><strong className="text-emerald-700">Try this:</strong> {selectedTemplate.task}</p>
+        </div>
+      )}
 
       {/* Two Column Editor + Terminal Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -241,7 +249,9 @@ export const PlaygroundView: React.FC = () => {
 
           {/* Console Body */}
           <div className="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-2">
-            {error ? (
+            {selectedLang === 'web' && output ? (
+              <iframe title="Page preview" sandbox="" srcDoc={code} className="w-full h-full bg-white rounded-xl" />
+            ) : error ? (
               <div className="p-3 bg-rose-950/50 border border-rose-800/80 rounded-xl text-rose-300 whitespace-pre-wrap leading-relaxed">
                 {error}
               </div>

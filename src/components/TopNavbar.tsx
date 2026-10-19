@@ -6,8 +6,8 @@ import { LanguageId } from '../types';
 import { Flame, Heart, Circle, Volume2, VolumeX, Code2, ChevronDown, Check, Crown, Bell, BellRing, Radio, Compass } from 'lucide-react';
 
 interface TopNavbarProps {
-  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground';
-  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground') => void;
+  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile';
+  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile') => void;
   onOpenHeartModal: () => void;
   onOpenMonetizationModal: () => void;
 }
@@ -34,13 +34,12 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground'; label: string }[] = [
+  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile'; label: string }[] = [
     { id: 'learn', label: 'Learn' },
     { id: 'practice', label: 'Practice' },
     { id: 'challenges', label: 'Challenges' },
     { id: 'leagues', label: 'Leagues' },
     { id: 'profile', label: 'Profile' },
-    { id: 'playground', label: 'Sandbox' },
   ];
 
   // Close dropdowns on outside click

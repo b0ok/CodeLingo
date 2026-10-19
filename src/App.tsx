@@ -10,7 +10,6 @@ import { HeartRefillModal } from './components/HeartRefillModal';
 import { LeaderboardView } from './components/LeaderboardView';
 import { ProfileView } from './components/ProfileView';
 import { PracticeView } from './components/PracticeView';
-import { PlaygroundView } from './components/PlaygroundView';
 import { ChallengesView } from './components/ChallengesView';
 import { DailySidebar } from './components/DailySidebar';
 import { BadgeUnlockModal } from './components/BadgeUnlockModal';
@@ -20,7 +19,7 @@ import { RoadmapModal } from './components/RoadmapModal';
 
 function AppContent() {
   const { activeLanguage } = useGame();
-  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'profile'>('learn');
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
@@ -62,7 +61,6 @@ function AppContent() {
 
           {activeTab === 'profile' && <ProfileView />}
 
-          {activeTab === 'playground' && <PlaygroundView />}
         </div>
 
         {/* Right Desktop Sidebar: Daily Streak Calendar, Quests, Pyto Tips, Habit Engine */}
