@@ -1,0 +1,6 @@
+{
+  "name": "CodeLingo - Bite-Sized Multi-Language Coding",
+  "description": "Catchy, gamified coding app with pathways for Python, JavaScript, SQL, and Web development. Features bite-sized challenges, streaks, badges, and competitive leagues.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
