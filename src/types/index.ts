@@ -112,7 +112,7 @@ export interface Unit {
   nodes: LessonNode[];
 }
 
-export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Sapphire' | 'Ruby' | 'Diamond';
+export type LeagueTier = 'Bronze' | 'Silver' | 'Gold' | 'Sapphire' | 'Ruby' | 'Diamond' | 'Legend';
 
 export interface LeaderboardEntry {
   id: string;

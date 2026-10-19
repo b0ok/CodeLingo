@@ -137,7 +137,7 @@ const DEFAULT_QUESTS: DailyQuest[] = [
   },
   {
     id: 'quest-hearts',
-    title: 'Finish a challenge with full hearts',
+    title: 'Finish a challenge with full life points',
     target: 1,
     current: 0,
     rewardGems: 15,

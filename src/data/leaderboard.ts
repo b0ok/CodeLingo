@@ -6,7 +6,8 @@ export const LEAGUE_CONFIG: Record<LeagueTier, { name: LeagueTier; color: string
   Gold: { name: 'Gold', color: 'from-amber-400 to-yellow-600', minXp: 800, promotionSlots: 5, demotionSlots: 4, icon: '🥇' },
   Sapphire: { name: 'Sapphire', color: 'from-blue-500 to-indigo-700', minXp: 1500, promotionSlots: 3, demotionSlots: 5, icon: '💎' },
   Ruby: { name: 'Ruby', color: 'from-rose-500 to-red-700', minXp: 2500, promotionSlots: 3, demotionSlots: 5, icon: '🩸' },
-  Diamond: { name: 'Diamond', color: 'from-cyan-400 to-teal-500', minXp: 4000, promotionSlots: 1, demotionSlots: 5, icon: '👑' },
+  Diamond: { name: 'Diamond', color: 'from-cyan-400 to-teal-500', minXp: 4000, promotionSlots: 1, demotionSlots: 5, icon: '💠' },
+  Legend: { name: 'Legend', color: 'from-fuchsia-500 to-purple-700', minXp: 6000, promotionSlots: 0, demotionSlots: 5, icon: '👑' },
 };
 
 export const INITIAL_LEADERBOARD_USERS: LeaderboardEntry[] = [

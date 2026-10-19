@@ -182,7 +182,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         <PytoMascot mood="happy" size="md" showHat={true} />
       </div>
 
-      {/* Heart Recovery Card */}
+      {/* Life point recovery card */}
       <div className="p-5 bg-rose-50 border-2 border-rose-200/80 rounded-2xl flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -190,10 +190,10 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
           </div>
           <div>
             <h3 className="font-extrabold text-base text-rose-950">
-              Free Heart Sanctuary ({stats.hearts}/{stats.maxHearts} Hearts)
+              Life point sanctuary ({stats.hearts}/{stats.maxHearts} life points)
             </h3>
             <p className="text-xs text-rose-700">
-              Did a hard challenge cost you a heart? Take an unlimited free review drill to restore all hearts.
+              Did a hard challenge cost you a life point? Take a free review drill to restore them all.
             </p>
           </div>
         </div>

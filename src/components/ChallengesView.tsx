@@ -486,7 +486,7 @@ export const ChallengesView: React.FC = () => {
                 </h3>
                 <p className="text-xs text-slate-500">
                   {cookResult.passed
-                    ? `Earned +${Math.round(activeChallenge.xpReward * (gameMode === 'novice' ? 1.5 : 1))} XP and gems!`
+                    ? `Earned +${Math.round(activeChallenge.xpReward * (gameMode === 'novice' ? 1.5 : 1))} XP and gold rings!`
                     : 'Output did not match the expected target. Keep tweaking!'}
                 </p>
               </div>

@@ -3,11 +3,11 @@ import { useGame } from '../context/GameContext';
 import { PATHWAYS_DATA } from '../data/curriculum';
 import { getRoadmapProgress } from '../data/roadmapProgress';
 import { LanguageId } from '../types';
-import { Flame, Heart, Gem, Volume2, VolumeX, Code2, ChevronDown, Check, Crown, Bell, BellRing, Radio, Compass } from 'lucide-react';
+import { Flame, Heart, Circle, Volume2, VolumeX, Code2, ChevronDown, Check, Crown, Bell, BellRing, Radio, Compass } from 'lucide-react';
 
 interface TopNavbarProps {
-  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'badges' | 'playground';
-  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'badges' | 'playground') => void;
+  activeTab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground';
+  setActiveTab: (tab: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground') => void;
   onOpenHeartModal: () => void;
   onOpenMonetizationModal: () => void;
 }
@@ -34,12 +34,12 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'badges' | 'playground'; label: string }[] = [
+  const navLinks: { id: 'learn' | 'practice' | 'challenges' | 'leagues' | 'profile' | 'playground'; label: string }[] = [
     { id: 'learn', label: 'Learn' },
     { id: 'practice', label: 'Practice' },
     { id: 'challenges', label: 'Challenges' },
     { id: 'leagues', label: 'Leagues' },
-    { id: 'badges', label: 'Badges' },
+    { id: 'profile', label: 'Profile' },
     { id: 'playground', label: 'Sandbox' },
   ];
 
@@ -211,27 +211,27 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             <span className="sr-only">day streak</span>
           </div>
 
-          {/* Gems */}
+          {/* Gold rings */}
           <div
-            title={`${stats.gems} gems collected! Use in shop for freezes and refills.`}
-            className="flex items-center gap-1.5 text-cyan-600 font-bold text-sm select-none"
+            title={`${stats.gems} gold rings collected! Spend them on streak freezes and life point refills.`}
+            className="flex items-center gap-1.5 text-amber-700 font-bold text-sm select-none"
           >
-            <Gem className="w-4 h-4 fill-cyan-400 text-cyan-600" aria-hidden="true" />
+            <Circle strokeWidth={3} className="w-4 h-4 text-yellow-500" aria-hidden="true" />
             <span className="tabular-nums">{stats.gems}</span>
-            <span className="sr-only">gems</span>
+            <span className="sr-only">gold rings</span>
           </div>
 
-          {/* Hearts */}
+          {/* Life points */}
           <button
             onClick={onOpenHeartModal}
             className="flex items-center gap-1.5 text-rose-500 font-bold text-sm hover:opacity-85 transition-opacity cursor-pointer px-2 py-1 rounded-lg hover:bg-rose-50"
-            title="Current Hearts. Click to refill or take a free practice drill!"
+            title="Life points. Click to refill or take a free practice drill."
           >
             <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
             <span className="tabular-nums">
               {stats.subscriptionTier === 'novice' || stats.subscriptionTier === 'pro' ? '∞' : stats.hearts}
             </span>
-            <span className="sr-only">hearts, refill</span>
+            <span className="sr-only">life points, refill</span>
           </button>
 
           {/* Roadmap & Agent Check-in Trigger (phones use the Learn page card) */}
