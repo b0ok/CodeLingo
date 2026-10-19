@@ -16,6 +16,7 @@ import { PracticeView } from './components/PracticeView';
 import { ChallengesView } from './components/ChallengesView';
 import { DailySidebar } from './components/DailySidebar';
 import { BadgeUnlockModal } from './components/BadgeUnlockModal';
+import { RewardToast } from './components/RewardToast';
 import { MonetizationModal } from './components/MonetizationModal';
 import { InactivityReminderModal } from './components/InactivityReminderModal';
 import { RoadmapModal } from './components/RoadmapModal';
@@ -171,6 +172,7 @@ function AppContent() {
 
       {/* Achievement Badge Unlock Celebration Modal */}
       <BadgeUnlockModal />
+      <RewardToast />
 
       {/* Web Inactivity & Personalized Daily Coding Goal Reminder */}
       <InactivityReminderModal
