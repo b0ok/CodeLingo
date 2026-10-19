@@ -35,6 +35,7 @@ interface GameContextType {
   claimQuest: (questId: string) => void;
   cheerLeaderboardUser: (userId: string) => void;
   setDailyGoalTarget: (target: number) => void;
+  placeOutOfLessons: (lessonIds: string[]) => void;
   newlyUnlockedBadge: Badge | null;
   dismissBadgeNotification: () => void;
   // Subscription & Monetization
@@ -78,38 +79,37 @@ const QUESTS_KEY = 'codelingo_quests_v2';
 const BADGES_KEY = 'codelingo_badges_v2';
 const LEADERBOARD_KEY = 'codelingo_leaderboard_v2';
 
+// A brand-new learner starts from zero.
 const DEFAULT_STATS: UserStats = {
-  xp: 180,
-  gems: 120,
-  streak: 4,
-  highestStreak: 4,
+  xp: 0,
+  gems: 0,
+  streak: 0,
+  highestStreak: 0,
   hearts: 5,
   maxHearts: 5,
-  streakFreeze: 1,
-  completedLessons: ['lesson-1-1'],
-  nodeStars: { 'lesson-1-1': 3 },
-  lastActiveDate: new Date().toISOString().split('T')[0],
-  history: {
-    [new Date().toISOString().split('T')[0]]: 60,
-  },
+  streakFreeze: 0,
+  completedLessons: [],
+  nodeStars: {},
+  lastActiveDate: '',
+  history: {},
   currentLeague: 'Bronze',
-  leagueWeeklyXp: 180,
-  unlockedBadgeIds: ['first_strike'],
+  leagueWeeklyXp: 0,
+  unlockedBadgeIds: [],
   dailyGoalTarget: 50,
   activeLanguage: 'python',
   theme: 'emerald',
   soundEnabled: true,
   subscriptionTier: 'free',
-  notificationsEnabled: true,
+  notificationsEnabled: false,
   dailyRoutineTime: '20:00',
-  receivedHighFives: 7,
-  sentHighFives: 3,
+  receivedHighFives: 0,
+  sentHighFives: 0,
   completedChallenges: [],
   inactivityIntervalSec: 60,
-  inactivityAlertsEnabled: true,
+  inactivityAlertsEnabled: false,
   targetCareerTrack: 'ai-ml',
-  checkedInNodes: ['rm-print-io'],
-  agentCheckinsCount: 1,
+  checkedInNodes: [],
+  agentCheckinsCount: 0,
 };
 
 const DEFAULT_QUESTS: DailyQuest[] = [
@@ -117,7 +117,7 @@ const DEFAULT_QUESTS: DailyQuest[] = [
     id: 'quest-xp',
     title: 'Earn 50 XP today',
     target: 50,
-    current: 20,
+    current: 0,
     rewardGems: 15,
     rewardXp: 10,
     isCompleted: false,
@@ -126,9 +126,9 @@ const DEFAULT_QUESTS: DailyQuest[] = [
   },
   {
     id: 'quest-lessons',
-    title: 'Complete 2 Python Lessons',
+    title: 'Complete 2 lessons',
     target: 2,
-    current: 1,
+    current: 0,
     rewardGems: 20,
     rewardXp: 15,
     isCompleted: false,
@@ -581,6 +581,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const placeOutOfLessons = (lessonIds: string[]) => {
+    setStats((prev) => ({
+      ...prev,
+      completedLessons: [...new Set([...prev.completedLessons, ...lessonIds])],
+      nodeStars: { ...Object.fromEntries(lessonIds.map((id) => [id, 1])), ...prev.nodeStars },
+    }));
+  };
+
   const setDailyGoalTarget = (target: number) => {
     sound.playTap();
     setStats((prev) => ({
@@ -783,6 +791,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         claimQuest,
         cheerLeaderboardUser,
         setDailyGoalTarget,
+        placeOutOfLessons,
         newlyUnlockedBadge,
         dismissBadgeNotification,
         setSubscriptionTier,

@@ -6,7 +6,7 @@ export const INITIAL_BADGES: Badge[] = [
     name: 'Syntax Scout',
     category: 'syntax',
     tier: 'bronze',
-    description: 'Complete your very first Python lesson.',
+    description: 'Complete your very first lesson.',
     requirement: '1 lesson completed',
     currentProgress: 0,
     maxProgress: 1,
