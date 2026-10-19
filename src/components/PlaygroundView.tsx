@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { runUnifiedCode, MULTI_LANG_TEMPLATES, PlaygroundTemplate } from '../utils/codeRunner';
+import { preloadPython, pythonStatus } from '../utils/pythonRunner';
 import { sound } from '../utils/soundEffects';
 import { PytoMascot } from './PytoMascot';
 import { LanguageId } from '../types';
@@ -9,6 +10,9 @@ import { Play, RotateCcw, Copy, Check, Terminal, Sparkles, BookOpen, Code2 } fro
 export const PlaygroundView: React.FC = () => {
   const { activeLanguage } = useGame();
   const [selectedLang, setSelectedLang] = useState<LanguageId>(activeLanguage || 'python');
+  useEffect(() => {
+    if (selectedLang === 'python') preloadPython();
+  }, [selectedLang]);
 
   // Filter templates by selected language
   const availableTemplates = MULTI_LANG_TEMPLATES.filter((t) => t.language === selectedLang);
@@ -33,9 +37,10 @@ export const PlaygroundView: React.FC = () => {
     setExecutionTime(null);
   };
 
-  const handleRun = () => {
+  const handleRun = async () => {
     sound.playTap();
-    const result = runUnifiedCode(code, selectedLang);
+    if (selectedLang === 'python' && pythonStatus() !== 'ready') setOutput('Starting Python (the first run downloads about 12 MB)…');
+    const result = await runUnifiedCode(code, selectedLang);
     setOutput(result.output);
     setError(result.error || null);
     setExecutionTime(result.executionTimeMs);

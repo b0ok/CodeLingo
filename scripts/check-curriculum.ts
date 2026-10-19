@@ -8,8 +8,7 @@ import { JS_ROADMAP_PHASES } from '../src/data/jsRoadmap';
 import { WEB_ROADMAP_PHASES } from '../src/data/webRoadmap';
 import { SQL_ROADMAP_PHASES } from '../src/data/sqlRoadmap';
 import { getPhaseDiagnosticQuestions } from '../src/utils/agentCheckinService';
-import { runUnifiedCode, passesTestCases } from '../src/utils/codeRunner';
-import { PLAYGROUND_TEMPLATES } from '../src/utils/pythonRunner';
+import { runUnifiedCode, passesTestCases, MULTI_LANG_TEMPLATES } from '../src/utils/codeRunner';
 import { SCHEDULED_CHALLENGES } from '../src/data/challenges';
 import type { Challenge, LanguageId, Unit } from '../src/types';
 import { SOLUTIONS } from './solutions';
@@ -29,7 +28,7 @@ const problems: string[] = [];
 const warnings: string[] = [];
 const fail = (m: string) => problems.push(m);
 
-function checkChallenge(c: Challenge, lang: LanguageId) {
+async function checkChallenge(c: Challenge, lang: LanguageId) {
   switch (c.type) {
     case 'token_fill': {
       const blanks = (c.codeTemplate?.match(/__BLANK_\d+__/g) || []).length;
@@ -73,11 +72,11 @@ function checkChallenge(c: Challenge, lang: LanguageId) {
         warnings.push(`${c.id}: no reference solution`);
         break;
       }
-      const passes = (code: string) => passesTestCases(runUnifiedCode(code, lang), c.testCases);
+      const passes = async (code: string) => passesTestCases(await runUnifiedCode(code, lang), c.testCases);
       if (!c.testCases?.length) fail(`${c.id}: no test cases`);
-      if (!passes(s.right)) fail(`${c.id}: reference solution fails`);
-      if (passes(c.starterCode || '')) fail(`${c.id}: starter code already passes`);
-      for (const w of s.wrong) if (passes(w)) fail(`${c.id}: wrong answer passes: ${w}`);
+      if (!(await passes(s.right))) fail(`${c.id}: reference solution fails`);
+      if (await passes(c.starterCode || '')) fail(`${c.id}: starter code already passes`);
+      for (const w of s.wrong) if (await passes(w)) fail(`${c.id}: wrong answer passes: ${w}`);
       break;
     }
   }
@@ -89,7 +88,7 @@ for (const [lang, units, phases] of TRACKS) {
   let challenges = 0;
 
   for (const unit of units) {
-    unit.nodes.forEach((lesson, i) => {
+    for (const [i, lesson] of unit.nodes.entries()) {
       if (lessonUnit.has(lesson.id)) fail(`duplicate lesson ${lesson.id}`);
       lessonUnit.set(lesson.id, unit.id);
       if (lesson.unitId !== unit.id || lesson.unitNumber !== unit.unitNumber || lesson.indexInUnit !== i)
@@ -112,9 +111,9 @@ for (const [lang, units, phases] of TRACKS) {
         challenges++;
         if (challengeIds.has(c.id)) fail(`duplicate challenge ${c.id}`);
         challengeIds.add(c.id);
-        checkChallenge(c, lang);
+        await checkChallenge(c, lang);
       }
-    });
+    }
   }
 
   const linked = new Set<string>();
@@ -142,22 +141,23 @@ for (const [lang, units, phases] of TRACKS) {
 // Scheduled challenges are graded by exact output match in the app's runner.
 for (const ch of SCHEDULED_CHALLENGES) {
   const s = SOLUTIONS[ch.id];
-  const passes = (code: string) => {
-    const r = runUnifiedCode(code, ch.language);
+  const passes = async (code: string) => {
+    const r = await runUnifiedCode(code, ch.language);
     return r.success && r.output.trim() === ch.expectedOutput.trim();
   };
   if (!s) fail(`${ch.id}: no reference solution`);
   else {
-    if (!passes(s.right)) fail(`${ch.id}: reference solution fails in the app runner`);
-    if (passes(ch.starterCode)) fail(`${ch.id}: starter code already passes`);
-    for (const w of s.wrong) if (passes(w)) fail(`${ch.id}: wrong answer passes: ${w}`);
+    if (!(await passes(s.right))) fail(`${ch.id}: reference solution fails in the app runner`);
+    if (await passes(ch.starterCode)) fail(`${ch.id}: starter code already passes`);
+    for (const w of s.wrong) if (await passes(w)) fail(`${ch.id}: wrong answer passes: ${w}`);
   }
 }
 
-// The Python playground's own examples must run cleanly.
-for (const t of PLAYGROUND_TEMPLATES) {
-  const r = runUnifiedCode(t.code, 'python');
-  if (!r.success || r.output.includes('NaN')) fail(`playground "${t.name}": ${r.error || r.output}`);
+// The playground's example programs must run cleanly.
+for (const t of MULTI_LANG_TEMPLATES) {
+  if (t.language === 'web') continue;
+  const r = await runUnifiedCode(t.code, t.language);
+  if (!r.success || r.output.includes('NaN')) fail(`playground "${t.title}" (${t.language}): ${r.error || r.output}`);
 }
 
 if (warnings.length) console.log('\nwarnings:\n  ' + warnings.join('\n  '));

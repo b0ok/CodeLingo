@@ -1,13 +1,14 @@
-import { CookEvaluation } from '../types';
+import { CookEvaluation, LanguageId } from '../types';
 import { runUnifiedCode } from './codeRunner';
 
-export function evaluateCookSubmission(
+export async function evaluateCookSubmission(
   code: string,
   expectedOutput: string,
   timeTakenSec: number,
-  timeLimitSec: number
-): CookEvaluation {
-  const result = runUnifiedCode(code, 'python');
+  timeLimitSec: number,
+  language: LanguageId = 'python'
+): Promise<CookEvaluation> {
+  const result = await runUnifiedCode(code, language);
   const actual = result.output.trim();
   const expected = expectedOutput.trim();
   const passed = result.success && actual === expected;
