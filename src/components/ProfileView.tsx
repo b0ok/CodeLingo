@@ -5,7 +5,8 @@ import { AVATARS, BANNERS, FRAMES, LIMITS, PRO_EXTRAS, SHOP_PRICES, avatarEmoji,
 import { PATHWAYS_DATA } from '../data/curriculum';
 import { levelFromXp } from '../data/economy';
 import { DEFAULT_SHOWCASE, showcaseStats } from '../data/profileStats';
-import { SPACE_LIMITS, SPACE_TEMPLATES, spaceDocument } from '../utils/profileSpace';
+import { SPACE_LIMITS, SPACE_TAGS, SPACE_TEMPLATES, SpaceData, spaceDocument } from '../utils/profileSpace';
+import { Badge, UserStats } from '../types';
 import { LanguageId } from '../types';
 import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
@@ -13,6 +14,28 @@ import { Modal } from './Modal';
 import { Check, Crown, Lock, Pencil } from 'lucide-react';
 import { supabase, useSession } from '../utils/supabase';
 import { UsernameField, useUsernameCheck } from './UsernameField';
+
+// The live values {{tags}} in My Space fill in with.
+function spaceData(profile: ProfileCustomization, stats: UserStats, badges: Badge[], pro: boolean): SpaceData {
+  const owned = stats.ownedItems || [];
+  const all = showcaseStats(stats, badges);
+  const chosen = profile.showcaseStats && profile.showcaseStats.length ? profile.showcaseStats : DEFAULT_SHOWCASE;
+  return {
+    displayName: profile.displayName || 'Learner',
+    username: profile.username || '',
+    avatar: avatarEmoji(profile.avatar, pro, owned),
+    bio: profile.bio,
+    status: profile.status || '',
+    level: levelFromXp(stats.xp).level,
+    xp: stats.xp,
+    streak: stats.streak,
+    bestStreak: stats.highestStreak,
+    league: stats.currentLeague,
+    lessons: stats.completedLessons.length,
+    stats: chosen.map((id) => all.find((s) => s.id === id)).filter((s): s is NonNullable<typeof s> => !!s).slice(0, (pro ? LIMITS.pro : LIMITS.free).showcase),
+    featuredBadges: profile.featuredBadges.map((id) => badges.find((b) => b.id === id && b.isUnlocked)?.name).filter((n): n is string => !!n),
+  };
+}
 
 const DEFAULT_PROFILE: ProfileCustomization = {
   displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [],
@@ -38,6 +61,32 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
     .map((id) => allStats.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => !!s)
     .slice(0, (pro ? LIMITS.pro : LIMITS.free).showcase);
+
+  const editor = editing && (
+    <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} onOpenShop={() => { setEditing(false); onOpenShop(); }} />
+  );
+
+  // Pro custom page: the learner's own HTML and CSS is the whole profile.
+  if (pro && profile.layout === 'custom' && profile.spaceHtml) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-3 pb-24 xl:pb-12">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="profile-heading" className="text-lg font-extrabold text-slate-900 [overflow-wrap:anywhere]">{profile.displayName || 'Learner'}'s page</h2>
+          <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-4 py-2 border-2 border-slate-300 bg-white rounded-xl font-bold text-slate-800 hover:bg-slate-50 cursor-pointer shrink-0">
+            <Pencil className="w-4 h-4" aria-hidden="true" />
+            Edit profile
+          </button>
+        </div>
+        <iframe
+          title={`${profile.displayName || 'Learner'}'s profile page`}
+          sandbox=""
+          srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '', spaceData(profile, stats, badges, pro))}
+          className="w-full h-[75dvh] min-h-[480px] bg-white border border-slate-200 rounded-3xl"
+        />
+        {editor}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -126,7 +175,7 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
           <iframe
             title={`${profile.displayName || 'Learner'}'s space`}
             sandbox=""
-            srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '')}
+            srcDoc={spaceDocument(profile.spaceHtml, profile.spaceCss || '', spaceData(profile, stats, badges, pro))}
             className="w-full h-[360px] border-t border-slate-200 bg-white"
           />
         </section>
@@ -134,7 +183,7 @@ export const ProfileView: React.FC<{ onOpenPlans: () => void; onOpenShop: () => 
 
       <BadgesView />
 
-      {editing && <ProfileEditor profile={profile} onClose={() => setEditing(false)} onOpenPlans={() => { setEditing(false); onOpenPlans(); }} onOpenShop={() => { setEditing(false); onOpenShop(); }} />}
+      {editor}
     </div>
   );
 };
@@ -193,6 +242,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
       showcaseStats: (draft.showcaseStats || []).slice(0, limits.showcase),
       ...(pro
         ? {
+            layout: draft.layout === 'custom' ? 'custom' : 'standard',
             frame: draft.frame, status: (draft.status || '').trim().slice(0, 40), snippetLanguage: draft.snippetLanguage, snippetCode: (draft.snippetCode || '').slice(0, 600),
             spaceHtml: (draft.spaceHtml || '').slice(0, SPACE_LIMITS.html), spaceCss: (draft.spaceCss || '').slice(0, SPACE_LIMITS.css),
           }
@@ -409,6 +459,29 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
                   </button>
                 ))}
               </div>
+              <fieldset>
+                <legend className="text-sm font-bold text-slate-800 mb-1">Show My Space as</legend>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {([['standard', 'A section on my profile'], ['custom', 'My whole profile page']] as const).map(([value, label]) => (
+                    <label key={value} className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+                      <input type="radio" name="layout" checked={(draft.layout || 'standard') === value} onChange={() => set({ layout: value })} className="w-4 h-4 accent-emerald-600" />
+                      <span className="text-sm font-bold text-slate-900">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <details className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                <summary className="font-bold text-slate-800 cursor-pointer">Live data tags</summary>
+                <p className="mt-2 text-slate-600">Type these in your HTML and they fill in with your real info.</p>
+                <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                  {SPACE_TAGS.map(([tag, meaning]) => (
+                    <React.Fragment key={tag}>
+                      <dt><code className="font-mono text-emerald-700">{tag}</code></dt>
+                      <dd className="text-slate-600">{meaning}</dd>
+                    </React.Fragment>
+                  ))}
+                </dl>
+              </details>
               <label htmlFor="space-html" className="block text-sm font-bold text-slate-800">HTML</label>
               <textarea id="space-html" value={draft.spaceHtml || ''} onChange={(e) => set({ spaceHtml: e.target.value })} maxLength={SPACE_LIMITS.html} rows={6} spellCheck={false} className="w-full p-3 bg-slate-900 text-emerald-300 font-mono text-sm rounded-xl" aria-describedby="space-html-count" />
               <p id="space-html-count" className="text-xs text-slate-600 tabular-nums">{(draft.spaceHtml || '').length} / {SPACE_LIMITS.html}</p>
@@ -416,7 +489,7 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
               <textarea id="space-css" value={draft.spaceCss || ''} onChange={(e) => set({ spaceCss: e.target.value })} maxLength={SPACE_LIMITS.css} rows={6} spellCheck={false} className="w-full p-3 bg-slate-900 text-sky-300 font-mono text-sm rounded-xl" aria-describedby="space-css-count" />
               <p id="space-css-count" className="text-xs text-slate-600 tabular-nums">{(draft.spaceCss || '').length} / {SPACE_LIMITS.css}</p>
               <p className="text-sm font-bold text-slate-800">Preview</p>
-              <iframe title="My space preview" sandbox="" srcDoc={spaceDocument(draft.spaceHtml || '', draft.spaceCss || '')} className="w-full h-64 border border-slate-200 rounded-xl bg-white" />
+              <iframe title="My space preview" sandbox="" srcDoc={spaceDocument(draft.spaceHtml || '', draft.spaceCss || '', spaceData(draft, stats, badges, pro))} className={`w-full ${draft.layout === 'custom' ? 'h-96' : 'h-64'} border border-slate-200 rounded-xl bg-white`} />
             </section>
           )}
 

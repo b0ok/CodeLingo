@@ -207,6 +207,7 @@ export interface ProfileCustomization {
   showcaseStats?: string[]; // stat ids from data/profileStats, in the order shown
   spaceHtml?: string; // Pro: My Space
   spaceCss?: string;
+  layout?: 'standard' | 'custom'; // Pro: 'custom' turns My Space into the whole profile page
 }
 
 export interface UserStats {
