@@ -6,7 +6,6 @@
     color: #1e293b;
     background-color: #f8fafc;
     -webkit-tap-highlight-color: transparent;
-    overflow-x: hidden;
   }
   
   code, pre, .font-mono {
@@ -93,3 +92,13 @@
   animation: streak-badge-glow 3s infinite ease-in-out;
 }
 
+
+/* Respect the OS "reduce motion" setting for every CSS animation and transition in the app */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

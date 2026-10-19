@@ -89,7 +89,7 @@ export const PlaygroundView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24 md:pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 pb-24 xl:pb-12">
       
       {/* Header Banner */}
       <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl shadow-lg border border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -98,7 +98,7 @@ export const PlaygroundView: React.FC = () => {
             <Sparkles className="w-4 h-4" />
             <span>Interactive Multi-Language Sandbox</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Code, Experiment & Play
           </h2>
           <p className="text-sm text-slate-300 max-w-lg">
@@ -123,7 +123,7 @@ export const PlaygroundView: React.FC = () => {
             <button
               key={lang}
               onClick={() => handleLanguageChange(lang)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                 isSelected
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300'
@@ -147,7 +147,7 @@ export const PlaygroundView: React.FC = () => {
             <button
               key={tmpl.title}
               onClick={() => handleSelectTemplate(tmpl)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer transition ${
                 selectedTemplateTitle === tmpl.title
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300'
@@ -197,20 +197,20 @@ export const PlaygroundView: React.FC = () => {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               spellCheck={false}
-              className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none"
+              className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
               placeholder={`Write ${getLanguageLabel()} code here...`}
             />
           </div>
 
           {/* Editor Bottom Run Bar */}
           <div className="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
-            <span className="text-[11px] font-mono text-slate-500">
+            <span className="text-xs font-mono text-slate-500">
               {getLanguageLabel()} Runner
             </span>
 
             <button
               onClick={handleRun}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/30 transition cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
               <span>Run Code</span>
@@ -228,7 +228,7 @@ export const PlaygroundView: React.FC = () => {
             </div>
 
             {executionTime !== null && (
-              <span className="text-[11px] font-mono text-slate-500 tabular-nums">
+              <span className="text-xs font-mono text-slate-500 tabular-nums">
                 executed in {executionTime}ms
               </span>
             )}
@@ -253,7 +253,7 @@ export const PlaygroundView: React.FC = () => {
           </div>
 
           {/* Terminal Footer */}
-          <div className="p-3 bg-slate-900/60 border-t border-slate-800 text-[11px] font-mono text-slate-500 flex items-center justify-between">
+          <div className="p-3 bg-slate-900/60 border-t border-slate-800 text-xs font-mono text-slate-500 flex items-center justify-between">
             <span>Status: {error ? 'Error' : output ? 'Finished' : 'Ready'}</span>
             {output && (
               <button

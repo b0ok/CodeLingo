@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { Badge } from '../types';
 import { Award, Flame, Terminal, Box, GitBranch, Repeat, Layers, Sparkles, ShieldAlert, Heart, Trophy, Lock, Check } from 'lucide-react';
@@ -34,7 +35,7 @@ export const BadgesView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-24 md:pb-12">
+    <div className="max-w-3xl mx-auto space-y-6 pb-24 xl:pb-12">
       
       {/* Header Banner */}
       <div className="p-6 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-white border border-amber-200/80 rounded-3xl shadow-sm flex items-center justify-between gap-4">
@@ -42,7 +43,7 @@ export const BadgesView: React.FC = () => {
           <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
             Concept Mastery & Achievements
           </span>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight mt-0.5">
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
             Developer Trophy Room
           </h2>
           <p className="text-sm text-slate-600 mt-1">
@@ -51,10 +52,10 @@ export const BadgesView: React.FC = () => {
         </div>
 
         <div className="text-center bg-white p-4 rounded-2xl border border-amber-200 shadow-sm shrink-0">
-          <div className="text-2xl font-black text-amber-600 tabular-nums">
+          <div className="text-2xl font-extrabold text-amber-600 tabular-nums">
             {unlockedCount} / {badges.length}
           </div>
-          <div className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Unlocked</div>
+          <div className="text-xs font-bold text-slate-500 uppercase mt-0.5">Unlocked</div>
         </div>
       </div>
 
@@ -62,7 +63,7 @@ export const BadgesView: React.FC = () => {
       <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl max-w-xs">
         <button
           onClick={() => setSelectedFilter('all')}
-          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition cursor-pointer ${
             selectedFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -70,7 +71,7 @@ export const BadgesView: React.FC = () => {
         </button>
         <button
           onClick={() => setSelectedFilter('unlocked')}
-          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition cursor-pointer ${
             selectedFilter === 'unlocked' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -78,7 +79,7 @@ export const BadgesView: React.FC = () => {
         </button>
         <button
           onClick={() => setSelectedFilter('locked')}
-          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-xl transition cursor-pointer ${
             selectedFilter === 'locked' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -95,7 +96,7 @@ export const BadgesView: React.FC = () => {
             <div
               key={badge.id}
               onClick={() => setInspectBadge(badge)}
-              className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative group ${
+              className={`p-5 rounded-2xl border-2 transition cursor-pointer relative group ${
                 badge.isUnlocked
                   ? 'bg-white border-amber-300 hover:border-amber-400 shadow-sm hover:shadow-md'
                   : 'bg-slate-50/70 border-slate-200 hover:border-slate-300 opacity-90'
@@ -118,7 +119,7 @@ export const BadgesView: React.FC = () => {
                 </div>
 
                 <span
-                  className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                  className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded-full ${
                     badge.isUnlocked
                       ? 'bg-emerald-100 text-emerald-800'
                       : 'bg-slate-200 text-slate-600'
@@ -138,7 +139,7 @@ export const BadgesView: React.FC = () => {
 
               {/* Progress bar */}
               <div className="mt-4 pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1">
                   <span>Progress</span>
                   <span className="tabular-nums">
                     {badge.currentProgress} / {badge.maxProgress}
@@ -146,7 +147,7 @@ export const BadgesView: React.FC = () => {
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-300 ${
+                    className={`h-full rounded-full transition duration-300 ${
                       badge.isUnlocked ? 'bg-amber-500' : 'bg-slate-300'
                     }`}
                     style={{ width: `${progressPercent}%` }}
@@ -160,7 +161,7 @@ export const BadgesView: React.FC = () => {
 
       {/* Inspect Badge Modal */}
       {inspectBadge && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Badge details" onClose={() => setInspectBadge(null)}>
           <div className="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative">
             <div
               className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center shadow-lg ${
@@ -173,10 +174,10 @@ export const BadgesView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <span className="text-[11px] font-extrabold uppercase text-amber-700 tracking-wider">
+              <span className="text-xs font-extrabold uppercase text-amber-700 tracking-wider">
                 {inspectBadge.tier} Tier · {inspectBadge.category}
               </span>
-              <h3 className="text-2xl font-black text-slate-900">{inspectBadge.name}</h3>
+              <h3 className="text-2xl font-extrabold text-slate-900">{inspectBadge.name}</h3>
               <p className="text-xs text-slate-600">{inspectBadge.description}</p>
             </div>
 
@@ -195,7 +196,7 @@ export const BadgesView: React.FC = () => {
               Close
             </button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

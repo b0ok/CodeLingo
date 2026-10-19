@@ -16,7 +16,7 @@ export const LeaderboardView: React.FC = () => {
   const userEntry = leaderboard.find((u) => u.isUser);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-24 md:pb-12">
+    <div className="max-w-2xl mx-auto space-y-6 pb-24 xl:pb-12">
       
       {/* League Header Card */}
       <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl shadow-lg border border-slate-700/60 relative overflow-hidden">
@@ -36,7 +36,7 @@ export const LeaderboardView: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="text-4xl">{leagueInfo.icon}</div>
             <div>
-              <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+              <h2 className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
                 <span>{selectedLeague} League</span>
               </h2>
               <p className="text-xs text-slate-300">
@@ -60,7 +60,7 @@ export const LeaderboardView: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <Minus className="w-4 h-4 text-slate-400" />
+                    <Minus className="w-4 h-4 text-slate-500" />
                     <span>Current Rank: #{userRank} · Earn {leaderboard[leagueInfo.promotionSlots - 1]?.xp - (userEntry?.xp || 0) + 10} more XP to reach top 5</span>
                   </>
                 )}
@@ -80,7 +80,7 @@ export const LeaderboardView: React.FC = () => {
             <button
               key={tier}
               onClick={() => setSelectedLeague(tier)}
-              className={`flex-1 min-w-[85px] py-2 px-3 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 min-w-[85px] py-2 px-3 text-xs font-bold rounded-xl transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 ${
                 isSelected
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
@@ -130,7 +130,7 @@ export const LeaderboardView: React.FC = () => {
                 {/* Left: Rank & Avatar & Name */}
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                   {/* Rank number or medal */}
-                  <div className="w-6 flex items-center justify-center font-black text-sm tabular-nums">
+                  <div className="w-6 flex items-center justify-center font-extrabold text-sm tabular-nums">
                     {rank === 1 ? (
                       <span className="text-amber-500 text-base">🥇</span>
                     ) : rank === 2 ? (
@@ -164,7 +164,7 @@ export const LeaderboardView: React.FC = () => {
                         {player.name}
                       </span>
                       {player.isUser && (
-                        <span className="px-1.5 py-0.5 bg-emerald-200 text-emerald-800 text-[10px] font-extrabold rounded-md uppercase">
+                        <span className="px-1.5 py-0.5 bg-emerald-200 text-emerald-800 text-xs font-extrabold rounded-md uppercase">
                           YOU
                         </span>
                       )}
@@ -203,13 +203,13 @@ export const LeaderboardView: React.FC = () => {
                     }`}>
                       {player.xp}
                     </div>
-                    <div className="text-[10px] text-slate-500 font-medium">XP</div>
+                    <div className="text-xs text-slate-500 font-medium">XP</div>
                   </div>
 
                   {/* Cheer button */}
                   <button
                     onClick={() => cheerLeaderboardUser(player.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors flex items-center gap-1 cursor-pointer"
+                    className="p-2 rounded-xl text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-colors flex items-center gap-1 cursor-pointer"
                     title="Send friendly cheer!"
                   >
                     <HeartHandshake className="w-4 h-4" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { SCHEDULED_CHALLENGES } from '../data/challenges';
 import { ScheduledChallenge, ChallengeGameMode, CookEvaluation } from '../types';
@@ -139,7 +140,7 @@ export const ChallengesView: React.FC = () => {
   // ================= RENDER: HARDCORE "LET ME COOK" ARENA =================
   if (isPlaying && gameMode === 'cook') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between font-mono select-none overflow-hidden animate-in fade-in duration-200">
+      <Modal className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col justify-between font-mono select-none overflow-hidden animate-in fade-in duration-200" label="Let me cook arena">
         {/* Cook Terminal Top Bar */}
         <div className="px-6 py-4 bg-slate-900 border-b border-emerald-900/60 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -206,7 +207,7 @@ export const ChallengesView: React.FC = () => {
                 <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                 <span>cook_session.py</span>
               </div>
-              <span className="text-[11px] text-slate-500 font-mono">
+              <span className="text-xs text-slate-500 font-mono">
                 {code.split('\n').length} lines
               </span>
             </div>
@@ -217,7 +218,7 @@ export const ChallengesView: React.FC = () => {
                 onChange={(e) => setCode(e.target.value)}
                 disabled={isSubmitted}
                 spellCheck={false}
-                className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none"
+                className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
                 placeholder="# Code here with speed and clean syntax..."
               />
             </div>
@@ -255,13 +256,13 @@ export const ChallengesView: React.FC = () => {
 
         {/* Cook Evaluation Modal / Bottom Reveal */}
         {cookResult && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <Modal className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" label="Cook results" onClose={() => setCookResult(null)}>
             <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 text-slate-100 space-y-5 animate-in zoom-in-95">
               <div className="text-center space-y-1">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-950 border border-emerald-700 text-2xl font-black text-emerald-400 mb-2">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-950 border border-emerald-700 text-2xl font-extrabold text-emerald-400 mb-2">
                   {cookResult.efficiencyRating}
                 </div>
-                <h3 className="text-2xl font-black">
+                <h3 className="text-2xl font-extrabold">
                   {cookResult.passed ? '👨‍🍳 Cooked to Perfection!' : '🍳 Underdone Solution'}
                 </h3>
                 <p className="text-xs text-slate-400">
@@ -275,15 +276,15 @@ export const ChallengesView: React.FC = () => {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
                   <div className="text-lg font-bold text-emerald-400">{cookResult.cleanlinessScore}/100</div>
-                  <div className="text-[10px] text-slate-500 uppercase">Cleanliness</div>
+                  <div className="text-xs text-slate-500 uppercase">Cleanliness</div>
                 </div>
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
                   <div className="text-lg font-bold text-amber-400">{cookResult.linesCount} lines</div>
-                  <div className="text-[10px] text-slate-500 uppercase">Brevity</div>
+                  <div className="text-xs text-slate-500 uppercase">Brevity</div>
                 </div>
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
                   <div className="text-lg font-bold text-cyan-400">{cookResult.runtimeMs}ms</div>
-                  <div className="text-[10px] text-slate-500 uppercase">Runtime</div>
+                  <div className="text-xs text-slate-500 uppercase">Runtime</div>
                 </div>
               </div>
 
@@ -305,16 +306,16 @@ export const ChallengesView: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </Modal>
         )}
-      </div>
+      </Modal>
     );
   }
 
   // ================= RENDER: REGULAR & NOVICE ACTIVE CHALLENGE =================
   if (isPlaying) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col justify-between overflow-hidden">
+      <Modal className="fixed inset-0 z-50 bg-slate-50 flex flex-col justify-between overflow-hidden" label={activeChallenge.title}>
         {/* Header */}
         <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -353,7 +354,7 @@ export const ChallengesView: React.FC = () => {
               </span>
             </div>
 
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
               {activeChallenge.title}
             </h2>
 
@@ -433,7 +434,7 @@ export const ChallengesView: React.FC = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 spellCheck={false}
-                className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none"
+                className="w-full h-full bg-transparent text-emerald-400 font-mono text-sm leading-relaxed resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
               />
             </div>
 
@@ -468,7 +469,7 @@ export const ChallengesView: React.FC = () => {
 
         {/* Evaluation Banner for Regular / Novice */}
         {cookResult && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <Modal className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" label="Challenge results" onClose={() => setCookResult(null)}>
             <div className="bg-white rounded-3xl max-w-md w-full p-6 text-slate-900 space-y-4 shadow-2xl">
               <div className="text-center space-y-1">
                 <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
@@ -491,15 +492,15 @@ export const ChallengesView: React.FC = () => {
                 Continue
               </button>
             </div>
-          </div>
+          </Modal>
         )}
-      </div>
+      </Modal>
     );
   }
 
   // ================= MAIN CHALLENGES HUB LIST =================
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-24 md:pb-12">
+    <div className="max-w-4xl mx-auto space-y-8 pb-24 xl:pb-12">
       {/* Banner */}
       <div className="p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl shadow-lg border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center sm:text-left">
@@ -507,7 +508,7 @@ export const ChallengesView: React.FC = () => {
             <Trophy className="w-4 h-4 text-amber-400" />
             <span>Competitive Challenges Hub</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Daily, Weekly & Tournament Quests
           </h2>
           <p className="text-sm text-slate-300 max-w-lg">
@@ -527,7 +528,7 @@ export const ChallengesView: React.FC = () => {
           <p className="text-xs text-slate-500">
             Open book reference guide, zero timer pressure, and unlimited hints. Great for relaxed learning.
           </p>
-          <span className="inline-block text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="inline-block text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
             Standard XP
           </span>
         </div>
@@ -541,7 +542,7 @@ export const ChallengesView: React.FC = () => {
           <p className="text-xs text-slate-500">
             Soft countdown timer, 1 hint allowed, and test case automated evaluation.
           </p>
-          <span className="inline-block text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+          <span className="inline-block text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
             +50% XP Multiplier
           </span>
         </div>
@@ -555,7 +556,7 @@ export const ChallengesView: React.FC = () => {
           <p className="text-xs text-slate-300">
             Hardcore terminal: zero hints, strict timer, and graded on code cleanliness & efficiency!
           </p>
-          <span className="inline-block text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full">
+          <span className="inline-block text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full">
             +200% XP & Grader Card
           </span>
         </div>
@@ -575,11 +576,11 @@ export const ChallengesView: React.FC = () => {
             return (
               <div
                 key={challenge.id}
-                className="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:border-slate-300 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                className="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:border-slate-300 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
               >
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                    <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                       challenge.type === 'daily'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : challenge.type === 'weekly'
@@ -620,7 +621,7 @@ export const ChallengesView: React.FC = () => {
 
                   <button
                     onClick={() => handleStartChallenge(challenge, 'cook')}
-                    className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
                   >
                     <ChefHat className="w-3.5 h-3.5 text-emerald-400" />
                     <span>LET ME COOK</span>

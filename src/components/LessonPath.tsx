@@ -1,6 +1,7 @@
 import React from 'react';
 import { Unit, LessonNode } from '../types';
 import { useGame } from '../context/GameContext';
+import { getRoadmapProgress } from '../data/roadmapProgress';
 import { getPathway } from '../data/curriculum';
 import { PytoMascot } from './PytoMascot';
 import { Check, Lock, Star, Play, Terminal, Quote, Hash, Box, ToggleLeft, RefreshCw, GitBranch, Split, Cpu, Repeat, List, CircleDot, Layers, PackagePlus, Key, Sparkles, CornerDownLeft, Sliders, Shield, Zap, ShieldCheck, Compass, Brain, ExternalLink } from 'lucide-react';
@@ -17,6 +18,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
   onOpenHeartModal,
 }) => {
   const { stats, activeLanguage, openRoadmapModal, checkedInNodes } = useGame();
+  const roadmap = getRoadmapProgress(activeLanguage, checkedInNodes);
   const pathway = getPathway(activeLanguage);
 
   // Helper to render appropriate icon
@@ -73,7 +75,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
   const pathwayCompleted = units.flatMap((u) => u.nodes).filter((n) => stats.completedLessons.includes(n.id)).length;
 
   return (
-    <div className="w-full max-w-xl mx-auto pb-24 md:pb-12">
+    <div className="w-full max-w-xl mx-auto pb-24 xl:pb-12">
       {/* Friendly Mascot Intro Banner on top of path */}
       <div className="mb-4 p-5 bg-gradient-to-br from-emerald-50 via-teal-50 to-white border border-emerald-200/80 rounded-2xl shadow-sm flex items-center justify-between gap-4">
         <div className="space-y-1">
@@ -115,7 +117,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-black uppercase tracking-wider ${
+                <span className={`text-xs font-extrabold uppercase tracking-wider ${
                   activeLanguage === 'web'
                     ? 'text-indigo-300 bg-indigo-950/80 border-indigo-500/30'
                     : activeLanguage === 'javascript'
@@ -129,11 +131,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                     : 'Python Mastery Track'}
                 </span>
                 <span className="text-xs text-slate-300 font-bold">
-                  {activeLanguage === 'web'
-                    ? `${(checkedInNodes || []).filter((id) => id.startsWith('web-')).length || 1} / 16 Milestones Verified`
-                    : activeLanguage === 'javascript'
-                    ? `${(checkedInNodes || []).filter((id) => id.startsWith('js-')).length || 1} / 16 Milestones Verified`
-                    : `${(checkedInNodes || []).filter((id) => !id.startsWith('web-') && !id.startsWith('js-')).length || 1} / 16 Milestones Verified`}
+                  {roadmap.verified} / {roadmap.total} milestones verified
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
@@ -155,7 +153,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                   : activeLanguage === 'javascript'
                   ? 'bg-amber-500 hover:bg-amber-400'
                   : 'bg-emerald-500 hover:bg-emerald-400'
-              } text-slate-950 font-black text-xs shadow-sm flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
+              } text-slate-950 font-extrabold text-xs shadow-sm flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
             >
               <Brain className="w-3.5 h-3.5" />
               <span>Agent Check-in</span>
@@ -199,7 +197,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                     </span>
                     <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden mt-1">
                       <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        className="h-full bg-emerald-500 rounded-full transition duration-500"
                         style={{ width: `${(unitCompletedCount / unit.nodes.length) * 100}%` }}
                       />
                     </div>
@@ -229,7 +227,7 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                   return (
                     <div
                       key={node.id}
-                      className="relative flex flex-col items-center group"
+                      className={`relative flex flex-col items-center group ${isCurrent ? 'mt-8' : ''}`}
                       style={{ transform: `translateX(${xOffset}px)` }}
                     >
                       {/* Mascot Speech Bubble if current node */}
@@ -247,8 +245,8 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                       <button
                         onClick={handleClick}
                         disabled={isLocked}
-                        aria-label={`Lesson: ${node.title}`}
-                        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md min-h-[44px] min-w-[44px] ${
+                        aria-label={`${node.title}, ${isCompleted ? `completed, ${stars} of 3 stars` : isLocked ? 'locked' : 'start lesson'}`}
+                        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition duration-200 cursor-pointer shadow-md min-h-[44px] min-w-[44px] ${
                           isCompleted
                             ? 'bg-emerald-500 text-white hover:bg-emerald-600 border-4 border-emerald-400 active:scale-95'
                             : isCurrent
@@ -283,12 +281,12 @@ export const LessonPath: React.FC<LessonPathProps> = ({
 
                       {/* Node Label Below */}
                       <div className="text-center mt-1.5 max-w-[130px]">
-                        <span className={`text-xs font-bold leading-tight block truncate ${
-                          isCurrent ? 'text-emerald-700' : isCompleted ? 'text-slate-800' : 'text-slate-400'
+                        <span className={`text-xs font-bold leading-tight block line-clamp-2 ${
+                          isCurrent ? 'text-emerald-700' : isCompleted ? 'text-slate-800' : 'text-slate-500'
                         }`}>
                           {node.title}
                         </span>
-                        <span className="text-[11px] text-slate-500 font-medium">
+                        <span className="text-xs text-slate-500 font-medium">
                           +{node.xpReward} XP
                         </span>
                       </div>

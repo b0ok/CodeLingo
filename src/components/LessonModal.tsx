@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from './Modal';
 import { LessonNode, Challenge } from '../types';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
@@ -204,19 +205,19 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col justify-between overflow-hidden select-none">
+    <Modal className="fixed inset-0 z-50 bg-slate-50 flex flex-col justify-between overflow-hidden select-none" label={lesson.title}>
       {/* Top Header Bar */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shrink-0 shadow-xs">
         <button
           onClick={onClose}
-          className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-          title="Exit lesson"
+          className="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+          aria-label="Exit lesson"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Focus Shield Indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700 uppercase tracking-wider">
           <Sparkles className="w-3 h-3 text-emerald-600" />
           <span>Focus Mode Active</span>
         </div>
@@ -224,7 +225,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
         {/* Progress bar */}
         <div className="flex-1 max-w-xl bg-slate-100 h-3 rounded-full overflow-hidden">
           <div
-            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+            className="h-full bg-emerald-500 rounded-full transition duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -286,7 +287,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                           <span
                             key={idx}
                             onClick={() => tokenInSlot && handleRemoveFilledToken(blankIdx)}
-                            className={`inline-flex items-center justify-center min-w-[70px] h-9 px-3 rounded-lg border-2 text-sm font-bold cursor-pointer transition-all ${
+                            className={`inline-flex items-center justify-center min-w-[70px] h-9 px-3 rounded-lg border-2 text-sm font-bold cursor-pointer transition ${
                               tokenInSlot
                                 ? 'bg-emerald-500 border-emerald-400 text-white shadow-sm'
                                 : 'bg-slate-800 border-dashed border-slate-600 text-slate-400'
@@ -310,7 +311,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                         key={`${token}-${idx}`}
                         onClick={() => handleSelectBankToken(token, idx)}
                         disabled={status !== 'unsubmitted'}
-                        className="px-4 py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 border-2 border-slate-200 hover:border-emerald-400 rounded-xl font-mono text-sm font-bold text-slate-800 shadow-sm cursor-pointer transition-all min-h-[44px]"
+                        className="px-4 py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 border-2 border-slate-200 hover:border-emerald-400 rounded-xl font-mono text-sm font-bold text-slate-800 shadow-sm cursor-pointer transition min-h-[44px]"
                       >
                         {token}
                       </button>
@@ -391,7 +392,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
                           }
                         }}
                         disabled={status !== 'unsubmitted'}
-                        className={`p-4 rounded-xl border-2 text-left font-medium text-sm transition-all cursor-pointer min-h-[56px] flex items-center justify-between ${
+                        className={`p-4 rounded-xl border-2 text-left font-medium text-sm transition cursor-pointer min-h-[56px] flex items-center justify-between ${
                           isSelected
                             ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-sm'
                             : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
@@ -476,7 +477,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
 
                 {/* Console Output */}
                 <div className="p-3 bg-slate-950 text-slate-300 rounded-xl font-mono text-xs border border-slate-800 min-h-[50px]">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Terminal Console:</div>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Terminal Console:</div>
                   {runnerError ? (
                     <span className="text-rose-400">{runnerError}</span>
                   ) : runnerOutput ? (
@@ -495,7 +496,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             <PytoMascot mood="celebrating" size="lg" className="justify-center" />
 
             <div className="space-y-2">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 Lesson Complete! 🎉
               </h2>
               <p className="text-slate-600 max-w-md mx-auto">
@@ -506,15 +507,15 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             {/* Rewards Grid */}
             <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl">
-                <div className="text-xl font-black text-amber-600 tabular-nums">+{lesson.xpReward}</div>
+                <div className="text-xl font-extrabold text-amber-600 tabular-nums">+{lesson.xpReward}</div>
                 <div className="text-xs font-bold text-amber-800 uppercase mt-0.5">Total XP</div>
               </div>
               <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-2xl">
-                <div className="text-xl font-black text-cyan-600 tabular-nums">+{lesson.gemReward}</div>
+                <div className="text-xl font-extrabold text-cyan-600 tabular-nums">+{lesson.gemReward}</div>
                 <div className="text-xs font-bold text-cyan-800 uppercase mt-0.5">Gems</div>
               </div>
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl">
-                <div className="text-xl font-black text-rose-600 tabular-nums">
+                <div className="text-xl font-extrabold text-rose-600 tabular-nums">
                   {heartsLostInSession === 0 ? '100%' : `${Math.round(((lesson.challenges.length - heartsLostInSession) / lesson.challenges.length) * 100)}%`}
                 </div>
                 <div className="text-xs font-bold text-rose-800 uppercase mt-0.5">Accuracy</div>
@@ -523,7 +524,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
 
             <button
               onClick={onClose}
-              className="w-full max-w-sm mx-auto py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer block"
+              className="w-full max-w-sm mx-auto py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition cursor-pointer block"
             >
               Back to Roadmap
             </button>
@@ -574,7 +575,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
               <button
                 onClick={handleCheckAnswer}
                 disabled={!canCheck()}
-                className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all cursor-pointer min-h-[44px] ${
+                className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide transition cursor-pointer min-h-[44px] ${
                   canCheck()
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-[0.98]'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -585,7 +586,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
             ) : (
               <button
                 onClick={handleContinue}
-                className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide text-white transition-all cursor-pointer min-h-[44px] ${
+                className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide text-white transition cursor-pointer min-h-[44px] ${
                   status === 'correct'
                     ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 active:scale-[0.98]'
                     : 'bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-[0.98]'
@@ -598,6 +599,6 @@ export const LessonModal: React.FC<LessonModalProps> = ({ lesson, onClose }) => 
           </div>
         </div>
       )}
-    </div>
+    </Modal>
   );
 };

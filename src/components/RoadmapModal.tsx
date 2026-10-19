@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
 import { sound } from '../utils/soundEffects';
@@ -189,14 +190,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
   });
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+    <Modal className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200" label={modalTitle} onClose={closeRoadmapModal}>
       <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Top Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-5 sm:p-6 relative">
           <button
             onClick={closeRoadmapModal}
             className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-            title="Close"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -214,7 +215,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-black uppercase tracking-widest ${
+                  <span className={`text-xs font-extrabold uppercase tracking-widest ${
                     isWeb
                       ? 'text-indigo-300 bg-indigo-950/60 border-indigo-500/30'
                       : isJs
@@ -227,7 +228,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     Industry Developer Standards
                   </span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white mt-1">
                   {modalTitle}
                 </h2>
               </div>
@@ -236,14 +237,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
             {/* Quick Stats Pill */}
             <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl">
               <div className="text-right">
-                <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                <div className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                   Roadmap Verified
                 </div>
-                <div className={`text-sm font-black ${isWeb ? 'text-indigo-300' : 'text-emerald-400'}`}>
+                <div className={`text-sm font-extrabold ${isWeb ? 'text-indigo-300' : 'text-emerald-400'}`}>
                   {verifiedCount} / {totalNodesCount} Milestones ({completionPercent}%)
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 font-black text-sm">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 font-extrabold text-sm">
                 <ShieldCheck className="w-6 h-6 text-emerald-400" />
               </div>
             </div>
@@ -256,7 +257,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                 setActiveTab('roadmap');
                 sound.playClick();
               }}
-              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition-all flex items-center gap-2 border-b-2 ${
+              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition flex items-center gap-2 border-b-2 ${
                 activeTab === 'roadmap'
                   ? 'border-emerald-400 text-emerald-300 bg-white/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -271,7 +272,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                 setActiveTab('checkin');
                 sound.playClick();
               }}
-              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition-all flex items-center gap-2 border-b-2 relative ${
+              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition flex items-center gap-2 border-b-2 relative ${
                 activeTab === 'checkin'
                   ? 'border-emerald-400 text-emerald-300 bg-white/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -287,7 +288,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                 setActiveTab('track');
                 sound.playClick();
               }}
-              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition-all flex items-center gap-2 border-b-2 ${
+              className={`px-4 py-2.5 rounded-t-xl font-bold text-sm transition flex items-center gap-2 border-b-2 ${
                 activeTab === 'track'
                   ? 'border-emerald-400 text-emerald-300 bg-white/10'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -313,9 +314,9 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                         <Zap className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-white flex items-center gap-2">
+                        <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
                           <span>Pedagogical Recommendation: Intertwined Dual-Track</span>
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full">
+                          <span className="text-xs font-extrabold uppercase tracking-wider bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full">
                             Best Practice
                           </span>
                         </h4>
@@ -331,7 +332,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     <span className="text-slate-400 font-bold">Curriculum View Mode:</span>
                     <button
                       onClick={() => setIntertwinedStrategy('integrated')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-xl font-bold transition ${
                         intertwinedStrategy === 'integrated'
                           ? 'bg-emerald-500 text-slate-950 shadow-sm'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
@@ -341,7 +342,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     </button>
                     <button
                       onClick={() => setIntertwinedStrategy('html-only')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-xl font-bold transition ${
                         intertwinedStrategy === 'html-only'
                           ? 'bg-indigo-500 text-white shadow-sm'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
@@ -351,7 +352,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     </button>
                     <button
                       onClick={() => setIntertwinedStrategy('css-only')}
-                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-xl font-bold transition ${
                         intertwinedStrategy === 'css-only'
                           ? 'bg-purple-500 text-white shadow-sm'
                           : 'bg-white/10 text-slate-300 hover:bg-white/20'
@@ -379,7 +380,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400">Filter Phase:</span>
+                  <span className="text-xs font-bold text-slate-500">Filter Phase:</span>
                   <select
                     value={selectedPhaseFilter}
                     onChange={(e) => setSelectedPhaseFilter(e.target.value)}
@@ -412,15 +413,15 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                       {/* Phase Header */}
                       <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white font-extrabold text-xs flex items-center justify-center">
                             #{phase.phaseNumber}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="font-black text-slate-900 text-base">
+                              <h4 className="font-extrabold text-slate-900 text-base">
                                 {phase.title}
                               </h4>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-md">
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-md">
                                 {phase.badge}
                               </span>
                             </div>
@@ -432,7 +433,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
 
                         <div className="flex items-center gap-2 text-xs font-bold">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[11px] ${
+                            className={`px-2.5 py-1 rounded-full text-xs ${
                               isPhaseComplete
                                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                 : 'bg-slate-200 text-slate-700'
@@ -451,7 +452,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                           return (
                             <div
                               key={node.id}
-                              className={`p-4 rounded-xl border transition-all ${
+                              className={`p-4 rounded-xl border transition ${
                                 isVerified
                                   ? 'bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-400/30'
                                   : 'bg-white border-slate-200 hover:border-slate-300'
@@ -476,19 +477,19 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                                     <h5 className="font-bold text-slate-900 text-sm leading-tight">
                                       {node.title}
                                     </h5>
-                                    <span className="text-[10px] text-slate-400 font-mono">
+                                    <span className="text-xs text-slate-500 font-mono">
                                       {node.roadmapCategory}
                                     </span>
                                   </div>
                                 </div>
 
                                 {isVerified ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                  <span className="inline-flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                                     <ShieldCheck className="w-3 h-3" />
                                     Mastered
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                                     Check-in Pending
                                   </span>
                                 )}
@@ -503,7 +504,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                                 {node.keyConcepts.map((concept) => (
                                   <span
                                     key={concept}
-                                    className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-mono"
+                                    className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-mono"
                                   >
                                     {concept}
                                   </span>
@@ -518,7 +519,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                                     setActiveTab('checkin');
                                     sound.playClick();
                                   }}
-                                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 ${
                                     isVerified
                                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
                                       : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
@@ -575,14 +576,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase tracking-wider text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/30">
                         Pyto Copilot • Anti-Blind Learning
                       </span>
                       <span className="text-xs text-slate-300">
                         Target: {currentCareerTrack?.name}
                       </span>
                     </div>
-                    <h3 className="text-lg font-black text-white mt-1">
+                    <h3 className="text-lg font-extrabold text-white mt-1">
                       Concept Understanding Check-in
                     </h3>
                     <p className="text-xs text-slate-300 max-w-xl">
@@ -621,7 +622,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         Milestone:
                       </span>
-                      <span className="text-sm font-black text-slate-900">
+                      <span className="text-sm font-extrabold text-slate-900">
                         {selectedNode.title}
                       </span>
                       <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
@@ -638,7 +639,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                     <span>Explain in your own words (or write sample code demonstrating the concept):</span>
-                    <span className="text-[11px] text-slate-400 font-normal">
+                    <span className="text-xs text-slate-500 font-normal">
                       Minimum 1-2 clear sentences
                     </span>
                   </label>
@@ -673,7 +674,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                   <button
                     onClick={handleRunEvaluation}
                     disabled={isEvaluating || userExplanation.trim().length < 5}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-black text-xs shadow-md flex items-center gap-2 transition-all cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-extrabold text-xs shadow-md flex items-center gap-2 transition cursor-pointer"
                   >
                     {isEvaluating ? (
                       <>
@@ -693,7 +694,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
               {/* Live Evaluation Results Card */}
               {evaluation && (
                 <div
-                  className={`p-6 rounded-2xl border transition-all animate-in fade-in duration-300 ${
+                  className={`p-6 rounded-2xl border transition animate-in fade-in duration-300 ${
                     evaluation.score >= 70
                       ? 'bg-emerald-50/70 border-emerald-300'
                       : 'bg-amber-50/70 border-amber-300'
@@ -702,7 +703,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-sm ${
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-sm ${
                           evaluation.score >= 70 ? 'bg-emerald-600' : 'bg-amber-600'
                         }`}
                       >
@@ -712,7 +713,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                         <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
                           Comprehension Rating
                         </div>
-                        <h4 className="text-lg font-black text-slate-900">
+                        <h4 className="text-lg font-extrabold text-slate-900">
                           {evaluation.rating}
                         </h4>
                       </div>
@@ -721,7 +722,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     {evaluation.score >= 70 && !(checkedInNodes || []).includes(selectedNode.id) && (
                       <button
                         onClick={handleClaimCheckin}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-sm flex items-center gap-1.5 transition-transform active:scale-95"
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-sm flex items-center gap-1.5 transition-transform active:scale-95"
                       >
                         <ShieldCheck className="w-4 h-4" />
                         <span>Claim Verified Badge (+40 XP)</span>
@@ -731,7 +732,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-black text-emerald-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-700 uppercase tracking-wider">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         <span>What You Nailed</span>
                       </div>
@@ -741,7 +742,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider">
+                      <div className="flex items-center gap-2 text-xs font-extrabold text-amber-700 uppercase tracking-wider">
                         <AlertTriangle className="w-4 h-4 text-amber-600" />
                         <span>Blind Spots & Subtle Gotchas</span>
                       </div>
@@ -774,7 +775,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                       ⚡
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-slate-900">
+                      <h4 className="text-sm font-extrabold text-slate-900">
                         30-Second Socratic Drill
                       </h4>
                       <p className="text-xs text-slate-500">
@@ -813,7 +814,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                               if (opt.isOptimal) sound.playCelebration();
                               else sound.playOops();
                             }}
-                            className={`w-full text-left p-3 rounded-xl border text-xs transition-all flex items-start gap-2.5 ${btnStyle}`}
+                            className={`w-full text-left p-3 rounded-xl border text-xs transition flex items-start gap-2.5 ${btnStyle}`}
                           >
                             <span className="font-mono font-bold mt-0.5">•</span>
                             <span>{opt.text}</span>
@@ -842,7 +843,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
             <div className="space-y-6">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-extrabold text-slate-900">
                     Select Your Target Career Track ({isWeb ? 'Web Frontend' : isJs ? 'JavaScript & Full-Stack' : 'Python'})
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -861,7 +862,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                           setTargetCareerTrack(track.id as any);
                           sound.playClick();
                         }}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                        className={`p-4 rounded-2xl border-2 transition cursor-pointer ${
                           isSelected
                             ? 'border-emerald-500 bg-emerald-50/40 shadow-sm'
                             : 'border-slate-200 bg-white hover:border-slate-300'
@@ -882,14 +883,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                               <h4 className="font-extrabold text-slate-900 text-sm">
                                 {track.name}
                               </h4>
-                              <span className="text-[11px] text-slate-500 font-medium">
+                              <span className="text-xs text-slate-500 font-medium">
                                 {track.targetRole}
                               </span>
                             </div>
                           </div>
 
                           {isSelected && (
-                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">
+                            <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">
                               Active Goal
                             </span>
                           )}
@@ -903,7 +904,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                           {track.keyTools.map((tool) => (
                             <span
                               key={tool}
-                              className="text-[10px] bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded"
+                              className="text-xs bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded"
                             >
                               {tool}
                             </span>
@@ -911,7 +912,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                         </div>
 
                         <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                          <span className="text-slate-400">Pacing Recommendation:</span>
+                          <span className="text-slate-500">Pacing Recommendation:</span>
                           <span className="font-bold text-slate-800 flex items-center gap-1">
                             <Flame className="w-3.5 h-3.5 text-amber-500" />
                             {track.recommendedDailyMinutes} mins/day
@@ -930,7 +931,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                       Calculated Pacing for {currentCareerTrack?.name}
                     </span>
-                    <h4 className="text-xl font-black text-white mt-0.5">
+                    <h4 className="text-xl font-extrabold text-white mt-0.5">
                       Daily Routine Alignment
                     </h4>
                   </div>
@@ -944,37 +945,37 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                   <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       Essential Roadmap Phases
                     </div>
-                    <div className="text-xl font-black text-white mt-1">
+                    <div className="text-xl font-extrabold text-white mt-1">
                       {currentCareerTrack?.essentialPhases.length || 6} Phases
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-1">
+                    <div className="text-xs text-slate-400 mt-1">
                       Targeted strictly to what matters for {currentCareerTrack?.targetRole}
                     </div>
                   </div>
 
                   <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       Target Completion ETA
                     </div>
-                    <div className="text-xl font-black text-emerald-400 mt-1">
+                    <div className="text-xl font-extrabold text-emerald-400 mt-1">
                       ~3 to 4 Weeks
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-1">
+                    <div className="text-xs text-slate-400 mt-1">
                       At {currentCareerTrack?.recommendedDailyMinutes || 25} mins/day + 1 Agent Check-in/phase
                     </div>
                   </div>
 
                   <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       Inactivity Reminder Engine
                     </div>
-                    <div className="text-xl font-black text-white mt-1">
+                    <div className="text-xl font-extrabold text-white mt-1">
                       {stats.inactivityIntervalSec ? `${stats.inactivityIntervalSec}s interval` : 'Active'}
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-1">
+                    <div className="text-xs text-slate-400 mt-1">
                       Pings you if you become inactive during your daily coding window
                     </div>
                   </div>
@@ -984,6 +985,6 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ onSelectLesson }) =>
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

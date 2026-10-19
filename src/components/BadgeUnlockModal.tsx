@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Modal } from './Modal';
 import { useGame } from '../context/GameContext';
 import { PytoMascot } from './PytoMascot';
 import { sound } from '../utils/soundEffects';
@@ -23,11 +24,12 @@ export const BadgeUnlockModal: React.FC = () => {
   if (!newlyUnlockedBadge) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <Modal className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" label="Badge unlocked" onClose={dismissBadgeNotification}>
       <div className="bg-white border-2 border-amber-300 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative animate-fadeIn">
         <button
           onClick={dismissBadgeNotification}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+          aria-label="Close"
+          className="absolute top-4 right-4 p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -35,11 +37,11 @@ export const BadgeUnlockModal: React.FC = () => {
         <PytoMascot mood="celebrating" size="md" className="justify-center" />
 
         <div className="space-y-1">
-          <span className="text-xs font-black uppercase text-amber-600 tracking-wider flex items-center justify-center gap-1">
+          <span className="text-xs font-extrabold uppercase text-amber-600 tracking-wider flex items-center justify-center gap-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Badge Unlocked!</span>
           </span>
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             {newlyUnlockedBadge.name}
           </h3>
           <p className="text-xs text-slate-600">
@@ -59,6 +61,6 @@ export const BadgeUnlockModal: React.FC = () => {
           Claim & Keep Going!
         </button>
       </div>
-    </div>
+    </Modal>
   );
 };
