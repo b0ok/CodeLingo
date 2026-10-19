@@ -1,0 +1,350 @@
+<title>CodeLingo Content Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: one reading column of challenge cards under a sticky filter bar, grouped by lesson. */
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --fg: #1d2330;
+    --muted: #5b6475;
+    --line: #dde1e8;
+    --accent: #2d5a9e;
+    --accent-soft: #e6eefb;
+    --ok: #1f7a4d;
+    --ok-soft: #e3f4ea;
+    --flag: #b3401f;
+    --flag-soft: #fbe9e3;
+    --read: #8a6100;
+    --read-soft: #fbf1d9;
+    --code-bg: #f0f2f6;
+    --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151c; --surface: #1a1f29; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2c3342;
+      --accent: #8fb3ef; --accent-soft: #1f2c44; --ok: #6fd3a0; --ok-soft: #173326;
+      --flag: #f2957a; --flag-soft: #3a2119; --read: #e8bf5c; --read-soft: #352a12; --code-bg: #141821;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151c; --surface: #1a1f29; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2c3342;
+    --accent: #8fb3ef; --accent-soft: #1f2c44; --ok: #6fd3a0; --ok-soft: #173326;
+    --flag: #f2957a; --flag-soft: #3a2119; --read: #e8bf5c; --read-soft: #352a12; --code-bg: #141821;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font-body); }
+  .wrap { max-width: 880px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0; text-wrap: balance; }
+  .intro { color: var(--muted); margin: 6px 0 0; max-width: 65ch; }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .stat { display: flex; align-items: baseline; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 0.875rem; }
+  .stat b { font-variant-numeric: tabular-nums; font-size: 1rem; }
+
+  .filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px; margin-top: 16px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 640px) { .filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .filters .search { grid-column: 1 / -1; } }
+  .filters label { display: grid; gap: 2px; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .filters input, .filters select { font: inherit; font-size: 1rem; text-transform: none; letter-spacing: 0; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; width: 100%; }
+  .result-count { color: var(--muted); font-size: 0.875rem; margin: 12px 0 0; }
+
+  .lesson { margin-top: 28px; }
+  .lesson h2 { font-size: 1.125rem; margin: 0; }
+  .lesson .crumb { color: var(--muted); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cards { display: grid; gap: 12px; margin-top: 10px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+  .card.is-flagged { border-left: 4px solid var(--flag); }
+  .card.is-ok { border-left: 4px solid var(--ok); }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.8125rem; }
+  .tag { padding: 2px 8px; border-radius: 999px; background: var(--code-bg); color: var(--muted); }
+  .tag.run { background: var(--ok-soft); color: var(--ok); }
+  .tag.hand { background: var(--accent-soft); color: var(--accent); }
+  .tag.review { background: var(--read-soft); color: var(--read); }
+  .cid { font-family: var(--font-mono); color: var(--muted); margin-left: auto; font-size: 0.75rem; }
+  .card h3 { margin: 0; font-size: 1rem; }
+  .instruction { margin: 0; white-space: pre-wrap; }
+  pre { margin: 0; padding: 10px 12px; background: var(--code-bg); border-radius: 8px; font: 0.875rem/1.5 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .options { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .options li { display: flex; gap: 8px; align-items: baseline; padding: 4px 8px; border-radius: 6px; }
+  .options li.correct { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+  .options .mark { width: 4.5em; flex: none; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pairs { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  .pairs td { border-top: 1px solid var(--line); padding: 4px 8px 4px 0; vertical-align: top; }
+  .pairs td:first-child { font-family: var(--font-mono); font-size: 0.875rem; width: 45%; }
+  .table-scroll { overflow-x: auto; }
+  dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 0.9375rem; }
+  dt { color: var(--muted); }
+  dd { margin: 0; white-space: pre-wrap; min-width: 0; overflow-wrap: anywhere; }
+  .verify-note { color: var(--muted); font-size: 0.8125rem; margin: 0; }
+
+  .review { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 8px; }
+  .marks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.9375rem; }
+  .marks .who { font-weight: 700; }
+  .marks .flag { color: var(--flag); }
+  .marks .ok { color: var(--ok); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  button { font: inherit; font-size: 0.9375rem; border-radius: 8px; padding: 6px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; min-height: 36px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.ok { border-color: var(--ok); color: var(--ok); }
+  button.flag { border-color: var(--flag); color: var(--flag); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  button[disabled] { opacity: 0.6; cursor: default; }
+  textarea { font: inherit; width: 100%; min-height: 72px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+  .notice { padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--fg); font-size: 0.9375rem; margin-top: 16px; }
+  .more { display: flex; justify-content: center; margin-top: 20px; }
+  .empty { color: var(--muted); margin-top: 24px; }
+  @media (prefers-reduced-motion: no-preference) { button { transition: border-color 0.15s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>CodeLingo Content Review</h1>
+    <p class="intro">Every lesson challenge and scheduled challenge, with its answer and how it was verified. Read the ones marked <strong>Needs a read</strong>, then mark each one <strong>Looks good</strong> or <strong>Flag a problem</strong> with a note. Everyone with access sees the same marks.</p>
+    <div class="stats" id="stats" aria-live="polite"></div>
+    <p class="notice" id="notice" hidden></p>
+  </header>
+
+  <div class="filters" role="search">
+    <label class="search">Search
+      <input id="f-search" type="search" placeholder="Words in the question, answer or id" autocomplete="off">
+    </label>
+    <label>Course
+      <select id="f-course">
+        <option value="">All courses</option>
+        <option>Python</option><option>JavaScript</option><option>SQL</option><option>HTML &amp; CSS</option>
+        <option value="scheduled">Scheduled challenges</option>
+      </select>
+    </label>
+    <label>Verification
+      <select id="f-verify">
+        <option value="">Any</option>
+        <option value="review">Needs a read</option>
+        <option value="run">Verified by running</option>
+        <option value="hand">Checked by hand</option>
+      </select>
+    </label>
+    <label>Review
+      <select id="f-review">
+        <option value="">Any</option>
+        <option value="none">No review yet</option>
+        <option value="mine-none">Not reviewed by me</option>
+        <option value="flag">Flagged</option>
+        <option value="ok">Looks good</option>
+      </select>
+    </label>
+  </div>
+  <p class="result-count" id="count"></p>
+  <main id="list"><p class="empty">Loading challenges…</p></main>
+  <div class="more"><button id="more" hidden>Show 40 more</button></div>
+</div>
+
+<script>
+(() => {
+  const PAGE = 40;
+  const TYPE_LABEL = {
+    token_fill: 'Fill in the blank', parsons: 'Put lines in order', predict_output: 'Predict the output',
+    spot_bug: 'Spot the bug', code_runner: 'Code exercise', concept_quiz: 'Multiple choice', matching: 'Matching',
+    daily: 'Daily challenge', weekly: 'Weekly challenge', monthly: 'Monthly challenge',
+  };
+  const VERIFY_LABEL = { run: 'Verified by running', hand: 'Checked by hand', review: 'Needs a read' };
+
+  let items = [];          // flattened challenges with lesson context
+  let reviews = new Map(); // challengeId -> [{by, status, note, at, docId}]
+  let me = null, db = null, userApi = null, canWrite = false;
+  let shown = PAGE;
+  let names = {};
+  const openFlagForm = new Set();
+
+  const $ = (id) => document.getElementById(id);
+  function h(tag, attrs = {}, ...children) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const c of children.flat()) if (c != null && c !== false) el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return el;
+  }
+
+  function flatten(data) {
+    const out = [];
+    for (const l of data.lessons)
+      for (const c of l.challenges)
+        out.push({ ...c, course: l.course, crumb: `${l.course} · ${l.unit}`, lesson: l.title, lessonId: l.id });
+    for (const s of data.scheduled)
+      out.push({
+        id: s.id, type: s.type, title: s.title, instruction: s.prompt, code: s.starterCode, options: null, tokens: null, pairs: null, checks: null,
+        answer: `Expected output:\n${s.expectedOutput}`, hint: s.hints.join('\n'), explanation: `${s.difficulty} · ${s.language}`,
+        verification: s.verification, course: 'scheduled', crumb: 'Scheduled challenges', lesson: 'Daily, weekly and monthly', lessonId: 'scheduled',
+      });
+    return out;
+  }
+
+  const myMark = (id) => (reviews.get(id) || []).find((r) => r.by === me);
+  const statusOf = (id) => {
+    const rs = reviews.get(id) || [];
+    if (rs.some((r) => r.status === 'flag')) return 'flag';
+    if (rs.length) return 'ok';
+    return 'none';
+  };
+
+  function filtered() {
+    const q = $('f-search').value.trim().toLowerCase();
+    const course = $('f-course').value, verify = $('f-verify').value, review = $('f-review').value;
+    return items.filter((c) => {
+      if (course && c.course !== course) return false;
+      if (verify && c.verification.level !== verify) return false;
+      if (review === 'mine-none' && myMark(c.id)) return false;
+      if (review && review !== 'mine-none' && statusOf(c.id) !== review) return false;
+      if (q) {
+        const hay = [c.id, c.title, c.instruction, c.code, c.answer, c.explanation, c.lesson, ...(c.options || []).map((o) => o.text)].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderStats() {
+    const count = (fn) => items.filter(fn).length;
+    const stats = [
+      ['Challenges', items.length],
+      ['Verified by running', count((c) => c.verification.level === 'run')],
+      ['Checked by hand', count((c) => c.verification.level === 'hand')],
+      ['Need a read', count((c) => c.verification.level === 'review')],
+      ['Marked looks good', count((c) => statusOf(c.id) === 'ok')],
+      ['Flagged', count((c) => statusOf(c.id) === 'flag')],
+    ];
+    $('stats').replaceChildren(...stats.map(([label, n]) => h('span', { class: 'stat' }, h('b', {}, n.toLocaleString()), label)));
+  }
+
+  async function save(c, status, note) {
+    const ref = db.doc(`reviews/${c.id}__${me}`);
+    try {
+      await ref.set({ challengeId: c.id, by: me, status, note: note || '', at: new Date().toISOString() });
+      openFlagForm.delete(c.id);
+    } catch (e) {
+      showNotice(e && e.code === 'invalid_argument'
+        ? 'Your access to this page is view-only, so reviews cannot be saved. Ask the owner for Contributor access.'
+        : 'Your review was not saved. Check your connection and try again.');
+      if (e && e.code === 'invalid_argument') { canWrite = false; render(); }
+    }
+  }
+
+  async function clearMine(c) {
+    try { await db.doc(`reviews/${c.id}__${me}`).delete(); }
+    catch { showNotice('Your review was not removed. Try again.'); }
+  }
+
+  function reviewBlock(c) {
+    const marks = reviews.get(c.id) || [];
+    const mine = myMark(c.id);
+    const list = marks.length
+      ? h('ul', { class: 'marks' }, marks.map((r) => h('li', {},
+          h('span', { class: 'who' }, r.by === me ? 'You' : (names[r.by]?.name || 'A reviewer')), ': ',
+          r.status === 'flag' ? h('span', { class: 'flag' }, 'Flagged') : h('span', { class: 'ok' }, 'Looks good'),
+          r.note ? ` — ${r.note}` : '')))
+      : null;
+    if (!db || !me || !canWrite) return h('div', { class: 'review' }, list || h('p', { class: 'verify-note' }, 'No reviews yet.'));
+
+    const actions = h('div', { class: 'actions' },
+      h('button', { class: 'ok', type: 'button', onclick: () => save(c, 'ok', '') }, mine?.status === 'ok' ? 'Looks good (yours)' : 'Looks good'),
+      h('button', { class: 'flag', type: 'button', 'aria-expanded': openFlagForm.has(c.id) ? 'true' : 'false',
+        onclick: () => { openFlagForm.has(c.id) ? openFlagForm.delete(c.id) : openFlagForm.add(c.id); render(true); } }, 'Flag a problem'),
+      mine ? h('button', { type: 'button', onclick: () => clearMine(c) }, 'Remove my review') : null);
+
+    let form = null;
+    if (openFlagForm.has(c.id)) {
+      const id = `note-${c.id}`;
+      const ta = h('textarea', { id, placeholder: 'What is wrong, and what should it say instead?' });
+      ta.value = mine?.status === 'flag' ? mine.note : '';
+      form = h('form', { class: 'review', onsubmit: (e) => { e.preventDefault(); if (ta.value.trim()) save(c, 'flag', ta.value.trim()); else ta.focus(); } },
+        h('label', { for: id }, 'Describe the problem'), ta,
+        h('div', { class: 'actions' }, h('button', { class: 'primary', type: 'submit' }, 'Save flag')));
+    }
+    return h('div', { class: 'review' }, list, actions, form);
+  }
+
+  function card(c) {
+    const status = statusOf(c.id);
+    const body = [
+      h('div', { class: 'meta' },
+        h('span', { class: 'tag' }, TYPE_LABEL[c.type] || c.type),
+        h('span', { class: `tag ${c.verification.level}` }, VERIFY_LABEL[c.verification.level]),
+        h('span', { class: 'cid' }, c.id)),
+      h('h3', {}, c.title),
+      h('p', { class: 'instruction' }, c.instruction),
+    ];
+    if (c.code) body.push(h('pre', {}, c.code));
+    if (c.options) body.push(h('ul', { class: 'options', 'aria-label': 'Options' }, c.options.map((o) =>
+      h('li', { class: o.correct ? 'correct' : '' }, h('span', { class: 'mark' }, o.correct ? 'Correct' : ''), h('span', {}, o.text)))));
+    if (c.tokens) body.push(h('p', { class: 'verify-note' }, `Word bank: ${c.tokens.join('   ')}`));
+    if (c.pairs) body.push(h('div', { class: 'table-scroll' }, h('table', { class: 'pairs' }, h('tbody', {}, c.pairs.map((p) => h('tr', {}, h('td', {}, p.left), h('td', {}, p.right)))))));
+    const dl = h('dl', {});
+    if (c.answer && !c.options && !c.pairs) dl.append(h('dt', {}, 'Answer'), h('dd', {}, c.answer));
+    if (c.explanation) dl.append(h('dt', {}, 'Explanation'), h('dd', {}, c.explanation));
+    if (c.hint) dl.append(h('dt', {}, 'Hint'), h('dd', {}, c.hint));
+    body.push(dl, h('p', { class: 'verify-note' }, c.verification.note), reviewBlock(c));
+    return h('article', { class: `card ${status === 'flag' ? 'is-flagged' : status === 'ok' ? 'is-ok' : ''}`, 'aria-label': c.title }, body);
+  }
+
+  async function render(keepScroll) {
+    renderStats();
+    const list = filtered();
+    $('count').textContent = `${list.length.toLocaleString()} matching challenge${list.length === 1 ? '' : 's'}`;
+    const visible = list.slice(0, shown);
+    const reviewerIds = [...new Set(visible.flatMap((c) => (reviews.get(c.id) || []).map((r) => r.by)))];
+    if (userApi && reviewerIds.length) names = await userApi.profiles(reviewerIds);
+    const groups = [];
+    for (const c of visible) {
+      if (!groups.length || groups[groups.length - 1].lessonId !== c.lessonId) groups.push({ lessonId: c.lessonId, crumb: c.crumb, lesson: c.lesson, cards: [] });
+      groups[groups.length - 1].cards.push(card(c));
+    }
+    const y = window.scrollY;
+    $('list').replaceChildren(...(groups.length
+      ? groups.map((g) => h('section', { class: 'lesson' }, h('div', { class: 'crumb' }, g.crumb), h('h2', {}, g.lesson), h('div', { class: 'cards' }, g.cards)))
+      : [h('p', { class: 'empty' }, 'No challenges match these filters.')]));
+    if (keepScroll) window.scrollTo(0, y);
+    $('more').hidden = list.length <= shown;
+  }
+
+  function showNotice(text) { const n = $('notice'); n.textContent = text; n.hidden = !text; }
+
+  for (const id of ['f-search', 'f-course', 'f-verify', 'f-review'])
+    $(id).addEventListener(id === 'f-search' ? 'input' : 'change', () => { shown = PAGE; render(); });
+  $('more').addEventListener('click', () => { shown += PAGE; render(true); });
+
+  fetch('review-data.json')
+    .then((r) => r.json())
+    .then((data) => { items = flatten(data); render(); })
+    .catch(() => { $('list').replaceChildren(h('p', { class: 'empty' }, 'The challenge data could not be loaded. Reload the page to try again.')); });
+
+  (async () => {
+    if (!window.claude?.use) { showNotice('Reviews appear when this page is opened on claude.ai.'); return; }
+    [db, userApi] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    me = userApi ? await userApi.id() : null;
+    const can = userApi ? await userApi.can('data.write') : null;
+    canWrite = !!db && !!me && can !== false;
+    if (!db) showNotice('Sign in to see and leave reviews.');
+    else if (!canWrite) showNotice('You can read reviews but not add them. Ask the owner for Contributor access to leave reviews.');
+    if (!db) return;
+    db.collection('reviews').onSnapshot((snap) => {
+      const next = new Map();
+      for (const d of snap.docs) {
+        const r = d.data();
+        if (!r || typeof r.challengeId !== 'string') continue;
+        if (!next.has(r.challengeId)) next.set(r.challengeId, []);
+        next.get(r.challengeId).push({ ...r, docId: d.id });
+      }
+      reviews = next;
+      if (items.length) render(true);
+    }, () => showNotice('Live reviews stopped updating. Reload the page to reconnect.'));
+  })();
+})();
+</script>
