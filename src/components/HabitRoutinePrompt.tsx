@@ -23,9 +23,10 @@ import {
 
 interface HabitRoutinePromptProps {
   onStartQuickLesson: () => void;
+  show: 'alerts' | 'settings';
 }
 
-export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQuickLesson }) => {
+export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQuickLesson, show }) => {
   const {
     stats,
     highFiveNotification,
@@ -79,7 +80,7 @@ export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQ
   return (
     <>
       {/* 1. Floating High-Five Received Notification Toast */}
-      {highFiveNotification && (
+      {show === 'alerts' && highFiveNotification && (
         <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 max-w-sm w-full bg-white border-2 border-emerald-500 rounded-3xl p-4 shadow-2xl animate-in slide-in-from-bottom duration-300 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-xl shrink-0">
@@ -105,7 +106,7 @@ export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQ
       )}
 
       {/* 2. Persistent / Urgent "Streak Saver" Habit Banner */}
-      {activeHabitReminder && (
+      {show === 'alerts' && activeHabitReminder && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full px-4 animate-in slide-in-from-top duration-300">
           <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white rounded-3xl p-4 sm:p-5 shadow-2xl flex items-center justify-between gap-4 border border-white/20">
             <div className="flex items-center gap-3">
@@ -144,6 +145,7 @@ export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQ
       )}
 
       {/* 3. Daily Habit & Inactivity Notification Control Card */}
+      {show === 'settings' && (
       <div className="p-5 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-4">
         
         {/* Header */}
@@ -364,6 +366,7 @@ export const HabitRoutinePrompt: React.FC<HabitRoutinePromptProps> = ({ onStartQ
           <span>Sent: <strong className="text-slate-800 tabular-nums">{stats.sentHighFives}</strong></span>
         </div>
       </div>
+      )}
     </>
   );
 };

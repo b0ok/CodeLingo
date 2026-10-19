@@ -9,6 +9,8 @@ import { LessonModal } from './components/LessonModal';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { LeaderboardView } from './components/LeaderboardView';
 import { ProfileView } from './components/ProfileView';
+import { SettingsView } from './components/SettingsView';
+import { HabitRoutinePrompt } from './components/HabitRoutinePrompt';
 import { FeedView } from './components/FeedView';
 import { PracticeView } from './components/PracticeView';
 import { ChallengesView } from './components/ChallengesView';
@@ -28,7 +30,7 @@ function AppContent() {
   const session = useSession();
   const [stage, setStageState] = useState<OnboardingStage>(initialStage);
   const setStage = (s: OnboardingStage) => { saveStage(s); setStageState(s); };
-  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile' | 'settings'>('learn');
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
@@ -89,6 +91,15 @@ function AppContent() {
 
           {activeTab === 'feed' && <FeedView />}
           {activeTab === 'profile' && <ProfileView />}
+          {activeTab === 'settings' && (
+            <SettingsView
+              onOpenPlans={() => setIsMonetizationModalOpen(true)}
+              onStartQuickLesson={() => {
+                const firstNode = currentUnits.flatMap((u) => u.nodes).find((n) => !stats.completedLessons.includes(n.id));
+                if (firstNode) setActiveLesson(firstNode);
+              }}
+            />
+          )}
 
         </div>
 
@@ -139,6 +150,15 @@ function AppContent() {
       <HeartRefillModal
         isOpen={isHeartModalOpen}
         onClose={() => setIsHeartModalOpen(false)}
+      />
+
+      {/* High-five toasts and the streak-saver banner, on every screen */}
+      <HabitRoutinePrompt
+        show="alerts"
+        onStartQuickLesson={() => {
+          const firstNode = currentUnits.flatMap((u) => u.nodes).find((n) => !stats.completedLessons.includes(n.id));
+          if (firstNode) setActiveLesson(firstNode);
+        }}
       />
 
       {/* Achievement Badge Unlock Celebration Modal */}
