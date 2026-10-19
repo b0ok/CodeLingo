@@ -1,0 +1,46 @@
+# Runs on every pull request and every push to main. A red X means something broke.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # verify:snippets runs every Python and SQL answer in real Python and SQLite.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ponytail: no lockfile is committed yet, so installs resolve fresh each run; commit package-lock.json to pin them.
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Curriculum check
+        run: npm run check:curriculum
+
+      - name: Cloud sync check
+        run: npm run check:sync
+
+      - name: Verify answers in real runtimes
+        run: npm run verify:snippets
