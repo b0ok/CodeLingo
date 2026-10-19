@@ -14,11 +14,7 @@ export const SCHEDULED_CHALLENGES: ScheduledChallenge[] = [
 nums = [2, 7, 11, 15]
 target = 9
 
-# TODO: Find the pair and print: "2 7"
-for i in range(len(nums)):
-    for j in range(i + 1, len(nums)):
-        if nums[i] + nums[j] == target:
-            print(f"{nums[i]} {nums[j]}")
+# TODO: Find the two numbers that add up to target and print them: "2 7"
 `,
     expectedOutput: '2 7',
     testCases: [
@@ -49,11 +45,7 @@ for i in range(len(nums)):
     starterCode: `# Weekly Boss Challenge: Palindrome Streamer
 word = "racecar"
 
-# TODO: Check if word is palindrome and print "VALID PALINDROME"
-if word == word[::-1]:
-    print("VALID PALINDROME")
-else:
-    print("INVALID")
+# TODO: Print "VALID PALINDROME" if word reads the same backwards, otherwise "INVALID"
 `,
     expectedOutput: 'VALID PALINDROME',
     testCases: [
@@ -84,13 +76,7 @@ else:
     starterCode: `# Monthly Grand Tournament: Frequency Counter
 stream = "mississippi"
 
-# Count frequencies and print the maximum count
-counts = {}
-for ch in stream:
-    counts[ch] = counts.get(ch, 0) + 1
-
-max_count = max(counts.values())
-print(f"Max frequency: {max_count}")
+# TODO: Count each letter, then print the highest count as "Max frequency: N"
 `,
     expectedOutput: 'Max frequency: 4',
     testCases: [
