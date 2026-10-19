@@ -3,7 +3,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ProfileCustomization, UserStats } from '../types';
 
-const DEFAULT_PROFILE: ProfileCustomization = { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] };
+const DEFAULT_PROFILE: ProfileCustomization = {
+  displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [],
+  frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '',
+};
 
 // The synced slice of UserStats. Everything else (quests, sounds of the day, feed) stays on the device.
 export type CloudState = Pick<
@@ -80,6 +83,8 @@ export function toRows(s: CloudState): Rows {
       daily_goal_xp: Math.min(500, Math.max(10, s.dailyGoalTarget)), reminder_time: s.dailyRoutineTime || null,
       display_name: s.profile.displayName.slice(0, 40) || null, avatar: s.profile.avatar, bio: s.profile.bio.slice(0, 160),
       banner: s.profile.banner, featured_badges: s.profile.featuredBadges.slice(0, 6),
+      frame: s.profile.frame || 'none', status: (s.profile.status || '').slice(0, 40),
+      snippet_language: s.profile.snippetLanguage || 'python', snippet_code: (s.profile.snippetCode || '').slice(0, 600),
     },
     lessons: s.completedLessons.map((id) => ({ lesson_id: id, stars: Math.min(3, Math.max(1, s.nodeStars[id] || 1)) })),
     achievements: [
@@ -110,6 +115,8 @@ export function fromRows(r: { progress: Row; profile: Row; lessons: Row[]; achie
       displayName: r.profile.display_name || '', avatar: r.profile.avatar ?? DEFAULT_PROFILE.avatar, bio: r.profile.bio ?? '',
       banner: r.profile.banner ?? DEFAULT_PROFILE.banner, featuredBadges: r.profile.featured_badges ?? [],
       username: r.profile.username || '',
+      frame: r.profile.frame ?? 'none', status: r.profile.status ?? '',
+      snippetLanguage: r.profile.snippet_language ?? 'python', snippetCode: r.profile.snippet_code ?? '',
     },
   };
 }

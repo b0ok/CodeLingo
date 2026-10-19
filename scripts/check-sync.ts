@@ -7,7 +7,7 @@ const base: CloudState = {
   leagueWeeklyXp: 0, lastActiveDate: '', completedLessons: [], nodeStars: {}, history: {},
   unlockedBadgeIds: [], checkedInNodes: [], completedChallenges: [], activeLanguage: 'python',
   targetCareerTrack: 'ai-ml', soundEnabled: true, dailyGoalTarget: 50, dailyRoutineTime: '20:00',
-  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [] },
+  profile: { displayName: '', avatar: 'snake', bio: '', banner: 'emerald', featuredBadges: [], frame: 'none', status: '', snippetLanguage: 'python', snippetCode: '' },
 };
 
 const phone: CloudState = {
@@ -19,7 +19,10 @@ const laptop: CloudState = {
   ...base, xp: 90, gems: 70, hearts: 2, streak: 4, highestStreak: 4, lastActiveDate: '2026-10-19',
   completedLessons: ['lesson-1-1', 'lesson-2-1'], nodeStars: { 'lesson-1-1': 3, 'lesson-2-1': 1 },
   history: { '2026-10-18': 30, '2026-10-19': 50 }, completedChallenges: ['cook-1'], dailyGoalTarget: 100,
-  profile: { displayName: 'T3', avatar: 'fox', bio: 'Learning SQL', banner: 'sky', featuredBadges: ['first_strike'] },
+  profile: {
+    displayName: 'T3', avatar: 'fox', bio: 'Learning SQL', banner: 'sunset', featuredBadges: ['first_strike'],
+    frame: 'gold', status: 'Cooking SQL', snippetLanguage: 'sql', snippetCode: 'SELECT 1;',
+  },
 };
 
 // Combining keeps the best of both, in either order.
