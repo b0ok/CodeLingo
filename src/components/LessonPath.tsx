@@ -97,12 +97,14 @@ export const LessonPath: React.FC<LessonPathProps> = ({
       </div>
 
       {/* Curriculum Roadmap & Anti-Blind Agent Check-in Banner */}
-      {(activeLanguage === 'python' || activeLanguage === 'web' || activeLanguage === 'javascript') && (
+      {(activeLanguage === 'python' || activeLanguage === 'web' || activeLanguage === 'javascript' || activeLanguage === 'sql') && (
         <div className={`mb-8 p-4 bg-gradient-to-r ${
           activeLanguage === 'web'
             ? 'from-slate-900 via-indigo-950 to-purple-950 border-indigo-500/30'
             : activeLanguage === 'javascript'
             ? 'from-slate-900 via-amber-950 to-slate-900 border-amber-500/30'
+            : activeLanguage === 'sql'
+            ? 'from-slate-900 via-cyan-950 to-slate-900 border-cyan-500/30'
             : 'from-slate-900 via-slate-800 to-emerald-950 border-emerald-500/30'
         } rounded-2xl text-white shadow-md border flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
           <div className="flex items-center gap-3">
@@ -111,6 +113,8 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                 ? 'bg-indigo-500/20 border-indigo-400/30 text-indigo-400'
                 : activeLanguage === 'javascript'
                 ? 'bg-amber-500/20 border-amber-400/30 text-amber-400'
+                : activeLanguage === 'sql'
+                ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-400'
                 : 'bg-emerald-500/20 border-emerald-400/30 text-emerald-400'
             } border flex items-center justify-center shrink-0`}>
               <Compass className="w-5 h-5" />
@@ -122,12 +126,16 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                     ? 'text-indigo-300 bg-indigo-950/80 border-indigo-500/30'
                     : activeLanguage === 'javascript'
                     ? 'text-amber-400 bg-amber-950/80 border-amber-500/30'
+                    : activeLanguage === 'sql'
+                    ? 'text-cyan-400 bg-cyan-950/80 border-cyan-500/30'
                     : 'text-emerald-400 bg-emerald-950/80 border-emerald-500/30'
                 } px-2 py-0.5 rounded-full border`}>
                   {activeLanguage === 'web'
                     ? 'HTML & CSS Dual-Track'
                     : activeLanguage === 'javascript'
                     ? 'JavaScript Mastery Track'
+                    : activeLanguage === 'sql'
+                    ? 'SQL Mastery Track'
                     : 'Python Mastery Track'}
                 </span>
                 <span className="text-xs text-slate-300 font-bold">
@@ -139,6 +147,8 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                   ? 'Intertwined HTML & CSS: build real components with semantic tags + Flexbox/Grid instead of "div soup"!'
                   : activeLanguage === 'javascript'
                   ? 'Modern ES6+, Event Loop, Closures & Async: verify you truly understand execution mechanics, not just syntax!'
+                  : activeLanguage === 'sql'
+                  ? 'Joins, GROUP BY, NULL logic & transactions: verify you understand how the database thinks, not just the syntax!'
                   : 'Don\'t learn blindly! Run an Agent Check-in to verify you truly understand the mental models.'}
               </p>
             </div>
@@ -152,6 +162,8 @@ export const LessonPath: React.FC<LessonPathProps> = ({
                   ? 'bg-indigo-500 hover:bg-indigo-400'
                   : activeLanguage === 'javascript'
                   ? 'bg-amber-500 hover:bg-amber-400'
+                  : activeLanguage === 'sql'
+                  ? 'bg-cyan-400 hover:bg-cyan-300'
                   : 'bg-emerald-500 hover:bg-emerald-400'
               } text-slate-950 font-extrabold text-xs shadow-sm flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer`}
             >
