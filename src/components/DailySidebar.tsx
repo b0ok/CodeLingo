@@ -59,7 +59,7 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
     const shuffled = [...RANDOM_TASK_POOL].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 3).map((t, idx) => ({
       ...t,
-      current: idx === 0 ? 1 : 0,
+      current: 0,
       isClaimed: false,
     }));
   };
@@ -72,9 +72,9 @@ export const DailySidebar: React.FC<DailySidebarProps> = ({
       // Ignore
     }
     return [
-      { id: 'lessons-2', title: 'Finish 2 lessons', target: 2, current: 1, rewardGems: 15, rewardXp: 20, unit: 'lessons', isClaimed: false },
-      { id: 'practice-5', title: 'Practice for 5 minutes', target: 5, current: 3, rewardGems: 15, rewardXp: 15, unit: 'mins', isClaimed: false },
-      { id: 'perfect-1', title: 'Score 100% on a drill', target: 1, current: 1, rewardGems: 20, rewardXp: 20, unit: 'drill', isClaimed: false },
+      { id: 'lessons-2', title: 'Finish 2 lessons', target: 2, current: 0, rewardGems: 15, rewardXp: 20, unit: 'lessons', isClaimed: false },
+      { id: 'practice-5', title: 'Practice for 5 minutes', target: 5, current: 0, rewardGems: 15, rewardXp: 15, unit: 'mins', isClaimed: false },
+      { id: 'perfect-1', title: 'Score 100% on a drill', target: 1, current: 0, rewardGems: 20, rewardXp: 20, unit: 'drill', isClaimed: false },
     ];
   });
 

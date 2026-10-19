@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { getUnitsForLanguage } from './data/curriculum';
 import { LessonNode } from './types';
@@ -17,15 +17,42 @@ import { BadgeUnlockModal } from './components/BadgeUnlockModal';
 import { MonetizationModal } from './components/MonetizationModal';
 import { InactivityReminderModal } from './components/InactivityReminderModal';
 import { RoadmapModal } from './components/RoadmapModal';
+import { OnboardingIntro, AccountDialog, WelcomeDialog, loadStage, saveStage, OnboardingStage } from './components/Onboarding';
+import { useSession, flushPendingProfile } from './utils/supabase';
+
+// Read before GameProvider saves anything, so first-time visitors are told apart from returning ones.
+const initialStage = loadStage();
 
 function AppContent() {
-  const { activeLanguage } = useGame();
+  const { activeLanguage, stats } = useGame();
+  const session = useSession();
+  const [stage, setStageState] = useState<OnboardingStage>(initialStage);
+  const setStage = (s: OnboardingStage) => { saveStage(s); setStageState(s); };
   const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'challenges' | 'leagues' | 'feed' | 'profile'>('learn');
   const [activeLesson, setActiveLesson] = useState<LessonNode | null>(null);
   const [isHeartModalOpen, setIsHeartModalOpen] = useState(false);
   const [isMonetizationModalOpen, setIsMonetizationModalOpen] = useState(false);
 
   const currentUnits = getUnitsForLanguage(activeLanguage);
+
+  // Signing in (including from the emailed link) saves onboarding choices and skips the intro.
+  useEffect(() => {
+    if (!session) return;
+    flushPendingProfile(session);
+    if (stage === 'intro') setStage('done');
+  }, [session]);
+
+  if (stage === 'intro') {
+    return (
+      <OnboardingIntro
+        onFinish={(lang, skipped) => {
+          const first = getUnitsForLanguage(lang).flatMap((u) => u.nodes).find((n) => !skipped.includes(n.id));
+          setStage('lesson');
+          if (first) setActiveLesson(first);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
@@ -92,9 +119,21 @@ function AppContent() {
       {activeLesson && (
         <LessonModal
           lesson={activeLesson}
-          onClose={() => setActiveLesson(null)}
+          onClose={() => {
+            // The onboarding lesson ends with the account offer, but only after a real win.
+            if (stage === 'lesson') {
+              const won = stats.completedLessons.includes(activeLesson.id);
+              setStage(won ? (session ? 'welcome' : 'account') : 'done');
+            }
+            setActiveLesson(null);
+          }}
         />
       )}
+
+      {stage === 'account' && (
+        <AccountDialog mode="create" intro="Nice work! Save your progress" onClose={() => setStage('welcome')} />
+      )}
+      {stage === 'welcome' && !activeLesson && <WelcomeDialog onDone={() => setStage('done')} />}
 
       {/* Life point refill & free practice drill modal */}
       <HeartRefillModal

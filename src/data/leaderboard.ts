@@ -16,7 +16,7 @@ export const INITIAL_LEADERBOARD_USERS: LeaderboardEntry[] = [
   { id: 'bot-3', name: 'GuidoFan24', username: '@guido_fan', avatarSeed: 'Jocelyn', xp: 390, streak: 12, league: 'Bronze', isUser: false, rankChange: 'up', cheerCount: 2 },
   { id: 'bot-4', name: 'ByteMaster', username: '@byte_ninja', avatarSeed: 'Caleb', xp: 350, streak: 4, league: 'Bronze', isUser: false, rankChange: 'down', cheerCount: 5 },
   { id: 'bot-5', name: 'Maya Lin', username: '@maya_code', avatarSeed: 'Sara', xp: 310, streak: 5, league: 'Bronze', isUser: false, rankChange: 'same', cheerCount: 1 },
-  { id: 'user-player', name: 'You (Python Explorer)', username: '@you', avatarSeed: 'Zack', xp: 180, streak: 3, league: 'Bronze', isUser: true, rankChange: 'up', cheerCount: 8 },
+  { id: 'user-player', name: 'You', username: '@you', avatarSeed: 'Zack', xp: 0, streak: 0, league: 'Bronze', isUser: true, rankChange: 'same', cheerCount: 0 },
   { id: 'bot-6', name: 'Sam Chen', username: '@chensam', avatarSeed: 'Aiden', xp: 160, streak: 2, league: 'Bronze', isUser: false, rankChange: 'down', cheerCount: 0 },
   { id: 'bot-7', name: 'Kavita Patel', username: '@kavita_p', avatarSeed: 'Jessica', xp: 140, streak: 3, league: 'Bronze', isUser: false, rankChange: 'same', cheerCount: 3 },
   { id: 'bot-8', name: 'Lucas Rossi', username: '@lucas_dev', avatarSeed: 'Brian', xp: 110, streak: 1, league: 'Bronze', isUser: false, rankChange: 'down', cheerCount: 0 },
