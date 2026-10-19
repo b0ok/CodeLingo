@@ -471,6 +471,51 @@ function runHeuristicEvaluation(
       'fetch() only rejects on network failure; check response.ok for 404 and 500.',
       'localStorage stores strings only; JSON.stringify objects and handle JSON.parse errors.',
     ],
+    // JavaScript blind spots for newer milestones
+    'js-rm-console-strings': [
+      'Strings are immutable: methods like toUpperCase() and slice() return new strings.',
+      'console.log() of an object shows a live reference in browser DevTools; log JSON.stringify(obj) for a snapshot.',
+    ],
+    'js-rm-type-conversion': [
+      '+ concatenates as soon as either operand is a string; - * / always convert to numbers.',
+      'Number("") is 0 but Number("abc") is NaN; check with Number.isNaN().',
+    ],
+    'js-rm-loops': [
+      'for...in iterates keys (including inherited ones); use for...of for array values.',
+      'Mutating an array while looping over it with an index skips or repeats elements.',
+    ],
+    'js-rm-error-handling': [
+      'An empty catch block hides bugs; at least log the error or rethrow it.',
+      'try/catch does not catch errors thrown later inside setTimeout callbacks or un-awaited promises.',
+    ],
+    'js-rm-map-set-json': [
+      'Objects used as Map or Set keys are compared by reference, not by contents.',
+      'JSON.stringify drops undefined and functions and throws on circular references.',
+    ],
+    'js-rm-function-params': [
+      'Default parameters replace undefined only, never null.',
+      'Recursion without a reachable base case throws RangeError: Maximum call stack size exceeded.',
+    ],
+    'js-rm-this-binding': [
+      'Passing obj.method as a callback loses this; use bind or an arrow wrapper.',
+      'Arrow functions ignore call, apply and bind for this; they always use the enclosing this.',
+    ],
+    'js-rm-callbacks-timers': [
+      'setTimeout delays are a minimum, not a guarantee.',
+      'Store interval ids and clear them, or they keep running after the UI is gone.',
+    ],
+    'js-rm-modules-esm': [
+      'Default exports are imported without braces; named exports need braces and exact names.',
+      'ES modules run in strict mode and evaluate only once, no matter how many files import them.',
+    ],
+    'js-rm-iterators-generators': [
+      'A generator object can only be iterated once; call the generator function again for a fresh one.',
+      'Calling a generator function runs none of its body until the first next().',
+    ],
+    'js-rm-memory-gc': [
+      'Setting a variable to null frees nothing if another reference still points to the object.',
+      'Forgotten listeners, intervals and growing caches are the most common leaks.',
+    ],
   };
 
   const blindSpots = defaultBlindSpots[node.id] || [
@@ -924,6 +969,27 @@ export function getPhaseDiagnosticQuestions(phaseId: string): {
               text: 'It returns null.',
               isOptimal: false,
               feedback: 'JavaScript never initializes hoisted variables to null.',
+            },
+          ],
+        },
+      ];
+    case 'js-control-flow':
+      return [
+        {
+          id: 'diag-jscf1',
+          question: 'A function that parses user input sometimes throws. Where should the try/catch go?',
+          options: [
+            {
+              id: 'o1',
+              text: 'Around the call at the level that knows how to recover, such as showing an error message.',
+              isOptimal: true,
+              feedback: 'Exactly. Catch errors where you can do something useful with them, not everywhere.',
+            },
+            {
+              id: 'o2',
+              text: 'Inside every function, with an empty catch block so nothing crashes.',
+              isOptimal: false,
+              feedback: 'Empty catch blocks hide bugs. Let errors travel up to code that can handle them.',
             },
           ],
         },
