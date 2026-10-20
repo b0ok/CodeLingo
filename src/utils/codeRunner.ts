@@ -1,5 +1,6 @@
 // Universal client-side code runner supporting Python, JavaScript, and SQL execution
 import { runPythonCode, ExecutionResult } from './pythonRunner';
+import { runJavaScriptInScope } from './jsCore';
 import { LanguageId, TestCase, WebCheck } from '../types';
 
 export type { ExecutionResult };
@@ -98,65 +99,25 @@ export function gradeWebCode(code: string, checks: WebCheck[] = []): WebGradeRes
   }
 }
 
-// Safe In-Browser JavaScript Runner
-export function runJavaScriptCode(code: string): ExecutionResult {
-  const startTime = performance.now();
-  const logs: string[] = [];
+const JS_TIME_LIMIT_MS = 3000;
 
-  try {
-    if (!code.trim()) {
-      return { success: true, output: '', executionTimeMs: 0 };
-    }
-
-    // Custom console logger
-    const customConsole = {
-      log: (...args: unknown[]) => {
-        logs.push(
-          args
-            .map((arg) => {
-              if (typeof arg === 'object' && arg !== null) {
-                try {
-                  return JSON.stringify(arg, null, 2);
-                } catch {
-                  return String(arg);
-                }
-              }
-              return String(arg);
-            })
-            .join(' ')
-        );
-      },
-      warn: (...args: unknown[]) => {
-        logs.push('[WARN] ' + args.map(String).join(' '));
-      },
-      error: (...args: unknown[]) => {
-        logs.push('[ERROR] ' + args.map(String).join(' '));
-      },
-      table: (data: unknown) => {
-        logs.push(JSON.stringify(data, null, 2));
-      },
-    };
-
-    // Safe execution inside an isolated Function sandbox
-    const runner = new Function('console', `"use strict";\n${code}`);
-    runner(customConsole);
-
-    const executionTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
-    return {
-      success: true,
-      output: logs.join('\n'),
-      executionTimeMs,
-    };
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-    const executionTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
-    return {
+// Learner JavaScript runs in a fresh Web Worker, never on the page: pasted code can't read the
+// saved sign-in, change the page or reach the network, and an endless loop is stopped.
+export function runJavaScriptCode(code: string): Promise<ExecutionResult> {
+  if (typeof window === 'undefined') return Promise.resolve(runJavaScriptInScope(code)); // Node repo scripts
+  return new Promise((resolve) => {
+    const w = new Worker(new URL('./jsWorker.ts', import.meta.url), { type: 'module' });
+    const done = (r: ExecutionResult) => { clearTimeout(timer); w.terminate(); resolve(r); };
+    const timer = setTimeout(() => done({
       success: false,
-      output: logs.join('\n'),
-      error: errorMsg,
-      executionTimeMs,
-    };
-  }
+      output: '',
+      error: `Your code ran for more than ${JS_TIME_LIMIT_MS / 1000} seconds, so it was stopped. Check for a loop that never ends.`,
+      executionTimeMs: JS_TIME_LIMIT_MS,
+    }), JS_TIME_LIMIT_MS);
+    w.onmessage = (e: MessageEvent<ExecutionResult>) => done(e.data);
+    w.onerror = () => done({ success: false, output: '', error: 'JavaScript could not start. Reload the page and try again.', executionTimeMs: 0 });
+    w.postMessage({ code });
+  });
 }
 
 // In-browser Relational SQL Query Engine
