@@ -64,7 +64,9 @@ export function fillSpaceTags(html: string, d: SpaceData): string {
 
 export function spaceDocument(html: string, css: string, data?: SpaceData): string {
   if (data) html = fillSpaceTags(html, data);
-  const safeCss = css.replace(/<\/?style/gi, ''); // can't close the style tag early
+  // No "<" at all, so the CSS can never close the style tag (stripping "</style" once let "</sty</stylele>" through).
+  // \3c is CSS for "<", so content: "<3" still shows.
+  const safeCss = css.replace(/</g, '\\3c ');
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:">
 <style>html,body{margin:0}body{font-family:system-ui,sans-serif;padding:16px;overflow-wrap:anywhere}${safeCss}</style>

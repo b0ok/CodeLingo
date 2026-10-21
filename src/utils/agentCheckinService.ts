@@ -1,22 +1,5 @@
-import { GoogleGenAI } from '@google/genai';
 import { AgentCheckinEvaluation, RoadmapNode } from '../types';
 import { getRoadmapNodeById } from '../data/pythonRoadmap';
-
-// Initialize Gemini SDK if API key is provided
-function getGeminiClient(): GoogleGenAI | null {
-  try {
-    const apiKey =
-      (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) ||
-      (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_API_KEY) ||
-      '';
-    if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
-      return new GoogleGenAI({ apiKey });
-    }
-  } catch {
-    // Environment does not support direct env lookup
-  }
-  return null;
-}
 
 /**
  * Intelligent Agent Evaluator that checks whether a learner is "blindly learning"
@@ -27,78 +10,7 @@ export async function evaluateLearnerExplanation(
   userExplanation: string,
   targetCareerTrack?: string
 ): Promise<AgentCheckinEvaluation> {
-  const ai = getGeminiClient();
-  const [trackName, roadmapSlug] = node.id.startsWith('sql-')
-    ? ['SQL', 'sql']
-    : node.id.startsWith('js-')
-    ? ['JavaScript', 'javascript']
-    : node.id.startsWith('web-')
-    ? ['HTML & CSS', 'frontend']
-    : ['Python', 'python'];
-
-  if (ai && userExplanation.trim().length > 10) {
-    try {
-      const prompt = `
-You are Pyto, an expert ${trackName} engineering mentor and learning coach on CodeLingo.
-A learner is working through the official roadmap.sh/${roadmapSlug} curriculum.
-Our core mission is to PREVENT BLIND LEARNING: students must not just copy syntax or guess multiple-choice options; they must understand the first principles, memory models, trade-offs, and edge cases.
-
-Roadmap Node: "${node.title}" (${node.roadmapCategory})
-Key Concepts: ${node.keyConcepts.join(', ')}
-Anti-Blind Socratic Prompt: "${node.antiBlindQuestion}"
-Sample Expert Model Answer Hint: "${node.sampleAnswerHint}"
-Learner's Target Career Track: "${targetCareerTrack || `General ${trackName} Mastery`}"
-
-Learner's Explanation:
-"""
-${userExplanation}
-"""
-
-Evaluate their explanation strictly for true conceptual understanding:
-1. Did they understand the underlying mental model (memory, execution flow, trade-offs)?
-2. Did they detect potential gotchas or edge cases?
-3. Are there blind spots or misconceptions in their reasoning?
-
-Respond with a valid JSON object ONLY (no markdown formatting, no code fence):
-{
-  "score": number between 15 and 98,
-  "rating": "Mastered" | "Solid Understanding" | "Blind Spots Detected" | "Needs Practice",
-  "whatNailed": "1-2 sentences highlighting what specific intuition or concept they got right",
-  "blindSpots": ["specific misconception or omitted crucial detail 1", "subtle gotcha 2"],
-  "actionableTip": "One direct, practical ${trackName} tip or mental model trick",
-  "socraticFollowup": "One thought-provoking question to deepen their intuition even further",
-  "recommendedNextStep": "Brief guidance on whether to proceed to next roadmap phase or review",
-  "pytoMood": "proud" | "celebrating" | "thinking" | "encouraging"
-}
-`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const text = response.text || '';
-      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-
-      return {
-        score: Math.max(20, Math.min(99, Number(parsed.score) || 75)),
-        rating: parsed.rating || (parsed.score >= 85 ? 'Mastered' : 'Solid Understanding'),
-        whatNailed: parsed.whatNailed || 'You articulated the core idea and connected it to practical Python usage.',
-        blindSpots: Array.isArray(parsed.blindSpots) && parsed.blindSpots.length > 0 
-          ? parsed.blindSpots 
-          : ['Be mindful of edge cases when scale or concurrency is introduced.'],
-        actionableTip: parsed.actionableTip || 'Always test behavior in a quick interactive Python terminal (REPL).',
-        socraticFollowup: parsed.socraticFollowup || 'How would this behave if the input was empty or None?',
-        recommendedNextStep: parsed.recommendedNextStep || 'Solid job! You are ready for the next roadmap milestone.',
-        pytoMood: parsed.pytoMood || 'proud',
-      };
-    } catch {
-      // Fallback to high-fidelity heuristic evaluator if network or key fails
-    }
-  }
-
-  // High-fidelity fallback heuristic evaluator (Works offline / in sandbox)
+  // AI grading moves to a server function (build plan PR 7) so no API key ever ships in the browser.
   return runHeuristicEvaluation(node, userExplanation, targetCareerTrack);
 }
 
