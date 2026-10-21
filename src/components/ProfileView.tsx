@@ -12,7 +12,7 @@ import { ProfileCustomization } from '../types';
 import { BadgesView } from './BadgesView';
 import { Modal } from './Modal';
 import { Check, Crown, Lock, Pencil } from 'lucide-react';
-import { supabase, useSession } from '../utils/supabase';
+import { supabase, useSession, checkText, TEXT_MESSAGES } from '../utils/supabase';
 import { UsernameField, useUsernameCheck } from './UsernameField';
 
 // The live values {{tags}} in myProfile fill in with.
@@ -212,6 +212,23 @@ const ProfileEditor: React.FC<{ profile: ProfileCustomization; onClose: () => vo
     e.preventDefault();
     setTriedSubmit(true);
     setSaveError(null);
+    // Same word filter the database enforces, checked first so the learner sees which field to fix.
+    if (session) {
+      const fields: [string, string, string][] = [
+        ['edit-name', 'display name', draft.displayName],
+        ['edit-bio', 'bio', draft.bio],
+        ...(pro ? [['edit-status', 'status', draft.status || ''] as [string, string, string]] : []),
+      ];
+      setSaving(true);
+      const problems = await Promise.all(fields.map(([, , text]) => checkText(text)));
+      setSaving(false);
+      const bad = problems.findIndex(Boolean);
+      if (bad >= 0) {
+        setSaveError(`That ${fields[bad][1]} ${TEXT_MESSAGES[problems[bad]!]}`);
+        document.getElementById(fields[bad][0])?.focus();
+        return;
+      }
+    }
     const changedName = !!session && !!username && username !== (profile.username || '');
     if (changedName) {
       if (usernameStatus !== 'ok') {
