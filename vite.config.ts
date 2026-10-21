@@ -7,10 +7,9 @@ import {defineConfig, Plugin} from 'vite';
 // It's a <meta> tag (any host serves it) and build-only, because the dev server injects inline scripts.
 // Workers aren't covered by a page's <meta> policy; jsWorker.ts locks itself down instead.
 // frame-ancestors can't go in a <meta>, so it's in public/_headers.
-// ponytail: 'unsafe-eval' is only for JS lessons running on the page; drop it once they run in a Web Worker (js-worker PR).
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval'",
+  "script-src 'self'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://images.unsplash.com",
