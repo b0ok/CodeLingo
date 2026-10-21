@@ -10,7 +10,7 @@ import { Modal } from './Modal';
 import { PRO_CHALLENGES } from '../data/proChallenges';
 import { runUnifiedCode, passesTestCases, gradeWebCode } from '../utils/codeRunner';
 import { preloadPython } from '../utils/pythonRunner';
-import { sendSignInLink, savePendingProfile } from '../utils/supabase';
+import { sendSignInLink, savePendingProfile, checkText, TEXT_MESSAGES } from '../utils/supabase';
 import { ArrowLeft, Check, Mail, ShieldCheck, X } from 'lucide-react';
 import { UsernameField, useUsernameCheck } from './UsernameField';
 
@@ -433,7 +433,7 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
   const [triedSubmit, setTriedSubmit] = useState(false);
   const { status: usernameStatus, suggestions } = useUsernameCheck(mode === 'create' ? username : '');
   const [email, setEmail] = useState('');
-  const [error, setError] = useState<{ field: 'birthday' | 'email' | 'form'; text: string } | null>(null);
+  const [error, setError] = useState<{ field: 'birthday' | 'name' | 'email' | 'form'; text: string } | null>(null);
   const [sending, setSending] = useState(false);
   const heading = useHeadingFocus(step);
   const today = new Date().toISOString().split('T')[0];
@@ -467,6 +467,13 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
     }
     setError(null);
     setSending(true);
+    const nameProblem = mode === 'create' ? await checkText(name) : null;
+    if (nameProblem) {
+      setSending(false);
+      setError({ field: 'name', text: `That display name ${TEXT_MESSAGES[nameProblem]}` });
+      document.getElementById('display-name')?.focus();
+      return;
+    }
     if (mode === 'create') {
       updateProfile({ displayName: name.trim().slice(0, 40) });
       savePendingProfile({
@@ -484,7 +491,7 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
   };
 
   const h2 = 'text-2xl font-extrabold text-slate-900 tracking-tight outline-none';
-  const errorFor = (field: 'birthday' | 'email') =>
+  const errorFor = (field: 'birthday' | 'name' | 'email') =>
     error?.field === field ? <p id={`${field}-error`} className="text-sm text-rose-700">{error.text}</p> : null;
 
   return (
@@ -528,8 +535,9 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
             {mode === 'create' && (
               <div className="space-y-1.5">
                 <label htmlFor="display-name" className="block font-bold text-slate-800">Display name</label>
-                <input id="display-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoComplete="nickname" className={inputClass} aria-describedby="name-hint" />
+                <input id="display-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoComplete="nickname" className={inputClass} aria-invalid={error?.field === 'name'} aria-describedby="name-hint name-error" />
                 <p id="name-hint" className="text-sm text-slate-600">Shown on leaderboards. Use a nickname, not your full name.</p>
+                {errorFor('name')}
               </div>
             )}
             {mode === 'create' && (
@@ -563,7 +571,9 @@ export const AccountDialog: React.FC<{ mode: 'create' | 'signin'; onClose: () =>
             <Mail className="w-10 h-10 text-emerald-600" aria-hidden="true" />
             <h2 ref={heading} tabIndex={-1} className={h2}>Check your email</h2>
             <p className="text-slate-600">
-              We sent a sign-in link to <strong className="text-slate-900 [overflow-wrap:anywhere]">{email.trim()}</strong>. Open it on this device to finish. It can take a minute to arrive.
+              {mode === 'signin' ? 'If there is an account for ' : 'We sent a sign-in link to '}
+              <strong className="text-slate-900 [overflow-wrap:anywhere]">{email.trim()}</strong>
+              {mode === 'signin' ? ", a sign-in link is on its way. Open it on this device to finish. Nothing after a few minutes? Check the spelling, or start learning to create an account." : '. Open it on this device to finish. It can take a minute to arrive.'}
             </p>
             <button onClick={onClose} className={primaryClass}>{mode === 'signin' ? 'Done' : 'Keep learning'}</button>
             <button onClick={() => { setStep('details'); setError(null); }} className="w-full py-2 text-slate-600 font-bold cursor-pointer">
