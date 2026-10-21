@@ -25,12 +25,23 @@ export async function sendSignInLink(email: string, create: boolean): Promise<st
     email,
     options: { shouldCreateUser: create, emailRedirectTo: window.location.origin },
   });
-  if (!error) return null;
-  if (!create && /signups not allowed/i.test(error.message)) {
-    return "We couldn't find an account with that email. Check the spelling, or start learning to create one.";
-  }
+  // No account for that email looks the same as success, so the form can't be used to learn who has an account.
+  if (!error || (!create && /signups not allowed/i.test(error.message))) return null;
   if (error.status === 429) return 'Too many sign-in emails were sent. Wait a few minutes, then try again.';
   return 'The sign-in email could not be sent. Check your connection and try again.';
+}
+
+// The database's text_problem() is the word filter for display names, bios and status lines.
+export const TEXT_MESSAGES = {
+  not_allowed: "isn't allowed. No swearing, insults, or words about anyone's religion, race, sexuality or disability.",
+  reserved: 'is reserved for the CodeLingo team. Try another one.',
+} as const;
+
+// 'not_allowed', 'reserved', or null when the text is fine (or accounts are off, so nothing is shared).
+export async function checkText(text: string): Promise<keyof typeof TEXT_MESSAGES | null> {
+  if (!supabase || !text.trim()) return null;
+  const { data, error } = await supabase.rpc('text_problem', { t: text });
+  return error ? null : (data as keyof typeof TEXT_MESSAGES | null); // the database still enforces it on save
 }
 
 // Details chosen during onboarding, saved to the profile once the learner is signed in.

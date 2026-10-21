@@ -170,6 +170,13 @@ export async function push(db: SupabaseClient, userId: string, rows: Partial<Row
     rows.achievements && db.from('achievements').upsert(withUser(rows.achievements), { ignoreDuplicates: true }),
     rows.xpLog && db.from('xp_log').upsert(withUser(rows.xpLog)),
   ]);
+  // A name or bio typed while signed out can trip the database word filter; keep syncing everything else.
+  if (rows.profile && results[1]?.error?.code === '23514') {
+    const { display_name: _n, bio: _b, status: _s, ...rest } = rows.profile;
+    const retry = await db.from('profiles').update({ ...rest, updated_at: now }).eq('id', userId);
+    if (retry.error) throw retry.error;
+    results[1] = undefined;
+  }
   const failed = results.find((r) => r && r.error);
   if (failed && failed.error) throw failed.error;
 }
