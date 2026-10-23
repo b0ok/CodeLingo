@@ -122,7 +122,7 @@ export const PlaygroundView: React.FC = () => {
       </div>
 
       {/* Language Track Selector Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         {(['python', 'javascript', 'sql', 'web'] as LanguageId[]).map((lang) => {
           const isSelected = selectedLang === lang;
           const labelMap: Record<LanguageId, { label: string; icon: string }> = {
@@ -155,7 +155,7 @@ export const PlaygroundView: React.FC = () => {
           <BookOpen className="w-3.5 h-3.5" />
           <span>{getLanguageLabel()} practices ({availableTemplates.length})</span>
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           {availableTemplates.map((tmpl) => (
             <button
               key={tmpl.title}
